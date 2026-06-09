@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>طه | ألعاب وخدمات برمجية</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0a0f1c 0%, #0c1222 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #eef5ff;
+      padding: 1.5rem 1rem;
+      direction: rtl;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* رأس الصفحة */
+    .hero {
+      text-align: center;
+      padding: 1.5rem 0 2rem;
+      border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #ffffff, #7aa2f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      color: #a3b3d9;
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #2b3b6e, #1a2747);
+      color: white;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-weight: bold;
+      margin-top: 1.2rem;
+      transition: transform 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(90deg, #3d548a, #22315a);
+    }
+
+    /* أقسام الألعاب */
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+      padding-right: 1rem;
+      border-right: 4px solid #4c7eff;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .game-card {
+      background: rgba(15, 25, 45, 0.7);
+      backdrop-filter: blur(4px);
+      border-radius: 24px;
+      padding: 1.2rem;
+      text-align: center;
+      border: 1px solid rgba(76, 126, 255, 0.3);
+      transition: all 0.2s;
+    }
+
+    .game-card:hover {
+      border-color: #4c7eff;
+      transform: translateY(-4px);
+      background: rgba(25, 40, 70, 0.8);
+    }
+
+    .game-icon {
+      font-size: 3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .game-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .game-card p {
+      color: #b9c7ec;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .game-link {
+      background: #2a3b60;
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
+
+    .game-link:hover {
+      background: #4c7eff;
+    }
+
+    /* قسم الخدمات */
+    .services-box {
+      background: linear-gradient(135deg, #101826, #0b1120);
+      border-radius: 32px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border: 1px solid rgba(76, 126, 255, 0.4);
+      text-align: center;
+    }
+
+    .services-box h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .services-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.7rem;
+      margin: 1rem 0;
+    }
+
+    .service-tag {
+      background: #1f2b46;
+      padding: 0.4rem 0.9rem;
+      border-radius: 60px;
+      font-size: 0.8rem;
+    }
+
+    .price {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffd966;
+      margin: 0.8rem 0;
+    }
+
+    .bot-link {
+      background: #4c7eff;
+      padding: 8px 16px;
+      border-radius: 50px;
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      display: inline-block;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #5f729b;
+      border-top: 1px solid #1e2a45;
+      padding-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- القسم الرئيسي -->
+  <div class="hero">
+    <h1>طه | Taha All in One</h1>
+    <p>ألعاب HTML تفاعلية | خدمات برمجية حسب الطلب</p>
+    <a href="https://t.me/superTsybot" class="btn" target="_blank">📩 تواصل عبر البوت</a>
+  </div>
+
+  <!-- قسم الألعاب (3 ألعاب فقط) -->
+  <div class="section-title">🎮 ألعابي الجاهزة</div>
+  <div class="games-grid">
+    <div class="game-card">
+      <div class="game-icon">🎈</div>
+      <h3>لعبة البالونات</h3>
+      <p>لعبة ممتعة وسريعة، جربها الآن مباشرة.</p>
+      <a href="BALLONe.html" class="game-link" target="_blank">▶ العب الآن</a>
+    </div>
+    <div class="game-card">
+      <div class="game-icon">🦖</div>
+      <h3>لعبة الديناصور</h3>
+      <p>تحدٍ سريع، أقصى درجة ممكنة.</p>
+      <a href="Dino.html" class="game-link" target="_blank">▶ العب الآن</a>
+    </div>
+    <div class="game-card">
+      <div class="game-icon">🏒</div>
+      <h3>لعبة الهوكي</h3>
+      <p>رياضة سريعة الإيقاع، استمتع بالمباراة.</p>
+      <a href="هوكي.html" class="game-link" target="_blank">▶ العب الآن</a>
+    </div>
+  </div>
+
+  <!-- قسم الخدمات التجارية -->
+  <div class="services-box">
+    <h2>🛠️ خدماتي البرمجية</h2>
+    <div class="services-list">
+      <span class="service-tag">🎮 ألعاب ألغاز / قفز / سباق</span>
+      <span class="service-tag">📊 أدوات ويب (عدادات، حاسبات، منسقات)</span>
+      <span class="service-tag">📄 قوالب HTML (سيرة ذاتية، صفحات تعريفية)</span>
+    </div>
+    <div class="price">يبدأ السعر من 30,000 ليرة سورية</div>
+    <a href="https://t.me/superTsybot" class="bot-link" target="_blank">✨ اطلب خدمتك الآن ✨</a>
+  </div>
+
+  <footer>
+    <p>للطلب والاستفسار: <strong>@superTsybot</strong> | قناتي: <strong>@TahaAllinOne</strong></p>
+    <p>جميع الألعاب والخدمات من تطوير وتصميم طه | Taha All in One</p>
+  </footer>
+</div>
+
+</body>
+</html>
