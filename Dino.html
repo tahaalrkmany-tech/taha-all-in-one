@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الديناصور</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #game-canvas {
+            border: 1px solid #000;
+            width: 100%;
+            height: 70vh;
+            image-rendering: pixelated;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        #button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .control-buttons {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 5%;
+            right: 5%;
+        }
+
+        .control-button {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            line-height: 50px;
+            background-color: #ccc;
+            border: 1px solid #000;
+            border-radius: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const startButton = document.getElementById('start-button');
+            const chooseCharacterButton = document.getElementById('choose-character-button');
+            const characterSelection = document.getElementById('character-selection');
+            const gameCanvas = document.getElementById('game-canvas');
+            const gameOverScreen = document.getElementById('game-over');
+            const restartButton = document.getElementById('restart-button');
+            const scoreDisplay = document.getElementById('score');
+            const upButton = document.getElementById('up-button');
+            const downButton = document.getElementById('down-button');
+            const controlButtons = document.querySelector('.control-buttons');
+            const ctx = gameCanvas.getContext('2d');
+            let chosenCharacter = null;
+            let score = 0;
+            let gameOver = false;
+            let animationFrameId;
+            let gameStarted = false;
+            const characterSprites = {
+                dino1: '🦖',
+                dino2: '🦕',
+                bird: '🐦'
+            };
+            let character = {
+                x: 50,
+                y: 100,
+                width: 50,
+                height: 50,
+                dy: 0,
+                gravity: 1,
+                lift: -15,
+                jumping: false,
+                doubleJumping: false
+            };
+            let obstacles = [];
+
+            startButton.addEventListener('click', startGame);
+            chooseCharacterButton.addEventListener('click', () => characterSelection.style.display = 'block');
+            document.querySelectorAll('.character-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    chosenCharacter = this.getAttribute('data-character');
+                    characterSelection.style.display = 'none';
+                    if (chosenCharacter === 'bird') {
+                        controlButtons.style.display = 'flex';
+                    } else {
+                        controlButtons.style.display = 'none';
+                    }
+                });
+            });
+            restartButton.addEventListener('click', function() {
+                gameStarted = false;
+                startGame();
+            });
+
+            upButton.addEventListener('click', function() {
+                if (chosenCharacter === 'bird') {
+                    handleFly();
+                }
+            });
+            downButton.addEventListener('click', function() {
+                if (chosenCharacter === 'bird') {
+                    handleDive();
+                }
+            });
+
+            window.addEventListener('keydown', function(e) {
+                if (chosenCharacter !== 'bird' && (e.code === 'Space' || e.code === 'ArrowUp')) {
+                    handleJump();
+                }
+            });
+
+            window.addEventListener('mousedown', function(e) {
+                if (chosenCharacter !== 'bird') {
+                    handleJump();
+                }
+            });
+
+            window.addEventListener('mouseup', function(e) {
+                if (chosenCharacter === 'bird') {
+                    character.dy = 5; // إعادة الطائر للنزول
+                }
+            });
+
+            function startGame() {
+                if (gameStarted) {
+                    return;
+                }
+                if (!chosenCharacter) {
+                    alert('يرجى اختيار شخصية أولاً!');
+                    return;
+                }
+                gameStarted = true;
+                score = 0;
+                gameOver = false;
+                character.x = 50;
+                character.y = 100;
+                character.dy = 0;
+                character.jumping = false;
+                character.doubleJumping = false;
+                obstacles = [];
+                gameOverScreen.style.display = 'none';
+                gameCanvas.style.display = 'block';
+                gameCanvas.width = window.innerWidth;
+                gameCanvas.height = window.innerHeight * 0.7;
+                gameLoop();
+            }
+
+            function gameLoop() {
+                if (gameOver) {
+                    endGame();
+                    return;
+                }
+
+                // مسح الشاشة
+                ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+                // تحديث حالة اللعبة
+                updateCharacter();
+                updateObstacles();
+                checkCollisions();
+
+                // رسم الشخصية والعقبات
+                drawCharacter();
+                drawObstacles();
+
+                // عرض النقاط
+                scoreDisplay.textContent = `النقاط: ${score}`;
+
+                // إعادة تشغيل التحديث بسرعة 60 إطاراً في الثانية
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            function updateCharacter() {
+                if (chosenCharacter === 'bird') {
+                    // تحكم الطائر
+                    character.dy += character.gravity * 0.5;
+                    character.y += character.dy;
+
+                    if (character.y + character.height > gameCanvas.height) {
+                        character.y = gameCanvas.height - character.height;
+                        character.dy = 0;
+                    }
+                } else {
+                    // تحكم الديناصور
+                    character.dy += character.gravity;
+                    character.y += character.dy;
+
+                    if (character.y + character.height > gameCanvas.height) {
+                        character.y = gameCanvas.height - character.height;
+                        character.dy = 0;
+                        character.jumping = false;
+                        character.doubleJumping = false;
+                    }
+                }
+            }
+
+            function updateObstacles() {
+                if (Math.random() < 0.02) {
+                    const obstacle = {
+                        x: gameCanvas.width,
+                        y: chosenCharacter === 'bird' ? Math.random() * (gameCanvas.height - 50) : gameCanvas.height - 50,
+                        width: 20,
+                        height: 50
+                    };
+                    obstacles.push(obstacle);
+                }
+                for (let i = 0; i < obstacles.length; i++) {
+                    obstacles[i].x -= 5;
+                    if (obstacles[i].x + obstacles[i].width < 0) {
+                        obstacles.splice(i, 1);
+                        i--;
+                        score++;
+                    }
+                }
+            }
+
+            function drawCharacter() {
+                ctx.font = `${character.height}px serif`;
+                ctx.save();
+                ctx.translate(character.x + character.width / 2, character.y + character.height / 2);
+                ctx.scale(-1, 1);
+                ctx.fillText(characterSprites[chosenCharacter], -character.width / 2, character.height / 2);
+                ctx.restore();
+            }
+
+            function drawObstacles() {
+                ctx.fillStyle = '#000';
+                for (let obstacle of obstacles) {
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+            }
+
+            function checkCollisions() {
+                for (let obstacle of obstacles) {
+                    if (character.x < obstacle.x + obstacle.width &&
+                        character.x + character.width > obstacle.x &&
+                        character.y < obstacle.y + obstacle.height &&
+                        character.y + character.height > obstacle.y) {
+                        gameOver = true;
+                        break;
+                    }
+                }
+            }
+
+            function endGame() {
+                cancelAnimationFrame(animationFrameId);
+                gameCanvas.style.display = 'none';
+                gameOverScreen.style.display = 'block';
+                gameStarted = false;
+                scoreDisplay.textContent = `النقاط: ${score}`;
+            }
+
+      function handleJump() {
+                if (chosenCharacter !== 'bird') {
+                    if (!character.jumping) {
+                        character.dy = character.lift;
+                        character.jumping = true;
+                    } else if (!character.doubleJumping) {
+                        character.dy = character.lift;
+                        character.doubleJumping = true;
+                    }
+                }
+            }
+
+            function handleFly() {
+                if (chosenCharacter === 'bird') {
+                    character.dy = character.lift;
+                }
+            }
+
+            function handleDive() {
+                if (chosenCharacter === 'bird') {
+                    character.dy += character.gravity * 5; // زيادة سرعة النزول
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div id="start-screen">
+            <h1>لعبة  العقبات</h1>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="game-over">
+            <h2>لقد خسرت!</h2>
+            <p id="score"></p>
+            <button id="restart-button">أعد المحاولة</button>
+        </div>
+        <div id="button-container">
+            <button id="start-button">ابدأ</button>
+            <button id="choose-character-button">اختر شخصيتك</button>
+            <div id="character-selection" style="display: none;">
+                <button class="character-button" data-character="dino1">🦖</button>
+                <button class="character-button" data-character="dino2">🦕</button>
+                <button class="character-button" data-character="bird">🐦</button>
+            </div>
+        </div>
+        <div class="control-buttons">
+            <div id="up-button" class="control-button">🔼</div>
+            <div id="down-button" class="control-button">🔽</div>
+        </div>
+    </div>
+</body>
+</html>

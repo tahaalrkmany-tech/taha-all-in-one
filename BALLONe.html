@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لعبة بالون الهواء 2D - نظام النقاط والمشتركين</title>
+  <style>
+    /* الإعدادات العامة وأنماط الشاشات */
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+    }
+    .screen {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #222;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #ff9800;
+      color: #fff;
+    }
+    /* شاشة البداية */
+    #startScreen h1 { font-size: 48px; margin-bottom: 30px; }
+    /* شاشة اختيار البالون */
+    #balloonOptions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      max-width: 90%;
+      margin: 20px;
+    }
+    .balloon-option {
+      width: 80px;
+      height: 100px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      transition: border 0.3s;
+    }
+    .balloon-option.selected { border: 2px solid #ff9800; }
+    /* لوحة النتائج */
+    #scoreboard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      font-size: 20px;
+      color: #fff;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    /* شاشة اللعبة */
+    #gameScreen {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    canvas { display: block; }
+    /* شاشة انتهاء اللعبة */
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+    #gameOverScreen h2 { font-size: 48px; margin-bottom: 20px; color: #ff5722; }
+  </style>
+</head>
+<body>
+  <!-- شاشة البداية -->
+  <div id="startScreen" class="screen">
+    <h1>لعبة بالون الهواء</h1>
+    <button id="startButton">ابدأ</button>
+    <button id="selectBalloonButton">اختر بالون</button>
+  </div>
+
+  <!-- شاشة اختيار البالون -->
+  <div id="selectBalloonScreen" class="screen" style="display: none;">
+    <h2>اختر بالون</h2>
+    <div id="balloonOptions"></div>
+  </div>
+
+  <!-- شاشة اللعبة -->
+  <div id="gameScreen" class="screen" style="display: none;">
+    <div id="scoreboard">
+      <!-- سيتم تعديل عناوين لوحة النتائج حسب نوع البالون -->
+      <span id="scoreLabel">النقاط:</span> <span id="score">0</span> |
+      <span id="highScoreLabel">أعلى نقاط:</span> <span id="highScore">0</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <!-- شاشة انتهاء اللعبة -->
+    <div id="gameOverScreen" style="display: none;">
+      <h2>انتهت اللعبة</h2>
+      <button id="restartButton">أعد المحاولة</button>
+    </div>
+  </div>
+
+  <!-- مشغل صوتي للموسيقى الخلفية (اختياري) -->
+  <audio id="bgMusic" loop>
+    <source src="bg.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /********** المتغيرات العامة **********/
+    let gameState = "start"; // القيم: start, select, playing, gameover
+    let chosenBalloon = { color: "#ff0000", shape: "circle" }; // الافتراضي للبالونات غير يوتيوب
+    let canvas = document.getElementById("gameCanvas");
+    let ctx = canvas.getContext("2d");
+    let balloon;
+    let obstacles = [];
+    let score = 0, highScore = 0;
+    let lastFrameTime = 0, lastObstacleSpawn = 0;
+    let obstacleSpawnInterval = 2000; // بالملّي ثانية
+    const BALLOON_VERTICAL_SPEED = 50; // سرعة الصعود (تحريك العالم)
+    const BASE_OBSTACLE_SPEED = 50;
+    let currentWind = 0;
+    const windUpdateInterval = 5000;
+    let lastWindUpdate = 0;
+    const COLLISION_DAMAGE = 100; // "الضريبة" عند الاصطدام
+
+    // لنظام بالون يوتيوب (المشتركين)
+    let initialBalloonY = 0;
+    let currentMilestone = 0;
+    let milestoneMessage = "";
+    let milestoneTimer = 0; // بالثواني
+
+    // متغيرات التنويه عند بلوغ الرقم 70
+    let subscribers70Shown = false;
+    let subscriber70Timer = 0;
+    let subscriber70Message = "";
+
+    // متغير لمشهد الافتتاح الخاص باليوتيوب (عند اختيار بالون يوتيوب)
+    let openingCinematicTimer = 0;
+
+    /********** تغيير حجم الكانفاس **********/
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    /********** التبديل بين الشاشات **********/
+    function showScreen(screenId) {
+      const screens = ["startScreen", "selectBalloonScreen", "gameScreen"];
+      screens.forEach(id => {
+        document.getElementById(id).style.display = (id === screenId) ? "flex" : "none";
+      });
+    }
+
+    /********** رسم الخلفية **********/
+    function drawBackground() {
+      let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#87CEEB");
+      gradient.addColorStop(1, "#0000FF");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /********** رسم الغيوم **********/
+    function drawClouds() {
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = "#555";
+      // رسم غيمة بسيطة
+      ctx.beginPath();
+      ctx.arc(150, 150, 40, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.arc(190, 140, 35, Math.PI, Math.PI * 2);
+      ctx.arc(230, 150, 30, Math.PI * 1.2, Math.PI * 2.2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /********** رسم الشمس مع أشعتها **********/
+    function drawSun() {
+      let sunX = canvas.width * 0.85;
+      let sunY = canvas.height * 0.15;
+      let radius = 50;
+      let gradSun = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, radius);
+      gradSun.addColorStop(0, "yellow");
+      gradSun.addColorStop(1, "orange");
+      ctx.fillStyle = gradSun;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,200,0,0.5)";
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 12; i++) {
+        let angle = i * (Math.PI * 2 / 12);
+        let x1 = sunX + Math.cos(angle) * (radius + 10);
+        let y1 = sunY + Math.sin(angle) * (radius + 10);
+        let x2 = sunX + Math.cos(angle) * (radius + 30);
+        let y2 = sunY + Math.sin(angle) * (radius + 30);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+
+    /********** إعداد خيارات البالون **********/
+    function populateBalloonOptions() {
+      const balloonOptionsDiv = document.getElementById("balloonOptions");
+      balloonOptionsDiv.innerHTML = "";
+      const colors = ["#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#00ffff", "#ffff00", "#ff9800", "#9c27b0", "#3f51b5", "#e91e63"];
+      // 20 خيار بالون عادي مع زخارف
+      for (let i = 0; i < 20; i++) {
+        const option = document.createElement("div");
+        option.classList.add("balloon-option");
+        let color = colors[i % colors.length];
+        option.innerHTML = `<svg width="80" height="100">
+                              <circle cx="40" cy="40" r="30" fill="${color}" stroke="#fff" stroke-width="2"/>
+                              <circle cx="30" cy="30" r="3" fill="#fff"/>
+                              <circle cx="50" cy="30" r="3" fill="#fff"/>
+                              <rect x="38" y="70" width="4" height="20" fill="#fff"/>
+                            </svg>`;
+        option.dataset.color = color;
+        option.addEventListener("dblclick", function() {
+          document.querySelectorAll(".balloon-option").forEach(el => el.classList.remove("selected"));
+          option.classList.add("selected");
+          chosenBalloon = { color: color, shape: "circle" };
+          showScreen("gameScreen");
+          startGame();
+        });
+        balloonOptionsDiv.appendChild(option);
+      }
+      // خيار بالون يوتيوب
+      const ytOption = document.createElement("div");
+      ytOption.classList.add("balloon-option");
+      ytOption.innerHTML = `<svg width="80" height="100">
+        <defs>
+          <linearGradient id="gradYT" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#FF0000" />
+            <stop offset="100%" stop-color="#AA0000" />
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r="30" fill="url(#gradYT)" stroke="#fff" stroke-width="2"/>
+        <polygon points="33,30 33,50 55,40" fill="#fff"/>
+        <rect x="38" y="70" width="4" height="20" fill="#fff"/>
+      </svg>`;
+      ytOption.addEventListener("dblclick", function() {
+        document.querySelectorAll(".balloon-option").forEach(el => el.classList.remove("selected"));
+        ytOption.classList.add("selected");
+        chosenBalloon = { tag: "youtube" };
+        showScreen("gameScreen");
+        startGame();
+      });
+      balloonOptionsDiv.appendChild(ytOption);
+    }
+
+    /********** تعريف كائن البالون **********/
+    class Balloon {
+      constructor(style) {
+        this.x = canvas.width / 2;
+        this.y = canvas.height - 100;
+        this.radius = 30;
+        this.targetX = this.x;
+        if (style.flag) {
+          this.flag = style.flag;
+        } else if (style.custom) {
+          this.custom = true;
+        } else if (style.tag && style.tag === "youtube") {
+          this.youtube = true;
+        } else {
+          this.custom = false;
+          this.color = style.color;
+        }
+      }
+      update(deltaTime) {
+        this.x += (this.targetX - this.x) * deltaTime * 5 + (currentWind * deltaTime);
+        this.y -= BALLOON_VERTICAL_SPEED * deltaTime;
+      }
+      draw(ctx) {
+        ctx.save();
+        if (this.flag) {
+          let grad;
+          if(this.flag === "us") {
+            grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
+            grad.addColorStop(0, "red");
+            grad.addColorStop(0.5, "white");
+            grad.addColorStop(1, "red");
+          } else if(this.flag === "rus") {
+            grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
+            grad.addColorStop(0, "white");
+            grad.addColorStop(0.5, "blue");
+            grad.addColorStop(1, "red");
+          }
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = "#654321";
+          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
+        }
+        else if(this.youtube) {
+          let grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
+          grad.addColorStop(0, "#FF0000");
+          grad.addColorStop(1, "#AA0000");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.moveTo(this.x - 7, this.y - 10);
+          ctx.lineTo(this.x - 7, this.y + 10);
+          ctx.lineTo(this.x + 10, this.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#654321";
+          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
+        }
+        else if(this.custom) {
+          let grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
+          grad.addColorStop(0, "green");
+          grad.addColorStop(0.5, "white");
+          grad.addColorStop(1, "black");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          drawStar(ctx, this.x, this.y, this.radius/3, 5, 0.5, "red");
+          ctx.fillStyle = "#654321";
+          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
+        }
+        else {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,255,255,0.6)";
+          ctx.beginPath();
+          ctx.arc(this.x - 10, this.y - 10, 3, 0, Math.PI * 2);
+          ctx.arc(this.x + 10, this.y - 10, 3, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y + 5, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#654321";
+          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
+        }
+        ctx.restore();
+      }
+    }
+
+    function drawStar(ctx, cx, cy, outerRadius, points, inset, color) {
+      let angle = Math.PI / points;
+      ctx.save();
+      ctx.beginPath();
+      for(let i = 0; i < 2 * points; i++){
+        let r = (i % 2 === 0) ? outerRadius : outerRadius * inset;
+        let a = i * angle;
+        let x = cx + Math.cos(a)*r;
+        let y = cy + Math.sin(a)*r;
+        if(i === 0)
+          ctx.moveTo(x, y);
+        else
+          ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function getRandomObstacleType() {
+      let r = Math.random();
+      if(r < 0.5) return "dislike";
+      else if(r < 0.8) return "copyright";
+      else return "report";
+    }
+
+    class Obstacle {
+      constructor(x, y, width, height, speed, type) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.speed = speed;
+        this.type = type;
+      }
+      update(deltaTime) {
+        this.y += this.speed * deltaTime;
+        this.x += currentWind * deltaTime * 0.5;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.fillStyle = "#333";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.font = Math.min(this.width, this.height) + "px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if(this.type === "copyright") {
+          ctx.beginPath();
+          ctx.moveTo(this.x + this.width/2 - 5, this.y + this.height/2);
+          ctx.lineTo(this.x + this.width/2 + 5, this.y + this.height/2);
+          ctx.lineTo(this.x + this.width/2 + 5, this.y + this.height/2 + 10);
+          ctx.lineTo(this.x + this.width/2 - 5, this.y + this.height/2 + 10);
+          ctx.closePath();
+          ctx.fillStyle = "#fff";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(this.x + this.width/2, this.y + this.height/2 - 5, 4, 0, Math.PI * 2);
+          ctx.fillStyle = "#ff0";
+          ctx.fill();
+        } else {
+          let icon = "";
+          if(this.type === "dislike") icon = "👎";
+          else if(this.type === "report") icon = "🚩";
+          ctx.fillStyle = "#fff";
+          ctx.fillText(icon, this.x + this.width/2, this.y + this.height/2);
+        }
+        ctx.restore();
+      }
+    }
+
+    function circleRectCollision(cx, cy, radius, rx, ry, rw, rh) {
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+      let closestX = clamp(cx, rx, rx + rw);
+      let closestY = clamp(cy, ry, ry + rh);
+      let dx = cx - closestX, dy = cy - closestY;
+      return (dx*dx + dy*dy) < (radius * radius);
+    }
+
+    function updateWind(timestamp) {
+      if(timestamp - lastWindUpdate > windUpdateInterval) {
+        currentWind = Math.random()*60 - 30;
+        lastWindUpdate = timestamp;
+      }
+    }
+
+    function updateGame(deltaTime, timestamp) {
+      updateWind(timestamp);
+      balloon.update(deltaTime);
+      // إذا كان هناك مشهد افتتاحي (لنظام يوتيوب) نتوقف عن تحديث باقي اللعبة
+      if(openingCinematicTimer > 0) {
+        openingCinematicTimer -= deltaTime;
+        return;
+      }
+      obstacles.forEach(obstacle => obstacle.update(deltaTime));
+      obstacles = obstacles.filter(obstacle => obstacle.y < balloon.y + canvas.height);
+      if(performance.now() - lastObstacleSpawn > obstacleSpawnInterval) {
+        spawnObstacle();
+        lastObstacleSpawn = performance.now();
+        obstacleSpawnInterval = Math.max(800, obstacleSpawnInterval - 20);
+      }
+      for(let i = obstacles.length - 1; i >= 0; i--){
+        if(circleRectCollision(balloon.x, balloon.y, balloon.radius, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height)){
+          if(score >= COLLISION_DAMAGE) {
+            score -= COLLISION_DAMAGE;
+            obstacles.splice(i, 1);
+          } else {
+            gameOver();
+            break;
+          }
+        }
+      }
+      if(chosenBalloon.tag === "youtube") {
+        let travel = initialBalloonY - balloon.y;
+        if(travel < 100) {
+          score += deltaTime * 5;
+        } else {
+          score += deltaTime * 10 * Math.log(1 + (travel-100)/100);
+        }
+        if(!subscribers70Shown && score >= 70) {
+          subscribers70Shown = true;
+          subscriber70Message = "70 مشترك حقيقي! شكرًا لدعمكم!";
+          subscriber70Timer = 3;
+        }
+      } else {
+        score += deltaTime * 10;
+      }
+      document.getElementById("score").textContent = Math.floor(score);
+      let newMilestone = Math.floor(score / 1000);
+      if(newMilestone > currentMilestone) {
+        currentMilestone = newMilestone;
+        milestoneMessage = "تهانينا! أصبحت " + (currentMilestone * 1000) + (chosenBalloon.tag === "youtube" ? " مشترك!" : " نقطة!");
+        milestoneTimer = 3;
+      }
+      if(milestoneTimer > 0) milestoneTimer -= deltaTime;
+      if(subscriber70Timer > 0) subscriber70Timer -= deltaTime;
+    }
+
+    function renderGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      drawClouds();
+      drawSun();
+      // ترجمة العالم بحيث يظهر البالون دائمًا على بعد 50 بكسل من أسفل الشاشة
+      let offsetY = balloon.y - (canvas.height - 50);
+      ctx.save();
+      ctx.translate(0, -offsetY);
+      obstacles.forEach(obstacle => obstacle.draw(ctx));
+      balloon.draw(ctx);
+      ctx.restore();
+      if(openingCinematicTimer > 0) {
+        ctx.save();
+        ctx.font = "32px Arial";
+        ctx.fillStyle = "cyan";
+        ctx.textAlign = "center";
+        ctx.fillText("انطلق... بداية رحلة القناة", canvas.width/2, canvas.height/2);
+        ctx.restore();
+      }
+      if(milestoneTimer > 0) {
+        ctx.save();
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "yellow";
+        ctx.textAlign = "center";
+        ctx.fillText(milestoneMessage, canvas.width/2, canvas.height/2);
+        ctx.restore();
+      }
+      if(subscriber70Timer > 0) {
+        ctx.save();
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "orange";
+        ctx.textAlign = "center";
+        ctx.fillText(subscriber70Message, canvas.width/2, canvas.height/2 + 50);
+        ctx.restore();
+      }
+    }
+
+    function gameLoop(timestamp) {
+      if(!lastFrameTime) lastFrameTime = timestamp;
+      let deltaTime = (timestamp - lastFrameTime) / 1000;
+      lastFrameTime = timestamp;
+      if(gameState === "playing") {
+        updateGame(deltaTime, timestamp);
+        renderGame();
+      } else if(gameState === "gameover") {
+        renderGame();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function spawnObstacle() {
+      let obstacleWidth = 50 + Math.random() * 50;
+      let obstacleHeight = 20 + Math.random() * 30;
+      let x = Math.random() * (canvas.width - obstacleWidth);
+      let y = balloon.y - canvas.height;
+      let speed = BASE_OBSTACLE_SPEED + score / 100;
+      let type = getRandomObstacleType();
+      obstacles.push(new Obstacle(x, y, obstacleWidth, obstacleHeight, speed, type));
+    }
+
+    function gameOver() {
+      gameState = "gameover";
+      if(score > highScore) { highScore = score; }
+      document.getElementById("gameOverScreen").style.display = "flex";
+      let bgMusic = document.getElementById("bgMusic");
+      if(bgMusic) bgMusic.pause();
+    }
+
+    function startGame() {
+      score = 0;
+      obstacles.forEach(obs => ctx.clearRect(0,0,canvas.width,canvas.height));
+      obstacles = [];
+      lastFrameTime = 0;
+      obstacleSpawnInterval = 2000;
+      document.getElementById("gameOverScreen").style.display = "none";
+      balloon = new Balloon(chosenBalloon);
+      if(chosenBalloon.tag === "youtube") {
+        initialBalloonY = balloon.y;
+        document.getElementById("scoreboard").innerHTML = "المشتركين: <span id='score'>0</span> | أعلى مشتركين: <span id='highScore'>0</span>";
+        openingCinematicTimer = 3;
+      } else {
+        document.getElementById("scoreboard").innerHTML = "النقاط: <span id='score'>0</span> | أعلى نقاط: <span id='highScore'>0</span>";
+      }
+      gameState = "playing";
+      resizeCanvas();
+      let bgMusic = document.getElementById("bgMusic");
+      if(bgMusic) {
+        bgMusic.currentTime = 0;
+        bgMusic.play().catch(()=>{});
+      }
+      gameLoop(0);
+    }
+
+    function handlePointerMove(e) {
+      let rect = canvas.getBoundingClientRect();
+      let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      balloon.targetX = clientX - rect.left;
+    }
+
+    function restartGame() { startGame(); }
+
+    window.addEventListener("DOMContentLoaded", function(){
+      canvas = document.getElementById("gameCanvas");
+      ctx = canvas.getContext("2d");
+      resizeCanvas();
+      populateBalloonOptions();
+      document.getElementById("startButton").addEventListener("click", function(){
+        showScreen("gameScreen");
+        startGame();
+      });
+      document.getElementById("selectBalloonButton").addEventListener("click", function(){
+        showScreen("selectBalloonScreen");
+      });
+      document.getElementById("restartButton").addEventListener("click", function(){
+        restartGame();
+      });
+      canvas.addEventListener("mousemove", handlePointerMove);
+      canvas.addEventListener("touchmove", function(e){
+        e.preventDefault();
+        handlePointerMove(e);
+      }, {passive: false});
+      requestAnimationFrame(gameLoop);
+    });
+    window.addEventListener("resize", resizeCanvas);
+  </script>
+</body>
+</html>

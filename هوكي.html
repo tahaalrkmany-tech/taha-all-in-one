@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لعبة الهوكي – النسخة المتطورة</title>
+  <style>
+    /* إعداد عام للصفحة والنمط */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #222;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+      -ms-touch-action: none;
+    }
+    /* إعداد طبقات الواجهة (Overlay) */
+    .overlay {
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .menu {
+      text-align: center;
+    }
+    .menu h1 {
+      margin-bottom: 20px;
+      font-size: 36px;
+    }
+    .menu button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    /* الحاويات داخل شاشة التخصيص */
+    #styleContainer, #emojiContainer {
+      width: 90%;
+      max-height: 40vh;
+      overflow-y: auto;
+      margin: 10px 0;
+      border: 1px solid #555;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .styleItem {
+      width: 80px;
+      height: 80px;
+      margin: 10px;
+      cursor: pointer;
+      border: 2px solid white;
+    }
+    .emojiItem {
+      width: 100px;   /* تكبير لتتماشى مع القياسات الجديدة */
+      height: 100px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 58px;
+      line-height: 100px;
+      text-align: center;
+      border: 2px solid white;
+      border-radius: 50%;
+    }
+    /* أزرار تبديل الأقسام داخل شاشة التخصيص */
+    .tabButtons {
+      margin: 10px;
+    }
+    .tabButtons button {
+      font-size: 16px;
+      padding: 5px 10px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- شاشة البداية -->
+  <div id="startScreen" class="overlay">
+    <div class="menu">
+      <h1>لعبة الهوكي</h1>
+      <button id="startButton">ابدأ اللعبة</button>
+      <button id="customizationButton">تخصيص النمط</button>
+    </div>
+  </div>
+
+  <!-- شاشة التخصيص -->
+  <div id="customizationScreen" class="overlay" style="display: none;">
+    <div class="menu">
+      <h1>التخصيص</h1>
+      <!-- أزرار التبديل بين أقسام الأنماط والإيموجي -->
+      <div class="tabButtons">
+        <button id="showStyles">أنماط الملعب</button>
+        <button id="showEmoji">أقراص الإيموجي</button>
+      </div>
+      <!-- حاوية أنماط الملعب -->
+      <div id="styleContainer"></div>
+      <!-- حاوية أقراص الإيموجي -->
+      <div id="emojiContainer" style="display: none;"></div>
+      <button id="backButton">عودة</button>
+    </div>
+  </div>
+
+  <script>
+    /******************* المتغيرات العامة والإعدادات *******************/
+    let game = null; // سيتم تعريف كائن اللعبة عند بدء اللعب
+    const goalMargin = 30; // الحد العمودي قرب المرمى الذي لا يمكن تجاوزُه
+
+    // إعدادات اللعبة الافتراضية
+    let gameConfig = {
+      background: "#004400",
+      playerColor: "blue",
+      enemyColor: "red",
+      puckColor: "white",
+      useEmoji: false,
+      playerEmoji: null
+    };
+
+    // تعريف أنماط الملعب (حوالي 10 أنماط)
+    const styles = [
+      { id: 0, name: "الكلاسيكي", background: "#004400", playerColor: "blue", enemyColor: "red", puckColor: "white" },
+      { id: 1, name: "أخضر ذهبي", background: "#31572c", playerColor: "#6a994e", enemyColor: "#bc4749", puckColor: "#f2e9e4" },
+      { id: 2, name: "بنفسجي مشرق", background: "#360568", playerColor: "#d72638", enemyColor: "#f46036", puckColor: "#2e294e" },
+      { id: 3, name: "محيطي", background: "#003049", playerColor: "#d62828", enemyColor: "#f77f00", puckColor: "#fcbf49" },
+      { id: 4, name: "هادئ", background: "#023e8a", playerColor: "#0077b6", enemyColor: "#0096c7", puckColor: "#00b4d8" },
+      { id: 5, name: "ليلي", background: "#1b1b2f", playerColor: "#e43f5a", enemyColor: "#e84393", puckColor: "#8d99ae" },
+      { id: 6, name: "شرقي", background: "#3d2c8d", playerColor: "#ff6f61", enemyColor: "#f7cac9", puckColor: "#92a8d1" },
+      { id: 7, name: "تكنو", background: "#0d1b2a", playerColor: "#1b263b", enemyColor: "#415a77", puckColor: "#778da9" },
+      { id: 8, name: "سايبربانك", background: "#2e294e", playerColor: "#ffaa00", enemyColor: "#ff4800", puckColor: "#f5f5f5" },
+      { id: 9, name: "كلاسيكي2", background: "#002635", playerColor: "#006494", enemyColor: "#ffd166", puckColor: "#ef476f" }
+    ];
+
+    // تعريف قائمة أقراص الإيموجي (كل أيقونة تُعرض كقرص منفرد)
+    const emojiDiscs = ["🦁","🐯","😀","😁","😂","😎","🤖","🐶","🐱","🐵"];
+
+    /******************* إعداد الكانفس *******************/
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      if (game) {
+        game.goalWidth = canvas.width / 5;
+        game.updateBarriers(); // تحديث مواقع الحواجز عند تغيير الحجم
+      }
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    /******************* إعداد الصوت باستخدام Web Audio API *******************/
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(frequency, duration) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = frequency;
+      gain.gain.value = 0.1;
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+    // صوت مشترك لأقراص الإيموجي
+    function playEmojiSound() {
+      playSound(800, 0.1);
+    }
+
+    /******************* تعريف الكلاسات الأساسية *******************/
+
+    // كلاس يمثل القرص (Disc)
+    class Disc {
+      constructor(x, y, radius, color, speed = 0) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.color = color;
+        this.speed = speed;
+      }
+      draw(ctx) {
+        // إذا كان قرص اللاعب ويستخدم إيموجي، نعرض الإيموجي بدلاً من الدائرة الملونة
+        if (gameConfig.useEmoji && this.isPlayer) {
+          ctx.font = this.radius * 2 + "px serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(gameConfig.playerEmoji, this.x, this.y);
+        } else {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // كلاس يمثل الكرة (Puck)
+    class Puck {
+      constructor(x, y, radius, speed, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.baseSpeed = speed; // السرعة الأساسية لإعادة التعيين
+        this.speed = speed;
+        this.dx = speed * (Math.random() > 0.5 ? 1 : -1);
+        this.dy = speed * (Math.random() > 0.5 ? 1 : -1);
+        this.color = color;
+        this.sineEffectTimer = 0; // مؤقت لتأثير Sine Twist بالثواني
+      }
+      update() {
+        if (this.sineEffectTimer > 0) {
+          this.sineEffectTimer -= 1/60; // نفترض 60 إطار بالثانية
+          let twist = Math.sin(Date.now() / 100) * 0.5;
+          this.dx += twist;
+        }
+        this.x += this.dx;
+        this.y += this.dy;
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // إعادة ضبط موقع وسرعة الكرة بعد كل هدف
+      reset(centerX, centerY, scoredByPlayer) {
+        this.x = centerX;
+        this.y = centerY;
+        this.speed = this.baseSpeed; // تعيين السرعة الأساسية
+        let angle = Math.random() * (Math.PI / 2) + (Math.PI / 4);
+        if (scoredByPlayer) {
+          this.dx = this.speed * Math.cos(angle);
+          this.dy = -this.speed * Math.sin(angle);
+        } else {
+          this.dx = this.speed * Math.cos(angle);
+          this.dy = this.speed * Math.sin(angle);
+        }
+        this.sineEffectTimer = 0;
+        playSound(300, 0.1);
+      }
+    }
+
+    // كلاس يمثل الحواجز الجانبية (Barriers)
+    class Barrier {
+      constructor(x, y, width, height, type, side) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.type = type; // "accel" أو "slow" أو "sine"
+        this.side = side; // "left" أو "right"
+      }
+      draw(ctx) {
+        ctx.save();
+        if(this.type === "accel") {
+          ctx.fillStyle = "#00FF00"; // أخضر للتسريع
+        } else if(this.type === "slow") {
+          ctx.fillStyle = "#FF00FF"; // لون للتبطيء
+        } else if(this.type === "sine") {
+          ctx.fillStyle = "#FFFF00"; // أصفر لتأثير Sine Twist
+        }
+        ctx.beginPath();
+        if (this.side === "left") {
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x + this.width, this.y + this.height / 2);
+          ctx.lineTo(this.x, this.y + this.height);
+        } else if (this.side === "right") {
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(this.x - this.width, this.y + this.height / 2);
+          ctx.lineTo(this.x, this.y + this.height);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // الكلاس الرئيسي للعبة (Game)
+    class Game {
+      constructor() {
+        this.goalWidth = canvas.width / 5; // لم يعد يُستخدم لحساب "مرمى" محدد؛ المرمى هو الجدار الخلفي
+        // تعديل حجم الأقراص: اللاعب والخصم نصف قطرهما 25 (بدلاً من 20)؛ الكرة نصف قطرها 12 (بدلاً من 10)
+        this.player = new Disc(canvas.width / 2, (canvas.height * 3) / 4, 25, gameConfig.playerColor);
+        this.player.isPlayer = true;
+        this.enemy = new Disc(canvas.width / 2, canvas.height / 4, 25, gameConfig.enemyColor, 2);
+        this.puck = new Puck(canvas.width / 2, canvas.height / 2, 12, 4, gameConfig.puckColor);
+
+        this.playerScore = 0;
+        this.enemyScore = 0;
+        this.isDragging = false;
+        this.dragStart = { x: 0, y: 0 };
+        this.playerStart = { x: this.player.x, y: this.player.y };
+
+        this.barriers = [];
+        this.createBarriers();
+
+        this.addTouchEvents();
+      }
+      createBarriers() {
+        // تصغير حجم الحواجز: عرض 20، ارتفاع 60
+        const bWidth = 20, bHeight = 60;
+        let tempBarriers = [];
+        // عدد الحواجز لكل جانب: 2 على اليسار و2 على اليمين
+        let countLeft = 2, countRight = 2;
+        // إنشاء حواجز على اليسار
+        for (let i = 0; i < countLeft; i++) {
+          let randY = Math.random() * (canvas.height - 2 * goalMargin - bHeight) + goalMargin;
+          // x = 0 على اليسار
+          // نعيّن النوع مؤقتًا "accel" أو "slow" عشوائياً
+          let type = Math.random() < 0.5 ? "accel" : "slow";
+          tempBarriers.push(new Barrier(0, randY, bWidth, bHeight, type, "left"));
+        }
+        // إنشاء حواجز على اليمين
+        for (let i = 0; i < countRight; i++) {
+          let randY = Math.random() * (canvas.height - 2 * goalMargin - bHeight) + goalMargin;
+          // x = canvas.width على اليمين
+          let type = Math.random() < 0.5 ? "accel" : "slow";
+          tempBarriers.push(new Barrier(canvas.width, randY, bWidth, bHeight, type, "right"));
+        }
+        // اختيار حاجز واحد عشوائي لجعله من نوع "sine" فقط
+        if (tempBarriers.length > 0) {
+          let index = Math.floor(Math.random() * tempBarriers.length);
+          tempBarriers[index].type = "sine";
+        }
+        // تعيين الناتج للحواجز
+        this.barriers = tempBarriers;
+      }
+      updateBarriers() {
+        this.createBarriers();
+      }
+      addTouchEvents() {
+        canvas.addEventListener(
+          "touchstart",
+          (e) => {
+            audioCtx.resume();
+            this.isDragging = true;
+            let touch = e.touches[0];
+            this.dragStart.x = touch.clientX;
+            this.dragStart.y = touch.clientY;
+            this.playerStart.x = this.player.x;
+            this.playerStart.y = this.player.y;
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+        canvas.addEventListener(
+          "touchmove",
+          (e) => {
+            if (!this.isDragging) return;
+            let touch = e.touches[0];
+            let dx = touch.clientX - this.dragStart.x;
+            let dy = touch.clientY - this.dragStart.y;
+            this.player.x = this.playerStart.x + dx;
+            this.player.y = this.playerStart.y + dy;
+            // تطبيق حدود حركة الرأسية للاعب:
+            // الحركة العمودية مسموحة بين (canvas.height/2 + goalMargin + radius) وبين (canvas.height - goalMargin - radius)
+            if (this.player.y < canvas.height/2 + goalMargin + this.player.radius) {
+              this.player.y = canvas.height/2 + goalMargin + this.player.radius;
+            }
+            if (this.player.y > canvas.height - goalMargin - this.player.radius) {
+              this.player.y = canvas.height - goalMargin - this.player.radius;
+            }
+            // الحركة الأفقية حرة ضمن حدود الكانفس
+            if (this.player.x < this.player.radius)
+              this.player.x = this.player.radius;
+            if (this.player.x > canvas.width - this.player.radius)
+              this.player.x = canvas.width - this.player.radius;
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+        canvas.addEventListener(
+          "touchend",
+          (e) => {
+            this.isDragging = false;
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+      }
+      distance(x1, y1, x2, y2) {
+        return Math.hypot(x1 - x2, y1 - y2);
+      }
+      checkBarrierCollisions() {
+        for (let barrier of this.barriers) {
+          if (
+            this.puck.x + this.puck.radius > barrier.x - (barrier.side === "right" ? barrier.width : 0) &&
+            this.puck.x - this.puck.radius < barrier.x + (barrier.side === "left" ? barrier.width : 0) &&
+            this.puck.y + this.puck.radius > barrier.y &&
+            this.puck.y - this.puck.radius < barrier.y + barrier.height
+          ) {
+            if (barrier.type === "accel") {
+              let factor = 0.5;
+              this.puck.dx += (this.puck.dx > 0 ? factor : -factor);
+              this.puck.dy += (this.puck.dy > 0 ? factor : -factor);
+              playSound(550, 0.05);
+            } else if (barrier.type === "slow") {
+              let factor = 0.5;
+              if (Math.abs(this.puck.dx) > factor) {
+                this.puck.dx -= (this.puck.dx > 0 ? factor : -factor);
+              }
+              if (Math.abs(this.puck.dy) > factor) {
+                this.puck.dy -= (this.puck.dy > 0 ? factor : -factor);
+              }
+              playSound(450, 0.05);
+            } else if (barrier.type === "sine") {
+              this.puck.sineEffectTimer = 2; // تأثير Sine Twist لمدة ثانيتين
+              playSound(600, 0.05);
+            }
+          }
+        }
+      }
+      updatePuck() {
+        this.puck.update();
+        if (this.puck.x - this.puck.radius < 0) {
+          this.puck.x = this.puck.radius;
+          this.puck.dx = -this.puck.dx;
+          playSound(500, 0.05);
+        }
+        if (this.puck.x + this.puck.radius > canvas.width) {
+          this.puck.x = canvas.width - this.puck.radius;
+          this.puck.dx = -this.puck.dx;
+          playSound(500, 0.05);
+        }
+        this.checkBarrierCollisions();
+        // نظام المرمى: سواءً كانت الكرة تخرج من الأعلى أو الأسفل
+        if (this.puck.y - this.puck.radius < 0) {
+          this.playerScore++;
+          this.puck.reset(canvas.width/2, canvas.height/2, true);
+        }
+        if (this.puck.y + this.puck.radius > canvas.height) {
+          this.enemyScore++;
+          this.puck.reset(canvas.width/2, canvas.height/2, false);
+        }
+      }
+      moveEnemy() {
+        let dx = this.puck.x - this.enemy.x;
+        let dy = this.puck.y - this.enemy.y;
+        let dist = Math.hypot(dx, dy);
+        let predictedTime = Math.min(Math.max(dist / this.enemy.speed, 0.2), 0.8);
+        let predictedX = this.puck.x + this.puck.dx * predictedTime;
+        let predictedY = this.puck.y + this.puck.dy * predictedTime;
+        let targetDx = predictedX - this.enemy.x;
+        let targetDy = predictedY - this.enemy.y;
+        let targetDist = Math.hypot(targetDx, targetDy);
+        if (targetDist > 0) {
+          let step = this.enemy.speed;
+          this.enemy.x += (targetDx / targetDist) * step;
+          this.enemy.y += (targetDy / targetDist) * step;
+        }
+        // تقييد الحركة الرأسية للخصم:
+        // للخصم (النصف العلوي) يسمح له بالحركة من goalMargin+radius حتى (canvas.height/2 - goalMargin - radius)
+        if (this.enemy.y < goalMargin + this.enemy.radius) {
+          this.enemy.y = goalMargin + this.enemy.radius;
+        }
+        if (this.enemy.y > canvas.height/2 - goalMargin - this.enemy.radius) {
+          this.enemy.y = canvas.height/2 - goalMargin - this.enemy.radius;
+        }
+        // الحركة الأفقية تبقى ضمن حدود الكانفس
+        if (this.enemy.x < this.enemy.radius)
+          this.enemy.x = this.enemy.radius;
+        if (this.enemy.x > canvas.width - this.enemy.radius)
+          this.enemy.x = canvas.width - this.enemy.radius;
+      }
+      handleCollision(disc) {
+        let dist = this.distance(this.puck.x, this.puck.y, disc.x, disc.y);
+        if (dist < this.puck.radius + disc.radius) {
+          let angle = Math.atan2(this.puck.y - disc.y, this.puck.x - disc.x);
+          let currentSpeed = Math.hypot(this.puck.dx, this.puck.dy) * 1.05;
+          this.puck.dx = currentSpeed * Math.cos(angle);
+          this.puck.dy = currentSpeed * Math.sin(angle);
+          this.puck.x = disc.x + (this.puck.radius + disc.radius + 1) * Math.cos(angle);
+          this.puck.y = disc.y + (this.puck.radius + disc.radius + 1) * Math.sin(angle);
+          if(disc.isPlayer && gameConfig.useEmoji) {
+            playEmojiSound();
+          } else {
+            playSound(600, 0.05);
+          }
+        }
+      }
+      draw() {
+        ctx.fillStyle = gameConfig.background;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+        // رسم الحواجز
+        for (let barrier of this.barriers) {
+          barrier.draw(ctx);
+        }
+        this.puck.draw(ctx);
+        this.player.draw(ctx);
+        this.enemy.draw(ctx);
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.fillText("اللاعب: " + this.playerScore, 20, canvas.height - 20);
+        ctx.fillText("الخصم: " + this.enemyScore, 20, 30);
+      }
+      gameLoop() {
+        this.updatePuck();
+        this.moveEnemy();
+        this.handleCollision(this.player);
+        this.handleCollision(this.enemy);
+        this.draw();
+        requestAnimationFrame(() => this.gameLoop());
+      }
+    }
+
+    /******************* التعامل مع واجهة المستخدم *******************/
+    const startScreen = document.getElementById("startScreen");
+    const customizationScreen = document.getElementById("customizationScreen");
+    const startButton = document.getElementById("startButton");
+    const customizationButton = document.getElementById("customizationButton");
+    const backButton = document.getElementById("backButton");
+    const styleContainer = document.getElementById("styleContainer");
+    const emojiContainer = document.getElementById("emojiContainer");
+    const showStyles = document.getElementById("showStyles");
+    const showEmoji = document.getElementById("showEmoji");
+
+    // تعبئة قائمة أنماط الملعب
+    styles.forEach((style) => {
+      let div = document.createElement("div");
+      div.classList.add("styleItem");
+      div.style.background = style.background;
+      div.title = style.name;
+      div.addEventListener("dblclick", () => {
+        gameConfig.background = style.background;
+        gameConfig.playerColor = style.playerColor;
+        gameConfig.enemyColor = style.enemyColor;
+        gameConfig.puckColor = style.puckColor;
+        customizationScreen.style.display = "none";
+        startScreen.style.display = "block";
+        if (game) {
+          game.player.color = gameConfig.playerColor;
+          game.enemy.color = gameConfig.enemyColor;
+          game.puck.color = gameConfig.puckColor;
+        }
+      });
+      styleContainer.appendChild(div);
+    });
+
+    // تعبئة قائمة أقراص الإيموجي
+    emojiDiscs.forEach((emoji) => {
+      let div = document.createElement("div");
+      div.classList.add("emojiItem");
+      div.textContent = emoji;
+      div.title = emoji;
+      div.addEventListener("dblclick", () => {
+        gameConfig.useEmoji = true;
+        gameConfig.playerEmoji = emoji;
+        customizationScreen.style.display = "none";
+        startScreen.style.display = "block";
+        if (game) {
+          game.player.isPlayer = true;
+        }
+        playEmojiSound();
+      });
+      emojiContainer.appendChild(div);
+    });
+
+    startButton.addEventListener("click", () => {
+      startScreen.style.display = "none";
+      game = new Game();
+      game.player.color = gameConfig.playerColor;
+      game.enemy.color = gameConfig.enemyColor;
+      game.puck.color = gameConfig.puckColor;
+      game.gameLoop();
+    });
+
+    customizationButton.addEventListener("click", () => {
+      startScreen.style.display = "none";
+      customizationScreen.style.display = "block";
+      styleContainer.style.display = "flex";
+      emojiContainer.style.display = "none";
+    });
+
+    backButton.addEventListener("click", () => {
+      customizationScreen.style.display = "none";
+      startScreen.style.display = "block";
+    });
+
+    showStyles.addEventListener("click", () => {
+      styleContainer.style.display = "flex";
+      emojiContainer.style.display = "none";
+    });
+    showEmoji.addEventListener("click", () => {
+      styleContainer.style.display = "none";
+      emojiContainer.style.display = "flex";
+    });
+  </script>
+</body>
+</html>
