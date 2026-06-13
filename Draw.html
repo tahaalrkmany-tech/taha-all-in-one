@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة رسم تفاعلية متجاوبة</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            touch-action: none;
+            max-width: 100%;
+            height: auto;
+        }
+        button, select {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        button:hover, select:hover {
+            background-color: #45a049;
+        }
+        .dropdown {
+            margin-bottom: 10px;
+        }
+        @media (max-width: 600px) {
+            button, select {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>لوحة رسم تفاعلية</h1>
+    <div class="dropdown">
+        <select id="drawType" onchange="setDrawType(this.value)">
+            <option value="">اختر نوع الرسم</option>
+            <option value="squareSymmetry">× رباعي متناظر</option>
+            <option value="plusSymmetry">+ رباعي متناظر آخر</option>
+            <option value="horizontalSymmetry">÷ متناظرين حول الخط الأفقي</option>
+            <option value="circle">@ دائرة</option>
+        </select>
+    </div>
+    <div class="dropdown">
+        <select id="glowEffect" onchange="setGlowEffect(this.value)">
+            <option value="">اختر خاصية التلألؤ</option>
+            <option value="none">بدون تلألؤ</option>
+            <option value="softGlow">تلألؤ خفيف</option>
+            <option value="brightGlow">تلألؤ ساطع</option>
+            <option value="neonGlow">تلألؤ نيون</option>
+        </select>
+    </div>
+    <div class="dropdown">
+        <select id="brushStyle" onchange="setBrushStyle(this.value)">
+            <option value="">اختر نمط الفرشاة</option>
+            <option value="solid">صلبة</option>
+            <option value="dotted">منقطة</option>
+            <option value="dashed">متقطعة</option>
+            <option value="zigzag">متعرجة</option>
+        </select>
+    </div>
+    <div class="dropdown">
+        <select id="brushShape" onchange="setBrushShape(this.value)">
+            <option value="">اختر شكل الفرشاة</option>
+            <option value="round">دائرية</option>
+            <option value="square">مربعة</option>
+        </select>
+    </div>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <div>
+        <button onclick="changeColor()">تغيير اللون</button>
+        <button onclick="startRotation()">ابدأ الدوران</button>
+        <button onclick="stopRotation()">توقف</button>
+    </div>
+    <div>
+        <button onclick="decreaseSpeed()">&#x3c; تقليل السرعة</button>
+        <button onclick="increaseSpeed()">زيادة السرعة &#x3e;</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let color = '#000000';
+        let rotationInterval;
+        let angle = 0;
+        let speed = 60 / 1000; // 60fps
+        let drawType = "";
+        let glowEffect = "none";
+        let brushStyle = "solid";
+        let brushShape = "round";
+        let points = [];
+        const offscreenCanvas = document.createElement('canvas');
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchmove', draw);
+
+        function setDrawType(type) {
+            drawType = type;
+        }
+
+        function setGlowEffect(effect) {
+            glowEffect = effect;
+        }
+
+        function setBrushStyle(style) {
+            brushStyle = style;
+        }
+
+        function setBrushShape(shape) {
+            brushShape = shape;
+        }
+
+        function startDrawing(event) {
+            drawing = true;
+            points = [];
+            ctx.beginPath(); // ابدأ مسار جديد للرسم الحالي
+            draw(event);
+        }
+
+        function stopDrawing() {
+            drawing = false;
+            ctx.beginPath(); // انهاء المسار الحالي
+            applySymmetry();
+            saveCanvasState();
+        }
+
+        function draw(event) {
+            if (!drawing) return;
+
+            event.preventDefault();
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX ? event.clientX - rect.left : event.touches[0].clientX - rect.left;
+            let y = event.clientY ? event.clientY - rect.top : event.touches[0].clientY - rect.top;
+
+            points.push({ x, y });
+
+            ctx.lineWidth = 5;
+            ctx.lineCap = brushShape;
+            ctx.strokeStyle = color;
+
+            applyGlowEffect();
+            applyBrushStyle();
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function applyBrushStyle() {
+            if (brushStyle === "dotted") {
+                ctx.setLineDash([1, 5]);
+            } else if (brushStyle === "dashed") {
+                ctx.setLineDash([10, 5]);
+            } else if (brushStyle === "zigzag") {
+                ctx.setLineDash([15, 10]);
+            } else {
+                ctx.setLineDash([]);
+            }
+        }
+
+        function changeColor() {
+            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFA500', '#800080', '#008000'];
+            color = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function startRotation() {
+            if (rotationInterval) return;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            function rotate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle);
+                ctx.translate(-centerX, -centerY);
+                ctx.drawImage(offscreenCanvas, 0, 0);
+                ctx.restore();
+                angle += speed;
+                rotationInterval = requestAnimationFrame(rotate);
+            }
+
+            rotate();
+        }
+
+        function stopRotation() {
+            cancelAnimationFrame(rotationInterval);
+            rotationInterval = null;
+        }
+
+        function decreaseSpeed() {
+            speed -= 0.01; // تقليل السرعة
+            if (rotationInterval) {
+                stopRotation();
+                startRotation();
+            }
+        }
+
+        function increaseSpeed() {
+            speed += 0.01; // زيادة السرعة
+            if (rotationInterval) {
+                stopRotation();
+                startRotation();
+            }
+        }
+
+        function saveCanvasState() {
+            offscreenCanvas.width = canvas.width;
+            offscreenCanvas.height = canvas.height;
+            offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            offscreenCtx.drawImage(canvas, 0, 0);
+        }
+
+        function applySymmetry() {
+            points.forEach(({ x, y }) => {
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+
+                if (drawType === "squareSymmetry") {
+                    drawSquareSymmetry(x, y);
+                } else if (drawType === "plusSymmetry") {
+                    drawPlusSymmetry(x, y);
+                } else if (drawType === "horizontalSymmetry") {
+                    drawHorizontalSymmetry(x, y);
+                } else if (drawType === "circle") {
+                    drawCircle(x, y);
+                }
+            });
+        }
+
+function applyGlowEffect() {
+            if (glowEffect === "softGlow") {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+            } else if (glowEffect === "brightGlow") {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = color;
+            } else if (glowEffect === "neonGlow") {
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = color;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawSquareSymmetry(x, y) {
+            ctx.lineTo(canvas.width - x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - x, y);
+
+            ctx.lineTo(x, canvas.height - y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height - y);
+
+            ctx.lineTo(canvas.width - x, canvas.height - y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - x, canvas.height - y);
+        }
+
+        function drawPlusSymmetry(x, y) {
+            ctx.lineTo(canvas.width - x, canvas.height - y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - x, canvas.height - y);
+
+            ctx.lineTo(x, canvas.height - y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height - y);
+
+            ctx.lineTo(canvas.width - x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - x, ي );
+        }
+
+        function drawHorizontalSymmetry(x, y) {
+            ctx.lineTo(x, canvas.height - y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height - ي );
+        }
+
+        function drawCircle(x, y) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        // حفظ حالة اللوحة عند التحميل
+        window.onload = saveCanvasState;
+    </script>
+</body>
+</html>
