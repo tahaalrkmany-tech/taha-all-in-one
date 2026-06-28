@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>معركة البلابل الملحمية - Clash of Beyblades</title>
+    <style>
+        :root { --gold: #ffd700; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow: hidden; font-family: 'Segoe UI', 'Cairo', sans-serif; height: 100vh; width: 100vw; user-select: none; -webkit-user-select: none; touch-action: none; }
+        #gameCanvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
+        .hud-container { position: fixed; z-index: 10; pointer-events: none; width: 100%; }
+        .top-hud { display: flex; justify-content: space-between; padding: 10px 20px; }
+        .player-side, .enemy-side { background: rgba(0,0,0,0.7); border: 2px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 8px 14px; backdrop-filter: blur(12px); min-width: 160px; }
+        .player-side { border-color: rgba(0,170,255,0.5); box-shadow: 0 0 20px rgba(0,100,255,0.3); }
+        .enemy-side { border-color: rgba(255,68,68,0.5); box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+        .beyblade-name { font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; text-align: center; }
+        .stat-row { display: flex; align-items: center; gap: 5px; margin: 2px 0; font-size: 9px; color: #aaa; }
+        .stat-bar-outer { flex: 1; height: 6px; background: rgba(0,0,0,0.6); border-radius: 3px; overflow: hidden; }
+        .stat-bar-inner { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .stamina-bar { background: linear-gradient(90deg, #00ff88, #00cc66); }
+        .attack-bar { background: linear-gradient(90deg, #ff8800, #ff4400); }
+        .defense-bar { background: linear-gradient(90deg, #4488ff, #0044cc); }
+        .center-hud { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .round-indicator { display: flex; gap: 10px; margin-bottom: 3px; }
+        .round-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); transition: 0.3s; }
+        .round-dot.won { background: #ffd700; border-color: #ffaa00; box-shadow: 0 0 10px gold; }
+        .round-dot.lost { background: #ff4444; border-color: #cc0000; }
+        .vs-text { font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .skills-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10; pointer-events: all; display: flex; gap: 8px; }
+        .skill-btn { width: 44px; height: 44px; border-radius: 10px; background: rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.3); color: #fff; font-size: 16px; cursor: pointer; backdrop-filter: blur(8px); position: relative; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .skill-btn:hover { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.4); }
+        .skill-btn .cooldown-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); border-radius: 0 0 8px 8px; transition: height 0.1s; pointer-events: none; }
+        .skill-btn .key-hint { position: absolute; top: -6px; right: -6px; background: #ffd700; color: #000; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .touch-only { display: none; }
+        @media (pointer: coarse) { .touch-only { display: flex; } .skills-bar { bottom: 140px; gap: 5px; } .skill-btn { width: 38px; height: 38px; font-size: 14px; } }
+        #joystick-zone { position: fixed; bottom: 25px; left: 25px; width: 110px; height: 110px; z-index: 50; }
+        #joystick-base { width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); position: relative; }
+        #joystick-thumb { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff, #00b4ff); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #camera-btn { position: fixed; top: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.3); z-index: 50; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; color: #fff; }
+        .footer { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.3); font-size: 8px; z-index: 10; pointer-events: none; background: rgba(0,0,0,0.4); padding: 2px 10px; border-radius: 15px; }
+        .message-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(8px); }
+        .message-box { background: linear-gradient(160deg, #1a1a35, #0d0d25); padding: 22px 28px; border-radius: 20px; text-align: center; color: #fff; border: 2px solid rgba(255,215,0,0.35); animation: popIn 0.4s; max-width: 420px; pointer-events: all; max-height: 80vh; overflow-y: auto; }
+        @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .btn-play { background: linear-gradient(135deg, #ffd700, #ff8c00); padding: 10px 24px; border: none; border-radius: 20px; color: #1a1a2e; cursor: pointer; font-weight: bold; margin: 4px; transition: 0.3s; font-size: 14px; }
+        .hidden { display: none !important; }
+        .record-text { font-size: 13px; color: #ffd700; margin: 4px 0; }
+        .custom-colors { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+        .color-swatch, .blade-swatch, .style-swatch { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; background: #333; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff; transition: 0.2s; }
+        .blade-swatch, .style-swatch { border-radius: 6px; font-size: 11px; }
+        .selected { border-color: #fff; box-shadow: 0 0 12px #fff; transform: scale(1.1); }
+        #bladeCanvas { border: 2px solid #888; border-radius: 8px; background: #111; cursor: crosshair; width: 180px; height: 180px; }
+        .shop-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #444; border-radius: 8px; margin: 5px 0; color: #fff; }
+        .shop-item button { padding: 4px 12px; border-radius: 12px; border: none; background: gold; color: #000; font-weight: bold; cursor: pointer; }
+        .upgrade-row { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin: 5px 0; border-bottom: 1px solid #333; }
+        input[type="text"] { padding: 6px; border-radius: 8px; border: 1px solid #555; background: #222; color: #fff; width: 100%; margin: 5px 0; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; padding: 12px 30px; border-radius: 30px; font-weight: bold; z-index: 200; box-shadow: 0 0 30px gold; animation: toastIn 0.5s ease-out, toastOut 0.5s 2.5s ease-in forwards; pointer-events: none; }
+        @keyframes toastIn { from { opacity: 0; top: 0; } to { opacity: 1; top: 20px; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+        .vs-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 150; display: flex; justify-content: center; align-items: center; flex-direction: column; animation: vsFadeIn 0.5s; }
+        .vs-screen .vs-content { text-align: center; }
+        .vs-screen .vs-names { font-size: 28px; font-weight: 900; color: #fff; margin: 20px; }
+        .vs-screen .vs-icon { font-size: 80px; animation: vsPulse 0.8s infinite alternate; }
+        @keyframes vsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes vsPulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+        .bracket { display: flex; justify-content: space-around; align-items: center; color: #fff; margin: 15px 0; font-size: 12px; }
+        .bracket-round { text-align: center; }
+        .bracket-round p { margin: 2px 0; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .arena-select { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+        .arena-swatch { padding: 8px 16px; border: 2px solid #555; border-radius: 8px; cursor: pointer; background: #333; color: #fff; }
+        .arena-swatch.selected { border-color: #ffd700; background: #555; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="hud-container">
+        <div class="top-hud">
+            <div class="player-side">
+                <div class="beyblade-name" id="playerHudName" style="color:#00aaff;">🌀 بلبلك</div>
+                <div class="stat-row">🔄 الدوران<div class="stat-bar-outer"><div class="stat-bar-inner stamina-bar" id="playerStaminaBar" style="width:100%"></div></div></div>
+                <div class="stat-row">⚡ الهجوم<div class="stat-bar-outer"><div class="stat-bar-inner attack-bar" id="playerAttackBar" style="width:0%"></div></div></div>
+                <div class="stat-row">🛡️ الدفاع<div class="stat-bar-outer"><div class="stat-bar-inner defense-bar" id="playerDefenseBar" style="width:30%"></div></div></div>
+            </div>
+            <div class="center-hud">
+                <div class="round-indicator" id="roundDots"><div class="round-dot" id="r1"></div><div class="round-dot" id="r2"></div><div class="round-dot" id="r3"></div></div>
+                <div class="vs-text">⚔️</div>
+                <div style="color:#fff;font-size:11px;" id="timerDisplay">60</div>
+            </div>
+            <div class="enemy-side">
+                <div class="beyblade-name" id="enemyHudName" style="color:#ff4444;">👾 الخصم</div>
+                <div class="stat-row">🔄 الدوران<div class="stat-bar-outer"><div class="stat-bar-inner stamina-bar" id="enemyStaminaBar" style="width:100%"></div></div></div>
+                <div class="stat-row">⚡ الهجوم<div class="stat-bar-outer"><div class="stat-bar-inner attack-bar" id="enemyAttackBar" style="width:0%"></div></div></div>
+                <div class="stat-row">🛡️ الدفاع<div class="stat-bar-outer"><div class="stat-bar-inner defense-bar" id="enemyDefenseBar" style="width:30%"></div></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="skills-bar">
+        <button class="skill-btn" id="skillQ">🚀<span class="key-hint">Q</span><div class="cooldown-overlay" style="height:0%"></div></button>
+        <button class="skill-btn" id="skillE">🛡️<span class="key-hint">E</span><div class="cooldown-overlay" style="height:0%"></div></button>
+        <button class="skill-btn" id="skillR">🌪️<span class="key-hint">R</span><div class="cooldown-overlay" style="height:0%"></div></button>
+        <button class="skill-btn" id="skillX" style="border-color: gold;">⚡<span class="key-hint">X</span><div class="cooldown-overlay" style="height:0%"></div></button>
+    </div>
+    <div id="joystick-zone" class="touch-only"><div id="joystick-base"><div id="joystick-thumb"></div></div></div>
+    <button id="camera-btn">🎥</button>
+    <div class="footer">صمم بواسطة Tahaalrakamany-2026</div>
+
+    <div class="message-overlay" id="startOverlay">
+        <div class="message-box">
+            <h2>🔥 معركة البلابل الملحمية</h2>
+            <p>⚡ أطوار متعددة | 🎨 تخصيص كامل</p>
+            <div class="record-text" id="bestScoreDisplay">🏆 أفضل نتيجة: 0</div>
+            <div class="record-text" id="winsDisplay">👑 الانتصارات: 0</div>
+            <div class="record-text" id="coinsDisplay">🪙 العملات: 500</div>
+            <button class="btn-play" id="btnStart">✨ الطور العادي</button>
+            <button class="btn-play" id="btnSurvival" style="background:linear-gradient(135deg, #ff4444, #aa0000);">💀 طور البقاء</button>
+            <button class="btn-play" id="btnTournament" style="background:linear-gradient(135deg, #aa44ff, #4400aa);">🏆 طور البطولة</button>
+            <button class="btn-play" id="btnCustomize" style="background:linear-gradient(135deg, #44aaff, #6644ff);">🎨 تخصيص</button>
+            <button class="btn-play" id="btnShop" style="background:linear-gradient(135deg, #ffaa00, #ff6600);">🛒 المتجر</button>
+            <button class="btn-play" id="btnBladeEditor" style="background:linear-gradient(135deg, #ff44aa, #aa44ff);">✏️ رسم الشفرة</button>
+            <button class="btn-play" id="btnUpgrades" style="background:linear-gradient(135deg, #00cc88, #006644);">📈 الترقيات</button>
+        </div>
+    </div>
+
+    <div class="message-overlay hidden" id="customizeOverlay">
+        <div class="message-box">
+            <h2>🎨 تخصيص بلبلك</h2>
+            <label>اسم البلبل:</label><input type="text" id="beybladeNameInput" maxlength="20" placeholder="أدخل الاسم">
+            <p>اللون الأساسي (القاعدة):</p><div class="custom-colors" id="primaryColors"></div>
+            <p>اللون الثانوي (الجسم):</p><div class="custom-colors" id="secondaryColors"></div>
+            <p>لون الشفرات:</p><div class="custom-colors" id="bladeColors"></div>
+            <p>لون القرص (Forge Disc):</p><div class="custom-colors" id="discColors"></div>
+            <p>لون الطرف (Tip):</p><div class="custom-colors" id="tipColors"></div>
+            <p>نمط الشفرات:</p><div class="custom-colors" id="bladeStyles"></div>
+            <p>نمط القتال:</p><div class="custom-colors" id="battleStyles"></div>
+            <button class="btn-play" id="btnSaveCustomize">💾 حفظ</button>
+            <button class="btn-play" id="btnCancelCustomize" style="background:#444;">↩️ رجوع</button>
+        </div>
+    </div>
+
+    <div class="message-overlay hidden" id="bladeEditorOverlay">
+        <div class="message-box">
+            <h2>✏️ ارسم شفرة البلبل</h2>
+            <canvas id="bladeCanvas" width="180" height="180"></canvas><br>
+            <button class="btn-play" id="btnClearCanvas">🧹 مسح</button>
+            <button class="btn-play" id="btnSaveBlade">💾 اعتماد الرسم</button>
+            <button class="btn-play" id="btnCancelBlade" style="background:#444;">↩️ رجوع</button>
+        </div>
+    </div>
+
+    <div class="message-overlay hidden" id="shopOverlay">
+        <div class="message-box"><h2>🛒 المتجر</h2><p>🪙 العملات: <span id="shopCoins">0</span></p><div id="shopItems"></div><button class="btn-play" id="btnCloseShop">↩️ رجوع</button></div>
+    </div>
+
+    <div class="message-overlay hidden" id="upgradesOverlay">
+        <div class="message-box"><h2>📈 ترقية البلبل</h2><p>🪙 العملات: <span id="upgradeCoins">0</span></p><div id="upgradeItems"></div><button class="btn-play" id="btnCloseUpgrades">↩️ رجوع</button></div>
+    </div>
+
+    <div class="message-overlay hidden" id="winOverlay">
+        <div class="message-box"><h2>🏆 فوز!</h2><p id="winMessage"></p><button class="btn-play" id="btnWinRestart">🔄 مباراة جديدة</button><button class="btn-play" id="btnMainMenuFromWin" style="background:#444;">🏠 القائمة الرئيسية</button><button class="btn-play" id="btnReplay" style="background:linear-gradient(135deg, #4488ff, #0044cc);">🎬 إعادة المباراة</button></div>
+    </div>
+    <div class="message-overlay hidden" id="loseOverlay">
+        <div class="message-box"><h2>💀 هزيمة</h2><p id="loseMessage"></p><button class="btn-play" id="btnLoseRestart">🔄 حاول مجدداً</button><button class="btn-play" id="btnMainMenuFromLose" style="background:#444;">🏠 القائمة الرئيسية</button><button class="btn-play" id="btnReplayLose" style="background:linear-gradient(135deg, #4488ff, #0044cc);">🎬 إعادة المباراة</button></div>
+    </div>
+
+    <div class="vs-screen hidden" id="vsScreen">
+        <div class="vs-content">
+            <div class="vs-names"><span id="vsPlayerName">بلبلك</span> ⚡ <span id="vsEnemyName">الخصم</span></div>
+            <div class="vs-icon">⚔️</div>
+        </div>
+    </div>
+
+    <div class="message-overlay hidden" id="tournamentOverlay">
+        <div class="message-box">
+            <h2>🏆 البطولة</h2>
+            <div class="bracket" id="bracketDisplay"></div>
+            <p id="tournamentStatus">استعد للمواجهة القادمة!</p>
+            <button class="btn-play" id="btnNextMatch">▶️ المباراة التالية</button>
+            <button class="btn-play" id="btnCancelTournament" style="background:#444;">↩️ رجوع</button>
+        </div>
+    </div>
+
+    <div class="message-overlay hidden" id="arenaSelectOverlay">
+        <div class="message-box">
+            <h2>🏟️ اختر الحلبة</h2>
+            <div class="arena-select" id="arenaOptions"></div>
+            <button class="btn-play" id="btnStartWithArena">▶️ ابدأ المعركة</button>
+            <button class="btn-play" id="btnCancelArena" style="background:#444;">↩️ رجوع</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+        function playMetallicHit(intensity = 1) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const buf = audioCtx.createBuffer(1, Math.floor(44100 * 0.12), 44100);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+            const src = audioCtx.createBufferSource(); src.buffer = buf;
+            const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass';
+            bp.frequency.setValueAtTime(1500 + intensity * 500, now); bp.Q.setValueAtTime(0.8, now);
+            const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.25 * intensity, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            src.connect(bp).connect(gain).connect(audioCtx.destination); src.start(now); src.stop(now + 0.12);
+        }
+        function sfxSkill() { playMetallicHit(0.6); }
+        function sfxUltimate() { playMetallicHit(1.2); setTimeout(() => playMetallicHit(0.8), 100); }
+        function sfxWin() { playMetallicHit(0.5); setTimeout(() => playMetallicHit(0.7), 200); setTimeout(() => playMetallicHit(0.9), 400); }
+        function sfxLose() { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const g = audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.6); g.gain.setValueAtTime(0.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7); osc.connect(g).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.7); }
+        function sfxCrowd() { if(!audioCtx) return; const now=audioCtx.currentTime; for(let i=0;i<3;i++){const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.type='square';o.frequency.setValueAtTime(200+Math.random()*300,now);g.gain.setValueAtTime(0.03,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.2);o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+0.2);}}
+
+        let musicNodes = [];
+        const musicalScale = [261.63, 329.63, 392.00, 523.25];
+        function startMusic() {
+            if (!audioCtx) return;
+            stopMusic();
+            const now = audioCtx.currentTime;
+            musicalScale.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.015, now);
+                osc.connect(gain).connect(audioCtx.destination);
+                osc.start(now);
+                musicNodes.push({ osc, gain });
+            });
+        }
+        function updateMusic(intensity = 0) { musicNodes.forEach((n, i) => { if (n.gain) n.gain.gain.setTargetAtTime(0.005 + intensity * 0.03, audioCtx.currentTime, 0.2); }); }
+        function stopMusic() { musicNodes.forEach(n => { try { n.osc.stop(); } catch(e) {} }); musicNodes = []; }
+
+        function saveRecord(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+        function loadRecord(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+        let bestScore = loadRecord('beyblade_bestScore', 0);
+        let totalWins = loadRecord('beyblade_wins', 0);
+        let coins = loadRecord('beyblade_coins', 500);
+        let purchasedItems = loadRecord('beyblade_purchased', []);
+        let achievements = loadRecord('beyblade_achievements', {});
+        let bossDefeated = loadRecord('beyblade_boss_defeated', false);
+
+        const enemies = [
+            { name: 'رعد', colors: { primary: 0xffaa00, secondary: 0xff6600, accent: 0xff4400, glow: 0xff8800 } },
+            { name: 'عاصف', colors: { primary: 0x00aaff, secondary: 0x0088cc, accent: 0x00ccff, glow: 0x00ddff } },
+            { name: 'جلمود', colors: { primary: 0x555555, secondary: 0x888888, accent: 0xaaaaaa, glow: 0xcccccc } },
+            { name: 'شهاب', colors: { primary: 0xff1493, secondary: 0xff44aa, accent: 0xff88cc, glow: 0xffaadd } },
+            { name: 'زمرد', colors: { primary: 0x00cc66, secondary: 0x009944, accent: 0x00ff88, glow: 0x00ffaa } },
+        ];
+        const bossEnemy = { name: '👑 الزعيم', colors: { primary: 0xff0000, secondary: 0xff4444, accent: 0xff8888, glow: 0xffaaaa }, isBoss: true };
+        let currentEnemyIndex = 0;
+        function getNextEnemy(survival = false, wave = 1) {
+            if (survival) { if (wave % 6 === 0 && !bossDefeated) return { ...bossEnemy, bossWave: true }; return { ...enemies[Math.floor(Math.random() * enemies.length)], wave }; }
+            const enemy = enemies[currentEnemyIndex % enemies.length]; currentEnemyIndex++; if (currentEnemyIndex > enemies.length && !bossDefeated) return bossEnemy; return enemy;
+        }
+
+        const shopItems = [
+            { id: 'color_plasma', name: 'لون بلازما', type: 'color', price: 200, colors: { primary: 0x00ffff, secondary: 0xff00ff, accent: 0xffff00, glow: 0x00ffff } },
+            { id: 'color_neon', name: 'لون نيون', type: 'color', price: 200, colors: { primary: 0xff1493, secondary: 0x00ff00, accent: 0xff4500, glow: 0xff1493 } },
+            { id: 'blade_legend', name: 'شفرة أسطورية', type: 'blade', price: 300, bladeIdx: 4 },
+            { id: 'blade_fire', name: 'شفرة نارية', type: 'blade', price: 300, bladeIdx: 5 },
+        ];
+        function updateShopUI() { const container = document.getElementById('shopItems'); if (!container) return; container.innerHTML = ''; document.getElementById('shopCoins').textContent = coins; shopItems.forEach(item => { const div = document.createElement('div'); div.className = 'shop-item'; div.innerHTML = `<span>${item.name} (${item.price}🪙)</span>`; const btn = document.createElement('button'); if (purchasedItems.includes(item.id)) { btn.textContent = 'تم الشراء'; btn.disabled = true; } else { btn.textContent = 'شراء'; btn.onclick = () => purchaseItem(item); } div.appendChild(btn); container.appendChild(div); }); }
+        function purchaseItem(item) { if (purchasedItems.includes(item.id)) return; if (coins < item.price) { alert('عملات غير كافية!'); return; } coins -= item.price; purchasedItems.push(item.id); saveRecord('beyblade_coins', coins); saveRecord('beyblade_purchased', purchasedItems); updateShopUI(); document.getElementById('coinsDisplay').textContent = '🪙 العملات: ' + coins; if (item.type === 'color' && !colorPalette.find(c => c.name === item.name)) colorPalette.push({ ...item.colors, name: item.name }); }
+
+        const upgrades = [
+            { id: 'defense', name: '🛡️ طلاء متين', desc: 'يزيد الدفاع الأساسي', maxLvl: 5, cost: (lvl) => 100 + lvl * 80 },
+            { id: 'speed', name: '⚡ محرك معزز', desc: 'يزيد السرعة', maxLvl: 5, cost: (lvl) => 100 + lvl * 80 },
+            { id: 'impact', name: '💥 ثقل المواجهة', desc: 'يزيد قوة الدفع', maxLvl: 5, cost: (lvl) => 100 + lvl * 80 },
+        ];
+        let upgradeLevels = loadRecord('beyblade_upgrades', { defense: 0, speed: 0, impact: 0 });
+        function updateUpgradesUI() { const container = document.getElementById('upgradeItems'); if (!container) return; container.innerHTML = ''; document.getElementById('upgradeCoins').textContent = coins; upgrades.forEach(upg => { const lvl = upgradeLevels[upg.id] || 0; const div = document.createElement('div'); div.className = 'upgrade-row'; div.innerHTML = `<span>${upg.name} (Lv.${lvl})</span><span>${upg.desc}</span>`; const btn = document.createElement('button'); if (lvl >= upg.maxLvl) { btn.textContent = 'MAX'; btn.disabled = true; } else { const price = upg.cost(lvl); btn.textContent = `${price}🪙`; btn.onclick = () => { if (coins < price) { alert('عملات غير كافية!'); return; } coins -= price; upgradeLevels[upg.id] = lvl + 1; saveRecord('beyblade_coins', coins); saveRecord('beyblade_upgrades', upgradeLevels); updateUpgradesUI(); document.getElementById('coinsDisplay').textContent = '🪙 العملات: ' + coins; }; } div.appendChild(btn); container.appendChild(div); }); }
+
+        const colorPalette = [
+            { primary: 0x0055cc, secondary: 0x0099ee, accent: 0x00ccff, glow: 0x00aaff, name: 'أزرق' },
+            { primary: 0xbb1100, secondary: 0xee3300, accent: 0xff6644, glow: 0xff4422, name: 'أحمر' },
+            { primary: 0x006622, secondary: 0x00aa44, accent: 0x00ff66, glow: 0x00ff44, name: 'أخضر' },
+            { primary: 0x550088, secondary: 0x9933cc, accent: 0xcc66ff, glow: 0xaa44ff, name: 'بنفسجي' },
+            { primary: 0xcc4400, secondary: 0xff6600, accent: 0xff9944, glow: 0xff8800, name: 'برتقالي' },
+            { primary: 0x886600, secondary: 0xddaa00, accent: 0xffdd44, glow: 0xffcc00, name: 'ذهبي' },
+            { primary: 0x222222, secondary: 0x888888, accent: 0xcccccc, glow: 0xaaaaaa, name: 'أسود فضي' },
+            { primary: 0xcccccc, secondary: 0xffffff, accent: 0xeeeeff, glow: 0xffffff, name: 'أبيض' },
+        ];
+
+        const battleStyles = [
+            { name: '🌀 متوازن', stats: { speed: 1.0, defense: 1.0, impact: 1.0, mass: 1.0, friction: 0.94 }, shape: 'balanced' },
+            { name: '🔥 هجومي', stats: { speed: 1.3, defense: 0.7, impact: 1.4, mass: 0.8, friction: 0.92 }, shape: 'attack' },
+            { name: '🛡️ دفاعي', stats: { speed: 0.7, defense: 1.5, impact: 0.6, mass: 1.5, friction: 0.96 }, shape: 'defense' },
+        ];
+
+        const baseBladeStyles = [
+            { name: '⚔️ قياسية', generator: (g, c) => addStandardBlades(g, c) },
+            { name: '🦈 منشارية', generator: (g, c) => addSawBlades(g, c) },
+            { name: '🌪️ حلزونية', generator: (g, c) => addSpiralBlades(g, c) },
+            { name: '🔷 مسننة', generator: (g, c) => addSpikeBlades(g, c) },
+        ];
+        const legendaryBlades = [
+            { name: '🔥 أسطورية', generator: (g, c) => { for (let i=0;i<14;i++) { const a=(i/14)*Math.PI*2; const s=0.35+Math.sin(i*3)*0.1; const m=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.1,s), new THREE.MeshStandardMaterial({color:c, emissive:c, emissiveIntensity:0.4})); m.position.y=0.15; m.castShadow=true; const sg=new THREE.Group(); sg.add(m); sg.position.set(Math.cos(a)*0.44,0.08,Math.sin(a)*0.44); sg.rotation.y=a; g.add(sg); } } },
+            { name: '🔥 نارية', generator: (g, c) => { for (let i=0;i<12;i++) { const a=(i/12)*Math.PI*2; const geo=new THREE.ConeGeometry(0.08,0.3,4); const m=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:c, emissive:c, emissiveIntensity:0.5})); m.position.y=0.1; m.castShadow=true; const sg=new THREE.Group(); sg.add(m); sg.position.set(Math.cos(a)*0.44,0.08,Math.sin(a)*0.44); sg.rotation.y=a; sg.rotation.z=Math.PI/2; g.add(sg); } } }
+        ];
+        let bladeStyles = [...baseBladeStyles];
+        if (purchasedItems.includes('blade_legend')) bladeStyles.push(legendaryBlades[0]);
+        if (purchasedItems.includes('blade_fire')) bladeStyles.push(legendaryBlades[1]);
+
+        let playerCustom = loadRecord('beyblade_custom', {
+            name: 'بلبلي', primaryIdx: 0, secondaryIdx: 0, bladeColorIdx: 0, discColorIdx: 1, tipColorIdx: 2,
+            bladeIdx: 0, useCustomBlade: false, customBladePoints: null, battleStyleIdx: 0
+        });
+        if (playerCustom.battleStyleIdx === undefined) playerCustom.battleStyleIdx = 0;
+
+        function buildSwatches(containerId, items, selectedIdx, onSelect, isColor = true) { const container = document.getElementById(containerId); if (!container) return; container.innerHTML = ''; items.forEach((item, i) => { const swatch = document.createElement('div'); swatch.className = isColor ? 'color-swatch' : (containerId==='battleStyles'?'style-swatch':'blade-swatch'); if (i===selectedIdx) swatch.classList.add('selected'); if (isColor) swatch.style.background = `#${(item.primary||item).toString(16).padStart(6,'0')}`; else swatch.textContent = item.name; swatch.addEventListener('click', () => onSelect(i)); container.appendChild(swatch); }); }
+
+        function openCustomize() { document.getElementById('startOverlay').classList.add('hidden'); document.getElementById('customizeOverlay').classList.remove('hidden'); document.getElementById('beybladeNameInput').value = playerCustom.name || 'بلبلي'; const discColors = colorPalette.map(c => c.primary); const tipColors = colorPalette.map(c => c.accent); buildSwatches('primaryColors', colorPalette, playerCustom.primaryIdx, (i) => { playerCustom.primaryIdx = i; buildSwatches('primaryColors', colorPalette, i, arguments[1]); }); buildSwatches('secondaryColors', colorPalette, playerCustom.secondaryIdx, (i) => { playerCustom.secondaryIdx = i; buildSwatches('secondaryColors', colorPalette, i, arguments[1]); }); buildSwatches('bladeColors', colorPalette, playerCustom.bladeColorIdx, (i) => { playerCustom.bladeColorIdx = i; buildSwatches('bladeColors', colorPalette, i, arguments[1]); }); buildSwatches('discColors', discColors, playerCustom.discColorIdx, (i) => { playerCustom.discColorIdx = i; buildSwatches('discColors', discColors, i, (j) => { playerCustom.discColorIdx = j; buildSwatches('discColors', discColors, j, arguments[1]); }, true); }); buildSwatches('tipColors', tipColors, playerCustom.tipColorIdx, (i) => { playerCustom.tipColorIdx = i; buildSwatches('tipColors', tipColors, i, (j) => { playerCustom.tipColorIdx = j; buildSwatches('tipColors', tipColors, j, arguments[1]); }, true); }); buildSwatches('bladeStyles', bladeStyles, playerCustom.bladeIdx, (i) => { playerCustom.bladeIdx = i; playerCustom.useCustomBlade = false; buildSwatches('bladeStyles', bladeStyles, i, arguments[1], false); }, false); buildSwatches('battleStyles', battleStyles, playerCustom.battleStyleIdx, (i) => { playerCustom.battleStyleIdx = i; buildSwatches('battleStyles', battleStyles, i, arguments[1], false); }, false); }
+        function saveCustomize() { playerCustom.name = document.getElementById('beybladeNameInput').value || 'بلبلي'; saveRecord('beyblade_custom', playerCustom); document.getElementById('customizeOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); updateRecords(); rebuildPlayerBeyblade(); }
+
+        let bladeCanvas, bladeCtx;
+        function openBladeEditor() { document.getElementById('startOverlay').classList.add('hidden'); document.getElementById('bladeEditorOverlay').classList.remove('hidden'); bladeCanvas = document.getElementById('bladeCanvas'); bladeCtx = bladeCanvas.getContext('2d'); bladeCtx.fillStyle = '#000'; bladeCtx.fillRect(0, 0, bladeCanvas.width, bladeCanvas.height); bladeCtx.strokeStyle = '#fff'; bladeCtx.lineWidth = 4; let drawing = false; const startDraw = (e) => { drawing = true; bladeCtx.beginPath(); bladeCtx.moveTo(e.offsetX, e.offsetY); }; const draw = (e) => { if (drawing) { bladeCtx.lineTo(e.offsetX, e.offsetY); bladeCtx.stroke(); } }; const endDraw = () => { drawing = false; }; bladeCanvas.onmousedown = startDraw; bladeCanvas.onmousemove = draw; bladeCanvas.onmouseup = endDraw; bladeCanvas.onmouseleave = endDraw; bladeCanvas.ontouchstart = (e) => { e.preventDefault(); const r = bladeCanvas.getBoundingClientRect(); const t = e.touches[0]; drawing = true; bladeCtx.beginPath(); bladeCtx.moveTo(t.clientX - r.left, t.clientY - r.top); }; bladeCanvas.ontouchmove = (e) => { e.preventDefault(); if (drawing) { const r = bladeCanvas.getBoundingClientRect(); const t = e.touches[0]; bladeCtx.lineTo(t.clientX - r.left, t.clientY - r.top); bladeCtx.stroke(); } }; bladeCanvas.ontouchend = endDraw; }
+        function clearCanvas() { if (bladeCtx) { bladeCtx.fillStyle = '#000'; bladeCtx.fillRect(0, 0, bladeCanvas.width, bladeCanvas.height); } }
+        function saveBladeShape() { if (!bladeCtx) return; const imageData = bladeCtx.getImageData(0, 0, bladeCanvas.width, bladeCanvas.height).data; const centerX = bladeCanvas.width / 2, centerY = bladeCanvas.height / 2; const points = []; for (let i = 0; i < 72; i++) { const angle = (i / 72) * Math.PI * 2; let maxDist = 0; for (let r = 1; r < 70; r++) { const x = Math.floor(centerX + Math.cos(angle) * r), y = Math.floor(centerY + Math.sin(angle) * r); if (x < 0 || x >= bladeCanvas.width || y < 0 || y >= bladeCanvas.height) break; if (imageData[(y * bladeCanvas.width + x) * 4 + 3] > 128) maxDist = r; } if (maxDist > 2) points.push({ angle, dist: maxDist / 60 }); } if (points.length < 6) { alert('ارسم شكلاً أكبر!'); return; } playerCustom.useCustomBlade = true; playerCustom.customBladePoints = points; playerCustom.bladeIdx = -1; saveRecord('beyblade_custom', playerCustom); document.getElementById('bladeEditorOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); rebuildPlayerBeyblade(); }
+
+        function addStandardBlades(g, c) { for (let i=0;i<10;i++){const a=(i/10)*Math.PI*2; const s=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.07,0.3,8), new THREE.MeshStandardMaterial({color:c, roughness:0.15, metalness:1})); s.position.y=0.15; s.castShadow=true; const sg=new THREE.Group(); sg.add(s); sg.position.set(Math.cos(a)*0.44,0.08,Math.sin(a)*0.44); sg.rotation.z=Math.PI/2; sg.rotation.y=a; g.add(sg); } }
+        function addSawBlades(g, c) { for (let i=0;i<12;i++){const a=(i/12)*Math.PI*2; const shape=new THREE.Shape(); shape.moveTo(0,0); shape.lineTo(0.15,0.35); shape.lineTo(-0.15,0.35); shape.closePath(); const geo=new THREE.ExtrudeGeometry(shape,{depth:0.04,bevelEnabled:true,bevelThickness:0.02}); const m=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:c, roughness:0.2, metalness:1})); m.position.y=0.05; m.castShadow=true; const sg=new THREE.Group(); sg.add(m); sg.position.set(Math.cos(a)*0.44,0.08,Math.sin(a)*0.44); sg.rotation.y=a+Math.PI/2; g.add(sg); } }
+        function addSpiralBlades(g, c) { for (let i=0;i<8;i++){const a=(i/8)*Math.PI*2; const curve=new THREE.CubicBezierCurve3(new THREE.Vector3(0,0,0.44),new THREE.Vector3(0.15,0.1,0.44),new THREE.Vector3(0.25,0.15,0.3),new THREE.Vector3(0.35,0.25,0.1)); const geo=new THREE.TubeGeometry(curve,8,0.03,6,false); const m=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:c, roughness:0.25, metalness:1})); m.castShadow=true; const sg=new THREE.Group(); sg.add(m); sg.position.set(Math.cos(a)*0.44,0.08,Math.sin(a)*0.44); sg.rotation.y=a; g.add(sg); } }
+        function addSpikeBlades(g, c) { for (let i=0;i<16;i++){const a=(i/16)*Math.PI*2; const geo=new THREE.BoxGeometry(0.06,0.08,0.22); const m=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:c, roughness:0.2, metalness:1})); m.position.y=0.1; m.castShadow=true; const sg=new THREE.Group(); sg.add(m); sg.position.set(Math.cos(a)*0.46,0.08,Math.sin(a)*0.46); sg.rotation.y=a; g.add(sg); } }
+        function createCustomBladeGeometry(points) { if(!points||points.length<3) return new THREE.BoxGeometry(0.01,0.01,0.01); const shape=new THREE.Shape(); points.sort((a,b)=>a.angle-b.angle); for(let i=0;i<points.length;i++){const p=points[i]; const x=Math.cos(p.angle)*p.dist*0.5; const y=Math.sin(p.angle)*p.dist*0.5; if(i===0) shape.moveTo(x,y); else shape.lineTo(x,y); } shape.closePath(); return new THREE.ExtrudeGeometry(shape,{depth:0.05,bevelEnabled:true,bevelThickness:0.02}); }
+
+        function createBeyblade(colors, bladeIdx, customBladePoints = null, customName = '', battleStyleIdx = 0, scale = 1) {
+            const { primary, secondary, accent, glow } = colors;
+            const bladeColor = colorPalette[playerCustom.bladeColorIdx]?.primary || 0xdddddd;
+            const discColor = colorPalette[playerCustom.discColorIdx]?.primary || 0x555555;
+            const tipColor = colorPalette[playerCustom.tipColorIdx]?.accent || 0xcccccc;
+            const style = battleStyles[battleStyleIdx] || battleStyles[0];
+            const group = new THREE.Group();
+            group.scale.setScalar(scale);
+            const tipGeo = new THREE.CylinderGeometry(0.08, 0.18, 0.25, 16);
+            const tip = new THREE.Mesh(tipGeo, new THREE.MeshStandardMaterial({ color: tipColor, roughness: 0.1, metalness: 1 }));
+            tip.position.y = -0.18; tip.castShadow = true; tip.receiveShadow = true; group.add(tip);
+            const baseGeo = new THREE.CylinderGeometry(0.38+(style.shape==='defense'?0.1:0), 0.55+(style.shape==='defense'?0.1:0), 0.25, 48);
+            const base = new THREE.Mesh(baseGeo, new THREE.MeshStandardMaterial({ color: primary, roughness: 0.1, metalness: 1 }));
+            base.position.y = 0.03; base.castShadow = base.receiveShadow = true; group.add(base);
+            const discGeo = new THREE.TorusGeometry(0.48, 0.08+(style.shape==='defense'?0.04:0), 12, 48);
+            const disc = new THREE.Mesh(discGeo, new THREE.MeshStandardMaterial({ color: discColor, roughness: 0.08, metalness: 1 }));
+            disc.rotation.x = Math.PI/2; disc.position.y = 0.14; disc.castShadow = true; group.add(disc);
+            const upperGeo = new THREE.CylinderGeometry(0.32, 0.42, 0.38, 48);
+            const upper = new THREE.Mesh(upperGeo, new THREE.MeshStandardMaterial({ color: secondary, roughness: 0.15, metalness: 0.95 }));
+            upper.position.y = 0.34; upper.castShadow = upper.receiveShadow = true; group.add(upper);
+            const crownGeo = new THREE.ConeGeometry(0.22, 0.22, 6);
+            const crown = new THREE.Mesh(crownGeo, new THREE.MeshStandardMaterial({ color: accent, roughness: 0.12, metalness: 0.95, emissive: accent, emissiveIntensity: 0.3 }));
+            crown.position.y = 0.58; crown.castShadow = true; group.add(crown);
+            if (customBladePoints && playerCustom.useCustomBlade) {
+                const bladeGeo = createCustomBladeGeometry(customBladePoints);
+                const bladeMesh = new THREE.Mesh(bladeGeo, new THREE.MeshStandardMaterial({ color: bladeColor, roughness: 0.15, metalness: 1 }));
+                bladeMesh.position.y = 0.4; bladeMesh.castShadow = true; group.add(bladeMesh);
+            } else {
+                const idx = Math.max(0, Math.min(bladeIdx, bladeStyles.length-1));
+                bladeStyles[idx].generator(group, bladeColor);
+            }
+            const energyRingGeo = new THREE.TorusGeometry(0.52, 0.02, 8, 48);
+            const energyRing = new THREE.Mesh(energyRingGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+            energyRing.rotation.x = Math.PI/2; energyRing.position.y = 0.3; energyRing.renderOrder = 998; energyRing.material.depthTest = false;
+            group.add(energyRing);
+            group.userData = { energyRing, baseMat: base.material, crownMat: crown.material, style };
+            group.name = customName || 'بلبل';
+            return group;
+        }
+
+        // ============ المشهد (تم تعديله بالكامل) ============
+        const canvas = document.getElementById('gameCanvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.3;
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x040410); scene.fog = new THREE.FogExp2(0x0a0a20, 0.0002);
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+        camera.position.set(0, 12, 18);
+        let camMode = 0; let lastMoveDirection = new THREE.Vector3(0,0,-1);
+        const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.2, 0.85);
+        bloomPass.threshold = 0.3; bloomPass.strength = 1.2; bloomPass.radius = 0.5; composer.addPass(bloomPass);
+
+        scene.add(new THREE.AmbientLight(0x223355, 2));
+        const sunLight = new THREE.DirectionalLight(0xffffdd, 4); sunLight.position.set(10,20,10); sunLight.castShadow=true; sunLight.shadow.mapSize.width=sunLight.shadow.mapSize.height=2048; scene.add(sunLight);
+        scene.add(new THREE.DirectionalLight(0x4488ff,2).position.set(-8,5,-8));
+        const pointLights = []; for(let i=0;i<8;i++){const pl=new THREE.PointLight([0xff4400,0xff8800,0x0044ff,0x00aaff,0xff0044,0xaa00ff,0xffd700,0x00ff88][i],6,10);pl.position.set(Math.cos(i/8*Math.PI*2)*7,1.5,Math.sin(i/8*Math.PI*2)*7);scene.add(pl);pointLights.push(pl);}
+        
+        const arenaGroup = new THREE.Group(); scene.add(arenaGroup);
+
+        // 🏟️ وعاء مقعر بدون قبة
+        const bowlGeo = new THREE.SphereGeometry(80, 64, 32, 0, Math.PI * 2, Math.PI * 0.6, Math.PI * 0.4);
+        const bowlMat = new THREE.MeshStandardMaterial({ color: 0x2a2a45, roughness: 0.2, metalness: 0.9, side: THREE.DoubleSide });
+        const bowl = new THREE.Mesh(bowlGeo, bowlMat);
+        bowl.position.y = -3.5; bowl.receiveShadow = true; arenaGroup.add(bowl);
+
+        const innerBowlGeo = new THREE.SphereGeometry(7.8, 64, 32, 0, Math.PI * 2, Math.PI * 0.6, Math.PI * 0.4);
+        const innerBowlMat = new THREE.MeshStandardMaterial({ color: 0x3a3a55, roughness: 0.15, metalness: 0.95, side: THREE.DoubleSide });
+        const innerBowl = new THREE.Mesh(innerBowlGeo, innerBowlMat);
+        innerBowl.position.y = -3.48; innerBowl.receiveShadow = true; arenaGroup.add(innerBowl);
+
+        const dangerRingGeo = new THREE.TorusGeometry(7.2, 0.12, 16, 80);
+        const dangerRingMat = new THREE.MeshStandardMaterial({color:0xff0000,roughness:0.3,metalness:0.5,emissive:0xff0000,emissiveIntensity:0.9});
+        const dangerRing = new THREE.Mesh(dangerRingGeo,dangerRingMat);
+        dangerRing.rotation.x=Math.PI/2; dangerRing.position.y=0.05; arenaGroup.add(dangerRing);
+        for(let i=0;i<8;i++){const angle=(i/8)*Math.PI*2; const markerGeo=new THREE.BoxGeometry(0.1,0.02,0.4); const markerMat=new THREE.MeshStandardMaterial({color:0xffd700,roughness:0.3,metalness:0.8,emissive:0xffd700,emissiveIntensity:0.4}); const marker=new THREE.Mesh(markerGeo,markerMat); marker.position.set(Math.cos(angle)*5.8,0.02,Math.sin(angle)*5.8); marker.rotation.y=angle+Math.PI/2; arenaGroup.add(marker);}
+        const floorGeo = new THREE.PlaneGeometry(40,40); const floorMat = new THREE.MeshStandardMaterial({color:0x0a0a1a,roughness:0.8}); const floor = new THREE.Mesh(floorGeo,floorMat); floor.rotation.x=-Math.PI/2; floor.position.y=-0.3; scene.add(floor);
+        const starsGeo = new THREE.BufferGeometry(); const starsVerts=[]; for(let i=0;i<500;i++){const theta=Math.random()*Math.PI*2,phi=Math.random()*Math.PI*0.5,r=20+Math.random()*20;starsVerts.push(Math.cos(theta)*Math.cos(phi)*r,Math.sin(phi)*r+4,Math.sin(theta)*Math.cos(phi)*r);} starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starsVerts,3)); const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xffffff,size:0.04,blending:THREE.AdditiveBlending,depthWrite:false})); scene.add(stars);
+
+        // ===== نظام الحلبات الجديد =====
+        const arenaTypes = [
+            { name: '🏟️ عادية', setup: () => {}, update: () => {}, cleanup: () => {} },
+            { name: '🔥 العوائق', setup: () => { arenaObstacles = []; }, update: (dt) => { if (Math.random() < 0.02) spawnObstacle(); }, cleanup: () => { clearObstacles(); } },
+            { name: '🌀 التلاشي', setup: () => { arenaShrinkTimer = 60; }, update: (dt) => { if (arenaShrinkTimer > 0) { arenaShrinkTimer -= dt; updateArenaShrink(); } }, cleanup: () => { resetArena(); } },
+            { name: '💥 التشقق', setup: () => { arenaCracks = []; }, update: (dt) => { if (Math.random() < 0.03) spawnCrack(); }, cleanup: () => { clearCracks(); } },
+        ];
+        let currentArenaType = 0;
+        let arenaObstacles = [];
+        let arenaCracks = [];
+        let arenaShrinkTimer = 60;
+        let selectedArena = 0;
+
+        function setupArenaSelect() {
+            const container = document.getElementById('arenaOptions');
+            if(!container) return;
+            container.innerHTML = '';
+            arenaTypes.forEach((a, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'arena-swatch';
+                if (i === selectedArena) btn.classList.add('selected');
+                btn.textContent = a.name;
+                btn.onclick = () => { selectedArena = i; setupArenaSelect(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function applyArenaSetup() {
+            currentArenaType = selectedArena;
+            arenaTypes[currentArenaType].setup();
+        }
+
+        function spawnObstacle() {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 3 + Math.random() * 3;
+            const x = Math.cos(angle) * dist;
+            const z = Math.sin(angle) * dist;
+            const geo = new THREE.BoxGeometry(0.3, 0.8, 0.8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xff4400, emissive: 0xff2200, emissiveIntensity: 0.6 });
+            const obstacle = new THREE.Mesh(geo, mat);
+            obstacle.position.set(x, 0.3, z);
+            obstacle.userData = { life: 5 + Math.random() * 5 };
+            scene.add(obstacle);
+            arenaObstacles.push(obstacle);
+        }
+
+        function clearObstacles() {
+            arenaObstacles.forEach(o => { if (o && o.parent) scene.remove(o); });
+            arenaObstacles = [];
+        }
+
+        function spawnCrack() {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 1 + Math.random() * 5;
+            const x = Math.cos(angle) * dist;
+            const z = Math.sin(angle) * dist;
+            const geo = new THREE.PlaneGeometry(0.1, 0.8);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+            const crack = new THREE.Mesh(geo, mat);
+            crack.rotation.x = -Math.PI/2;
+            crack.position.set(x, 0.05, z);
+            crack.userData = { life: 3 + Math.random() * 3, active: false };
+            scene.add(crack);
+            arenaCracks.push(crack);
+        }
+
+        function clearCracks() {
+            arenaCracks.forEach(c => { if (c && c.parent) scene.remove(c); });
+            arenaCracks = [];
+        }
+
+        function updateArenaShrink() {
+            const scale = Math.max(0.5, arenaShrinkTimer / 60);
+            if (dangerRing) dangerRing.scale.setScalar(scale);
+        }
+
+        function resetArena() {
+            if (dangerRing) dangerRing.scale.setScalar(1);
+            arenaShrinkTimer = 60;
+        }
+
+        function checkArenaHazards(entity, dt) {
+            if (currentArenaType === 2) {
+                arenaCracks.forEach(crack => {
+                    if (crack && !crack.userData.active) {
+                        const dx = entity.x - crack.position.x;
+                        const dz = entity.z - crack.position.z;
+                        if (Math.sqrt(dx*dx + dz*dz) < 0.5) {
+                            crack.userData.active = true;
+                            entity.vx += (Math.random()-0.5) * 4;
+                            entity.vz += (Math.random()-0.5) * 4;
+                            entity.stamina -= 5;
+                            spawnParticles(crack.position, 0xff0000, 10, 2);
+                            setTimeout(() => { if (crack.parent) scene.remove(crack); }, 500);
+                        }
+                    }
+                });
+            }
+            if (currentArenaType === 0) {
+                arenaObstacles.forEach(o => {
+                    if (o) {
+                        const dx = entity.x - o.position.x;
+                        const dz = entity.z - o.position.z;
+                        if (Math.sqrt(dx*dx + dz*dz) < 0.6) {
+                            entity.vx += (dx / Math.abs(dx)) * 3;
+                            entity.vz += (dz / Math.abs(dz)) * 3;
+                            entity.stamina -= 2;
+                        }
+                    }
+                });
+            }
+        }
+
+        let playerColors = colorPalette[playerCustom.primaryIdx];
+        let enemyData = getNextEnemy(); let enemyColors = enemyData.colors;
+        let playerBeyblade = createBeyblade(playerColors, playerCustom.bladeIdx, playerCustom.customBladePoints, playerCustom.name, playerCustom.battleStyleIdx);
+        playerBeyblade.position.set(0,0.2,-4); scene.add(playerBeyblade);
+        let enemyBeyblade = createBeyblade(enemyColors, 0, null, enemyData.name, 0, enemyData.isBoss ? 3 : 1);
+        enemyBeyblade.position.set(0,0.2,4); scene.add(enemyBeyblade);
+
+        function rebuildPlayerBeyblade() {
+            const pos = playerBeyblade.position.clone(); const quat = playerBeyblade.quaternion.clone();
+            scene.remove(playerBeyblade); playerColors = colorPalette[playerCustom.primaryIdx];
+            playerBeyblade = createBeyblade(playerColors, playerCustom.bladeIdx, playerCustom.useCustomBlade ? playerCustom.customBladePoints : null, playerCustom.name, playerCustom.battleStyleIdx);
+            playerBeyblade.position.copy(pos); playerBeyblade.quaternion.copy(quat); scene.add(playerBeyblade);
+            player.mesh = playerBeyblade; player.mesh.userData = playerBeyblade.userData;
+            document.getElementById('playerHudName').textContent = playerCustom.name || '🌀 بلبلك';
+        }
+
+        const particlesGroup = new THREE.Group(); scene.add(particlesGroup);
+        const debrisGroup = new THREE.Group(); scene.add(debrisGroup);
+        function spawnParticles(pos,color,count=20,spread=3){for(let i=0;i<count;i++){const geo=new THREE.SphereGeometry(0.03+Math.random()*0.06,4,4);const mat=new THREE.MeshBasicMaterial({color,transparent:true,depthWrite:false});const p=new THREE.Mesh(geo,mat);p.position.copy(pos).add(new THREE.Vector3(0,0.3,0));p.userData={velocity:new THREE.Vector3((Math.random()-0.5)*spread,Math.random()*3+1,(Math.random()-0.5)*spread),life:0.8,decay:0.04};p.renderOrder=1000;p.material.depthTest=false;particlesGroup.add(p);}}
+        function createDebrisExplosion(pos,color,count=40){for(let i=0;i<count;i++){const size=0.04+Math.random()*0.12;const geo=new THREE.BoxGeometry(size,size,size);const mat=new THREE.MeshStandardMaterial({color,roughness:0.4,metalness:0.8,emissive:color,emissiveIntensity:0.3});const piece=new THREE.Mesh(geo,mat);piece.position.copy(pos).add(new THREE.Vector3((Math.random()-0.5)*0.6,0.2,(Math.random()-0.5)*0.6));const speed=3+Math.random()*6;const angle=Math.random()*Math.PI*2;const upAngle=Math.random()*Math.PI*0.5;piece.userData={velocity:new THREE.Vector3(Math.cos(angle)*Math.cos(upAngle)*speed,Math.sin(upAngle)*speed+2,Math.sin(angle)*Math.cos(upAngle)*speed),life:1.5,decay:0.4,rotSpeed:new THREE.Vector3((Math.random()-0.5)*8,(Math.random()-0.5)*8,(Math.random()-0.5)*8)};piece.castShadow=true;debrisGroup.add(piece);}}
+
+        let gameState = 'start', playerRoundsWon = 0, enemyRoundsWon = 0, roundTimer = 60, roundTimerInterval = null, score = 0;
+        let gameMode = 'normal'; let survivalWave = 1; let tournamentRound = 0; let tournamentOpponents = [];
+        const player = { mesh: playerBeyblade, stamina:100, maxStamina:100, attackPower:0, maxAttack:100, defense:30, maxDefense:100, speed:3.5, rotSpeed:14, x:0, z:-4, vx:0, vz:0, charging:false, skillCD:{Q:0,E:0,R:0}, shieldActive:false, shieldTimer:0, outTimer:0, specialReady:false, destroyed:false, impact:1, mass:1, friction:0.94 };
+        const enemy = { mesh: enemyBeyblade, stamina:100, maxStamina:100, attackPower:0, maxAttack:100, defense:30, maxDefense:100, speed:3.0, rotSpeed:10, x:0, z:4, vx:0, vz:0, aiTimer:0, aiDir:Math.random()*Math.PI*2, aiInterval:1.0, outTimer:0, destroyed:false, skillCD:{Q:0,E:0,R:0}, impact:1, mass:1, friction:0.94, isBoss:false };
+        const bowlRadius = 7.2; const innerRadius = 3.5; let lastCollisionSound = 0;
+        let endCamAnimation = null; let entranceAnimation = null;
+        let replayData = null; let replayMode = false; let replayIndex = 0;
+
+        function applyPhysics(ent, dt) {
+            if (ent.destroyed) return;
+            const friction = ent.friction || 0.94;
+            ent.vx *= friction; ent.vz *= friction;
+            const dist = Math.sqrt(ent.x**2 + ent.z**2);
+            const gravityFactor = 1.2 * (dist / innerRadius);
+            if (dist > 0.01) { ent.vx -= (ent.x/dist)*gravityFactor*dt; ent.vz -= (ent.z/dist)*gravityFactor*dt; }
+            ent.x += ent.vx * dt; ent.z += ent.vz * dt;
+            const edgeDist = Math.sqrt(ent.x**2 + ent.z**2);
+            if (edgeDist > bowlRadius - 0.5) { const edgeForce = 2.0 * (edgeDist - (bowlRadius - 0.5)); ent.vx -= (ent.x/edgeDist)*edgeForce*dt; ent.vz -= (ent.z/edgeDist)*edgeForce*dt; }
+            ent.mesh.position.x = ent.x; ent.mesh.position.z = ent.z;
+        }
+
+        function useSkillQ() { if(player.skillCD.Q>0||player.attackPower<20||player.destroyed)return; player.skillCD.Q=3; player.attackPower-=20; sfxSkill(); const angle=Math.atan2(enemy.z-player.z,enemy.x-player.x); player.vx+=Math.cos(angle)*10; player.vz+=Math.sin(angle)*10; spawnParticles(player.mesh.position.clone(),playerColors.glow,15,2); }
+        function useSkillE() { if(player.skillCD.E>0||player.attackPower<15||player.destroyed)return; player.skillCD.E=4; player.attackPower-=15; player.shieldActive=true; player.shieldTimer=2; player.defense=80; sfxSkill(); }
+        function useSkillR() { if(player.skillCD.R>0||player.attackPower<40||player.destroyed)return; player.skillCD.R=6; player.attackPower-=40; sfxUltimate(); const angle=Math.atan2(enemy.z-player.z,enemy.x-player.x); enemy.vx+=Math.cos(angle)*15; enemy.vz+=Math.sin(angle)*15; enemy.stamina=Math.max(0,enemy.stamina-20); spawnParticles(player.mesh.position.clone(),0xffd700,40,5); sfxCrowd(); }
+        function useSpecialAttack() { if(!player.specialReady||player.destroyed)return; player.specialReady=false; player.attackPower=0; player.mesh.userData.energyRing.material.opacity=0; sfxUltimate(); spawnParticles(player.mesh.position.clone(),0xffffff,30,4); sfxCrowd(); }
+
+        function enemyUseSkillQ() { if(enemy.skillCD.Q>0||enemy.attackPower<20||enemy.destroyed)return; enemy.skillCD.Q=3; enemy.attackPower-=20; const angle=Math.atan2(player.z-enemy.z,player.x-enemy.x); enemy.vx+=Math.cos(angle)*10; enemy.vz+=Math.sin(angle)*10; }
+        function enemyUseSkillE() { if(enemy.skillCD.E>0||enemy.attackPower<15||enemy.destroyed)return; enemy.skillCD.E=4; enemy.attackPower-=15; enemy.defense=Math.min(100,enemy.defense+50); setTimeout(()=>{if(!enemy.destroyed)enemy.defense=Math.max(30,enemy.defense-50);},2000); }
+        function enemyUseSkillR() { if(enemy.skillCD.R>0||enemy.attackPower<40||enemy.destroyed)return; enemy.skillCD.R=6; enemy.attackPower-=40; const angle=Math.atan2(player.z-enemy.z,player.x-enemy.x); player.vx+=Math.cos(angle)*15; player.vz+=Math.sin(angle)*15; player.stamina=Math.max(0,player.stamina-20); }
+
+        function updateHUD() {
+            document.getElementById('playerStaminaBar').style.width = player.stamina+'%';
+            document.getElementById('playerAttackBar').style.width = player.attackPower+'%';
+            document.getElementById('playerDefenseBar').style.width = player.defense+'%';
+            document.getElementById('enemyStaminaBar').style.width = enemy.stamina+'%';
+            document.getElementById('enemyAttackBar').style.width = enemy.attackPower+'%';
+            document.getElementById('enemyDefenseBar').style.width = enemy.defense+'%';
+            document.getElementById('timerDisplay').textContent = roundTimer;
+            document.getElementById('playerHudName').textContent = playerCustom.name || '🌀 بلبلك';
+            document.getElementById('enemyHudName').textContent = enemyData.name || '👾 الخصم';
+            const cds = [player.skillCD.Q/3, player.skillCD.E/4, player.skillCD.R/6];
+            document.querySelectorAll('.skills-bar .skill-btn .cooldown-overlay').forEach((el,i)=>{if(i<3)el.style.height=(cds[i]*100)+'%';});
+            const skillXBtn = document.getElementById('skillX');
+            if(skillXBtn) skillXBtn.querySelector('.cooldown-overlay').style.height = player.specialReady ? '0%' : '100%';
+        }
+
+        function updateRecords() {
+            document.getElementById('bestScoreDisplay').textContent = '🏆 أفضل نتيجة: ' + bestScore;
+            document.getElementById('winsDisplay').textContent = '👑 الانتصارات: ' + totalWins;
+            document.getElementById('coinsDisplay').textContent = '🪙 العملات: ' + coins;
+        }
+
+        function destroyBeyblade(entity, color) { if(entity.destroyed)return; entity.destroyed=true; entity.mesh.visible=false; entity.vx=entity.vz=0; createDebrisExplosion(new THREE.Vector3(entity.x,0.3,entity.z),color,50); }
+
+        function endRound(reason) {
+            if (gameState !== 'playing') return;
+            gameState = 'roundEnd'; clearInterval(roundTimerInterval);
+            if (reason.includes('player')) { destroyBeyblade(player, playerColors.primary); enemyRoundsWon++; } else { destroyBeyblade(enemy, enemyColors.primary); playerRoundsWon++; }
+            for (let i=0;i<playerRoundsWon;i++) { const dot = document.getElementById('r'+(i+1)); if(dot) dot.classList.add('won'); }
+            for (let i=0;i<enemyRoundsWon;i++) { const dot = document.getElementById('r'+(playerRoundsWon+i+1)); if(dot) dot.classList.add('lost'); }
+            updateHUD();
+            if (gameMode === 'survival') {
+                setTimeout(() => { if (reason.includes('player')) { endGame(false); } else { survivalWave++; startRound(); } }, 2000);
+            } else if (gameMode === 'tournament') {
+                setTimeout(() => { if (reason.includes('player')) { endGame(false); } else { advanceTournament(); } }, 2000);
+            } else {
+                setTimeout(() => { if (playerRoundsWon >= 2) { endGame(true); } else if (enemyRoundsWon >= 2) { endGame(false); } else startRound(); }, 2500);
+            }
+        }
+
+        function endGame(playerWin) {
+            gameState = 'ending'; stopMusic(); arenaTypes[currentArenaType].cleanup();
+            const winner = playerWin ? player : enemy;
+            if (!winner.destroyed) { endCamAnimation = { target: winner.mesh.position.clone(), angle: 0, duration: 3.0 }; }
+            setTimeout(() => {
+                if (playerWin) {
+                    score += 1000; coins += 50; if (score > bestScore) { bestScore = score; saveRecord('beyblade_bestScore', bestScore); }
+                    totalWins++; saveRecord('beyblade_wins', totalWins); saveRecord('beyblade_coins', coins);
+                    sfxWin(); document.getElementById('winMessage').textContent = `فزت ${playerRoundsWon}-${enemyRoundsWon}!\nالنقاط: ${score}\n+50 عملة`; document.getElementById('winOverlay').classList.remove('hidden');
+                    if (enemyData.isBoss) { bossDefeated = true; saveRecord('beyblade_boss_defeated', true); showToast('👑 لقد هزمت الزعيم!'); }
+                } else {
+                    if (score > bestScore) { bestScore = score; saveRecord('beyblade_bestScore', bestScore); }
+                    sfxLose(); document.getElementById('loseMessage').textContent = gameMode==='survival'? `وصلت للموجة ${survivalWave}\nالنقاط: ${score}` : `خسرت ${enemyRoundsWon}-${playerRoundsWon}.\nالنقاط: ${score}`; document.getElementById('loseOverlay').classList.remove('hidden');
+                }
+                updateRecords(); checkAchievements();
+                endCamAnimation = null;
+            }, 3500);
+        }
+
+        function startRound() {
+            if (player.destroyed) { scene.remove(player.mesh); playerBeyblade = createBeyblade(playerColors, playerCustom.bladeIdx, playerCustom.useCustomBlade ? playerCustom.customBladePoints : null, playerCustom.name, playerCustom.battleStyleIdx); playerBeyblade.position.set(0,0.2,-4); scene.add(playerBeyblade); player.mesh = playerBeyblade; }
+            if (enemy.destroyed) { scene.remove(enemy.mesh); enemyColors = enemyData.colors; enemyBeyblade = createBeyblade(enemyColors, 0, null, enemyData.name, 0, enemyData.isBoss ? 3 : 1); enemyBeyblade.position.set(0,0.2,4); scene.add(enemyBeyblade); enemy.mesh = enemyBeyblade; enemy.isBoss = enemyData.isBoss || false; }
+
+            const pStyle = battleStyles[playerCustom.battleStyleIdx] || battleStyles[0];
+            const defBase = 30 + (upgradeLevels.defense * 6);
+            const spdBase = 3.5 + (upgradeLevels.speed * 0.4);
+            const impBase = 1 + (upgradeLevels.impact * 0.3);
+            Object.assign(player, {
+                stamina: 100, attackPower: 0, defense: defBase * pStyle.stats.defense, speed: spdBase * pStyle.stats.speed,
+                impact: impBase * pStyle.stats.impact, mass: pStyle.stats.mass, friction: pStyle.stats.friction,
+                skillCD: { Q:0, E:0, R:0 }, shieldActive: false, outTimer: 0, specialReady: false, destroyed: false,
+                x: 0, z: -4, vx: 0, vz: 0
+            });
+            player.mesh.position.set(0,0.2,-4); player.mesh.visible = true; player.mesh.userData.energyRing.material.opacity = 0;
+
+            Object.assign(enemy, {
+                stamina: enemy.isBoss ? 300 : 100, maxStamina: enemy.isBoss ? 300 : 100, attackPower: 0, defense: enemy.isBoss ? 50 : 30,
+                speed: enemy.isBoss ? 1.5 : 3.0, impact: enemy.isBoss ? 2.5 : 1, mass: enemy.isBoss ? 3 : 1, friction: 0.94,
+                skillCD: { Q:0, E:0, R:0 }, outTimer: 0, destroyed: false, x: 0, z: 4, vx: 0, vz: 0
+            });
+            enemy.mesh.position.set(0,0.2,4); enemy.mesh.visible = true;
+
+            roundTimer = 60; clearInterval(roundTimerInterval);
+            roundTimerInterval = setInterval(() => { roundTimer--; if (roundTimer <= 0) { clearInterval(roundTimerInterval); if (player.stamina > enemy.stamina) endRound('enemy_stamina'); else if (enemy.stamina > player.stamina) endRound('player_stamina'); else endRound('player_stamina'); } }, 1000);
+            
+            applyArenaSetup();
+            startEntranceAnimation();
+            updateHUD(); gameState = 'entrance';
+            if (!replayMode) startMusic();
+        }
+
+        function startEntranceAnimation() {
+            camera.position.set(0, 20, 0);
+            camera.lookAt(player.mesh.position);
+            entranceAnimation = { timer: 2.0 };
+        }
+
+        function goToMainMenu() {
+            stopMusic(); clearInterval(roundTimerInterval);
+            document.getElementById('winOverlay').classList.add('hidden');
+            document.getElementById('loseOverlay').classList.add('hidden');
+            document.getElementById('tournamentOverlay').classList.add('hidden');
+            document.getElementById('startOverlay').classList.remove('hidden');
+            gameState = 'start';
+            arenaTypes[currentArenaType].cleanup();
+            while (debrisGroup.children.length) { const d = debrisGroup.children[0]; debrisGroup.remove(d); d.geometry.dispose(); d.material.dispose(); }
+            while (particlesGroup.children.length) { const p = particlesGroup.children[0]; particlesGroup.remove(p); p.geometry.dispose(); p.material.dispose(); }
+            replayData = []; replayMode = false;
+        }
+
+        function startGame(mode = 'normal') {
+            initAudio(); document.getElementById('startOverlay').classList.add('hidden');
+            gameMode = mode; playerRoundsWon = 0; enemyRoundsWon = 0; score = 0; survivalWave = 1;
+            currentEnemyIndex = 0;
+            if (mode === 'tournament') { tournamentRound = 0; tournamentOpponents = [...enemies].sort(() => Math.random() - 0.5).slice(0, 4); enemyData = tournamentOpponents[0]; updateBracketDisplay(); }
+            else { enemyData = getNextEnemy(mode==='survival', 1); }
+            enemyColors = enemyData.colors;
+            document.querySelectorAll('.round-dot').forEach(d => d.className = 'round-dot');
+            while (debrisGroup.children.length) { const d = debrisGroup.children[0]; debrisGroup.remove(d); d.geometry.dispose(); d.material.dispose(); }
+            while (particlesGroup.children.length) { const p = particlesGroup.children[0]; particlesGroup.remove(p); p.geometry.dispose(); p.material.dispose(); }
+            replayData = []; replayMode = false;
+            setupArenaSelect();
+            document.getElementById('arenaSelectOverlay').classList.remove('hidden');
+        }
+
+        function restartGame() { document.getElementById('winOverlay').classList.add('hidden'); document.getElementById('loseOverlay').classList.add('hidden'); clearInterval(roundTimerInterval); startGame(gameMode); }
+
+        function updateBracketDisplay() {
+            const container = document.getElementById('bracketDisplay'); if (!container) return;
+            const rounds = ['ربع النهائي', 'نصف النهائي', 'النهائي'];
+            let html = '';
+            for (let r = 0; r < 3; r++) {
+                html += '<div class="bracket-round"><strong>' + rounds[r] + '</strong>';
+                if (r === 0) { for (let i = 0; i < 4; i++) { const name = i < tournamentOpponents.length ? tournamentOpponents[i].name : '???'; html += `<p>${name}</p>`; } }
+                else if (r === 1) { html += '<p>الفائز 1</p><p>الفائز 2</p>'; }
+                else { html += '<p>🏆 البطل</p>'; }
+                html += '</div>';
+            }
+            container.innerHTML = html;
+            document.getElementById('tournamentStatus').textContent = `المواجهة القادمة: ${enemyData.name}`;
+        }
+
+        function advanceTournament() {
+            tournamentRound++;
+            if (tournamentRound >= 3) { endGame(true); showToast('🏆 لقد فزت بالبطولة!'); return; }
+            enemyData = tournamentOpponents[tournamentRound]; enemyColors = enemyData.colors;
+            updateBracketDisplay();
+            document.getElementById('tournamentOverlay').classList.remove('hidden');
+            gameState = 'tournament_waiting';
+        }
+
+        function checkAchievements() {
+            if (!achievements['first_win'] && totalWins >= 1) { achievements['first_win'] = true; coins += 100; showToast('🏅 إنجاز: أول انتصار! +100 عملة'); }
+            if (!achievements['three_wins'] && totalWins >= 3) { achievements['three_wins'] = true; coins += 250; showToast('🏅 إنجاز: بطل المبتدئين! +250 عملة'); }
+            if (!achievements['five_wins'] && totalWins >= 5) { achievements['five_wins'] = true; coins += 500; showToast('🏅 إنجاز: محارب البلابل! +500 عملة'); }
+            if (!achievements['boss_slayer'] && bossDefeated) { achievements['boss_slayer'] = true; coins += 1000; showToast('👑 إنجاز: قاهر الزعيم! +1000 عملة'); }
+            saveRecord('beyblade_achievements', achievements); saveRecord('beyblade_coins', coins);
+        }
+        function showToast(msg) { const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+
+        function startReplay() {
+            if (!replayData || replayData.length === 0) return;
+            replayMode = true; replayIndex = 0;
+            document.getElementById('winOverlay').classList.add('hidden');
+            document.getElementById('loseOverlay').classList.add('hidden');
+            gameState = 'replay';
+            player.x = replayData[0].px; player.z = replayData[0].pz;
+            enemy.x = replayData[0].ex; enemy.z = replayData[0].ez;
+            player.mesh.position.set(player.x, 0.2, player.z);
+            enemy.mesh.position.set(enemy.x, 0.2, enemy.z);
+            player.mesh.visible = true; enemy.mesh.visible = true;
+            player.destroyed = false; enemy.destroyed = false;
+            updateHUD();
+        }
+
+        document.getElementById('btnStart').addEventListener('click', () => startGame('normal'));
+        document.getElementById('btnSurvival').addEventListener('click', () => startGame('survival'));
+        document.getElementById('btnTournament').addEventListener('click', () => startGame('tournament'));
+        document.getElementById('btnCustomize').addEventListener('click', openCustomize);
+        document.getElementById('btnSaveCustomize').addEventListener('click', saveCustomize);
+        document.getElementById('btnCancelCustomize').addEventListener('click', () => { document.getElementById('customizeOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); });
+        document.getElementById('btnShop').addEventListener('click', () => { document.getElementById('startOverlay').classList.add('hidden'); document.getElementById('shopOverlay').classList.remove('hidden'); updateShopUI(); });
+        document.getElementById('btnCloseShop').addEventListener('click', () => { document.getElementById('shopOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); });
+        document.getElementById('btnBladeEditor').addEventListener('click', openBladeEditor);
+        document.getElementById('btnClearCanvas').addEventListener('click', clearCanvas);
+        document.getElementById('btnSaveBlade').addEventListener('click', saveBladeShape);
+        document.getElementById('btnCancelBlade').addEventListener('click', () => { document.getElementById('bladeEditorOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); });
+        document.getElementById('btnUpgrades').addEventListener('click', () => { document.getElementById('startOverlay').classList.add('hidden'); document.getElementById('upgradesOverlay').classList.remove('hidden'); updateUpgradesUI(); });
+        document.getElementById('btnCloseUpgrades').addEventListener('click', () => { document.getElementById('upgradesOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); });
+        document.getElementById('btnWinRestart').addEventListener('click', restartGame);
+        document.getElementById('btnLoseRestart').addEventListener('click', restartGame);
+        document.getElementById('btnMainMenuFromWin').addEventListener('click', goToMainMenu);
+        document.getElementById('btnMainMenuFromLose').addEventListener('click', goToMainMenu);
+        document.getElementById('btnReplay').addEventListener('click', startReplay);
+        document.getElementById('btnReplayLose').addEventListener('click', startReplay);
+        document.getElementById('btnNextMatch').addEventListener('click', () => { document.getElementById('tournamentOverlay').classList.add('hidden'); startRound(); });
+        document.getElementById('btnCancelTournament').addEventListener('click', goToMainMenu);
+        document.getElementById('btnStartWithArena').addEventListener('click', () => {
+            document.getElementById('arenaSelectOverlay').classList.add('hidden');
+            const vsScreen = document.getElementById('vsScreen');
+            document.getElementById('vsPlayerName').textContent = playerCustom.name || 'بلبلك';
+            document.getElementById('vsEnemyName').textContent = enemyData.name;
+            vsScreen.classList.remove('hidden');
+            setTimeout(() => { vsScreen.classList.add('hidden'); startRound(); }, 3000);
+        });
+        document.getElementById('btnCancelArena').addEventListener('click', () => { document.getElementById('arenaSelectOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); });
+        document.getElementById('camera-btn').addEventListener('click', () => { camMode = (camMode+1)%3; document.getElementById('camera-btn').textContent = ['🎥','🔝','🌀'][camMode]; });
+        document.getElementById('skillQ').addEventListener('click', useSkillQ);
+        document.getElementById('skillE').addEventListener('click', useSkillE);
+        document.getElementById('skillR').addEventListener('click', useSkillR);
+        document.getElementById('skillX').addEventListener('click', useSpecialAttack);
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => { initAudio(); keys[e.key.toLowerCase()] = true; if (e.key === ' ') { e.preventDefault(); player.charging = true; } if (e.key === 'q') useSkillQ(); if (e.key === 'e') useSkillE(); if (e.key === 'r') useSkillR(); if (e.key === 'x') useSpecialAttack(); });
+        window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; if (e.key === ' ') player.charging = false; });
+
+        let joyX=0,joyY=0,joyActive=false;
+        const jb=document.getElementById('joystick-base'),jt=document.getElementById('joystick-thumb'),jz=document.getElementById('joystick-zone');
+        if(jz&&jb&&jt){const setJ=(e)=>{const r=jb.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=(e.touches?e.touches[0].clientX:e.clientX)-cx;let dy=(e.touches?e.touches[0].clientY:e.clientY)-cy;const d=Math.sqrt(dx*dx+dy*dy),max=40;if(d>max){dx*=max/d;dy*=max/d;}joyX=dx/max;joyY=dy/max;jt.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;};jz.addEventListener('touchstart',(e)=>{e.preventDefault();initAudio();joyActive=true;setJ(e);});jz.addEventListener('touchmove',(e)=>{if(joyActive){e.preventDefault();setJ(e);}});jz.addEventListener('touchend',()=>{joyActive=false;joyX=joyY=0;jt.style.transform='translate(-50%,-50%)';});jz.addEventListener('mousedown',(e)=>{e.preventDefault();initAudio();joyActive=true;setJ(e);});window.addEventListener('mousemove',(e)=>{if(joyActive)setJ(e);});window.addEventListener('mouseup',()=>{joyActive=false;joyX=joyY=0;jt.style.transform='translate(-50%,-50%)';});}
+
+        function updateGame(dt) {
+            if (gameState === 'entrance') {
+                if (entranceAnimation) {
+                    entranceAnimation.timer -= dt;
+                    const target = player.mesh.position;
+                    const progress = Math.min(1, (2.0 - entranceAnimation.timer) / 2.0);
+                    camera.position.lerp(new THREE.Vector3(target.x + 5, target.y + 8, target.z + 5), progress * 0.05);
+                    camera.lookAt(target.x, target.y + 0.5, target.z);
+                    if (entranceAnimation.timer <= 0) {
+                        entranceAnimation = null;
+                        gameState = 'playing';
+                        camera.position.set(0, 12, 18);
+                        camera.lookAt(0, 0.2, 0);
+                    }
+                }
+                return;
+            }
+            if (gameState === 'ending') {
+                if (endCamAnimation) { endCamAnimation.angle += dt*1.2; const target=endCamAnimation.target; const radius=8; const height=3; camera.position.lerp(new THREE.Vector3(target.x+Math.cos(endCamAnimation.angle)*radius, target.y+height, target.z+Math.sin(endCamAnimation.angle)*radius), 0.03); camera.lookAt(target.x, target.y, target.z); }
+                return;
+            }
+            if (gameState === 'replay') {
+                if (replayIndex < replayData.length) {
+                    const frame = replayData[replayIndex];
+                    player.x = frame.px; player.z = frame.pz; enemy.x = frame.ex; enemy.z = frame.ez;
+                    player.mesh.position.set(player.x, 0.2, player.z); enemy.mesh.position.set(enemy.x, 0.2, enemy.z);
+                    player.mesh.rotation.y = frame.pr; enemy.mesh.rotation.y = frame.er;
+                    camera.position.copy(frame.camPos); camera.lookAt(frame.camLook);
+                    replayIndex++;
+                } else { gameState = 'start'; replayMode = false; goToMainMenu(); }
+                return;
+            }
+            if (gameState !== 'playing') return;
+            const delta = Math.min(dt, 0.1);
+            
+            arenaTypes[currentArenaType].update(delta);
+            
+            if (!player.destroyed) {
+                player.stamina -= 2*delta; if(player.charging) player.attackPower = Math.min(100, player.attackPower+40*delta);
+                player.specialReady = player.attackPower >= 100;
+                if(player.specialReady){player.mesh.userData.energyRing.material.opacity=0.6;player.mesh.userData.energyRing.material.color.set(0xffd700);}else if(player.attackPower>0){player.mesh.userData.energyRing.material.opacity=player.attackPower/200;player.mesh.userData.energyRing.material.color.set(0x00aaff);}else player.mesh.userData.energyRing.material.opacity=0;
+                if(player.mesh.userData.baseMat){const staminaRatio=player.stamina/100;player.mesh.userData.baseMat.emissive.set(playerColors.primary);player.mesh.userData.baseMat.emissiveIntensity=0.1+staminaRatio*0.4;if(player.mesh.userData.crownMat){player.mesh.userData.crownMat.emissive.set(playerColors.accent);player.mesh.userData.crownMat.emissiveIntensity=0.1+staminaRatio*0.5;}}
+                for(const k of['Q','E','R'])if(player.skillCD[k]>0)player.skillCD[k]-=delta;
+                if(player.shieldActive){player.shieldTimer-=delta;if(player.shieldTimer<=0){player.shieldActive=false;player.defense=(30+(upgradeLevels.defense*6))*(battleStyles[playerCustom.battleStyleIdx]?.stats.defense||1);}}
+                let mx=joyX,mz=joyY;if(keys['w']||keys['arrowup'])mz=-1;if(keys['s']||keys['arrowdown'])mz=1;if(keys['a']||keys['arrowleft'])mx=-1;if(keys['d']||keys['arrowright'])mx=1;
+                const mlen=Math.sqrt(mx*mx+mz*mz);
+                if(mlen>0.01){const force=player.speed*(1+player.attackPower/200)*5;player.vx+=(mx/mlen)*force*delta/player.mass;player.vz+=(mz/mlen)*force*delta/player.mass;const sp=Math.sqrt(player.vx**2+player.vz**2);const maxSp=player.speed*4;if(sp>maxSp){player.vx*=maxSp/sp;player.vz*=maxSp/sp;}player.attackPower=Math.min(100,player.attackPower+mlen*15*delta);lastMoveDirection.set(mx,0,mz).normalize();}
+                applyPhysics(player,delta);player.mesh.rotation.y+=player.rotSpeed*delta;
+                checkArenaHazards(player, delta);
+            }
+            if (!enemy.destroyed) {
+                enemy.stamina -= 1.8*delta; enemy.aiTimer += delta;
+                if(enemy.aiTimer > enemy.aiInterval){enemy.aiTimer=0;enemy.aiInterval=0.5+Math.random()*1.0;const angleToPlayer=Math.atan2(player.z-enemy.z,player.x-enemy.x);const enemyDist=Math.sqrt(enemy.x**2+enemy.z**2);let targetAngle=angleToPlayer;if(enemyDist>bowlRadius-1.0){const centerAngle=Math.atan2(-enemy.z,-enemy.x);targetAngle=centerAngle+(Math.random()-0.5)*0.8;}else if(enemy.stamina<40&&Math.random()<0.4){targetAngle=angleToPlayer+Math.PI+(Math.random()-0.5)*1.5;}else if(player.stamina<30&&Math.random()<0.6){targetAngle=angleToPlayer+(Math.random()-0.5)*0.5;}else{targetAngle=angleToPlayer+(Math.random()-0.5)*1.8;}enemy.aiDir=targetAngle;}
+                enemy.attackPower = Math.min(100, enemy.attackPower+20*delta);
+                if(enemy.attackPower>50&&Math.random()<0.02)enemyUseSkillR();if(enemy.stamina<50&&enemy.attackPower>15&&Math.random()<0.03)enemyUseSkillE();if(enemy.attackPower>20&&player.attackPower<30&&Math.random()<0.04)enemyUseSkillQ();
+                enemy.vx += Math.cos(enemy.aiDir)*enemy.speed*4*delta/enemy.mass; enemy.vz += Math.sin(enemy.aiDir)*enemy.speed*4*delta/enemy.mass; const esp=Math.sqrt(enemy.vx**2+enemy.vz**2); const emax=enemy.speed*3; if(esp>emax){enemy.vx*=emax/esp;enemy.vz*=emax/esp;}
+                applyPhysics(enemy,delta);enemy.mesh.rotation.y+=enemy.rotSpeed*delta;for(const k of['Q','E','R'])if(enemy.skillCD[k]>0)enemy.skillCD[k]-=delta;
+                checkArenaHazards(enemy, delta);
+            }
+            const pd=Math.sqrt(player.x**2+player.z**2),ed=Math.sqrt(enemy.x**2+enemy.z**2);
+            if(!player.destroyed&&pd>bowlRadius){player.outTimer+=delta;if(player.outTimer>1.2)endRound('player_ringout');}else player.outTimer=0;
+            if(!enemy.destroyed&&ed>bowlRadius){enemy.outTimer+=delta;if(enemy.outTimer>1.2)endRound('enemy_ringout');}else enemy.outTimer=0;
+            if(!player.destroyed&&player.stamina<=0)endRound('player_stamina');if(!enemy.destroyed&&enemy.stamina<=0)endRound('enemy_stamina');
+            if(!player.destroyed&&!enemy.destroyed){const dx=player.x-enemy.x,dz=player.z-enemy.z;const dist=Math.sqrt(dx*dx+dz*dz);if(dist<1.0&&performance.now()-lastCollisionSound>250){lastCollisionSound=performance.now();const relSpeed=Math.sqrt(player.vx**2+player.vz**2)+Math.sqrt(enemy.vx**2+enemy.vz**2);let damage=Math.floor(relSpeed*5+player.attackPower*0.3);if(player.specialReady){damage*=2.5;player.specialReady=false;player.attackPower=0;}playMetallicHit(Math.min(damage/25,1.2));spawnParticles(new THREE.Vector3((player.x+enemy.x)/2,0.3,(player.z+enemy.z)/2),0xffaa00,damage);sfxCrowd();const playerSpeed=Math.sqrt(player.vx**2+player.vz**2);const enemySpeed=Math.sqrt(enemy.vx**2+enemy.vz**2);const pushForce=4+relSpeed*0.3;if(playerSpeed>enemySpeed*1.2||player.attackPower>50){enemy.stamina-=Math.floor(damage*(1-enemy.defense/100));enemy.defense=Math.max(10,enemy.defense-5);player.vx+=Math.cos(Math.atan2(dz,dx))*pushForce*player.impact;player.vz+=Math.sin(Math.atan2(dz,dx))*pushForce*player.impact;enemy.vx-=Math.cos(Math.atan2(dz,dx))*pushForce/enemy.mass;enemy.vz-=Math.sin(Math.atan2(dz,dx))*pushForce/enemy.mass;}else if(enemySpeed>playerSpeed*1.1){player.stamina-=Math.floor(damage*0.8*(1-player.defense/100));if(!player.shieldActive)player.defense=Math.max(10,player.defense-3);enemy.vx+=Math.cos(Math.atan2(dz,dx))*pushForce;enemy.vz+=Math.sin(Math.atan2(dz,dx))*pushForce;player.vx-=Math.cos(Math.atan2(dz,dx))*pushForce/player.mass;player.vz-=Math.sin(Math.atan2(dz,dx))*pushForce/player.mass;}else{const s=Math.floor(damage*0.3);player.stamina-=s;enemy.stamina-=s;}}}
+            if(!player.destroyed&&!player.shieldActive)player.defense=Math.min(100,player.defense+2*delta);if(!enemy.destroyed)enemy.defense=Math.min(100,enemy.defense+1.5*delta);
+            if (!replayMode) replayData.push({ px: player.x, pz: player.z, ex: enemy.x, ez: enemy.z, pr: player.mesh.rotation.y, er: enemy.mesh.rotation.y, camPos: camera.position.clone(), camLook: new THREE.Vector3(0,0.2,0) });
+            updateHUD();
+            const intensity = Math.max(player.attackPower/100, enemy.attackPower/100, (100-player.stamina)/100);
+            updateMusic(intensity * 0.5);
+        }
+
+        let lastTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate); const now = performance.now(); const dt = Math.min((now-lastTime)/1000, 0.1); lastTime = now; updateGame(dt);
+            for(const p of[...particlesGroup.children]){p.userData.velocity.y-=6*0.016;p.position.x+=p.userData.velocity.x*0.016;p.position.y+=p.userData.velocity.y*0.016;p.position.z+=p.userData.velocity.z*0.016;p.userData.life-=p.userData.decay;p.material.opacity=Math.max(0,p.userData.life);if(p.userData.life<=0||p.position.y<-1){particlesGroup.remove(p);p.geometry.dispose();p.material.dispose();}}
+            for(const d of[...debrisGroup.children]){d.userData.velocity.y-=9.8*0.016;d.position.x+=d.userData.velocity.x*0.016;d.position.y+=d.userData.velocity.y*0.016;d.position.z+=d.userData.velocity.z*0.016;d.rotation.x+=d.userData.rotSpeed.x*0.016;d.rotation.y+=d.userData.rotSpeed.y*0.016;d.rotation.z+=d.userData.rotSpeed.z*0.016;d.userData.life-=d.userData.decay*0.016;if(d.userData.life<=0||d.position.y<-3){debrisGroup.remove(d);d.geometry.dispose();d.material.dispose();}}
+            if(gameState!=='ending'&&gameState!=='replay'&&gameState!=='entrance'){if(camMode===2&&gameState==='playing'&&!player.destroyed){const pos=player.mesh.position.clone();const behind=lastMoveDirection.clone().multiplyScalar(-6);const target=pos.clone().add(behind).add(new THREE.Vector3(0,3.5,0));camera.position.lerp(target,0.05);camera.lookAt(pos.x,pos.y+0.5,pos.z);}else if(camMode===1){camera.position.lerp(new THREE.Vector3(0,22,0.5),0.05);camera.lookAt(0,0.2,0);}else{camera.position.lerp(new THREE.Vector3(0,13,20),0.05);camera.lookAt(0,0.2,0);}}
+            dangerRing.material.emissiveIntensity=0.7+Math.sin(now*0.005)*0.3;stars.rotation.y+=0.0002;pointLights.forEach((pl,i)=>{pl.intensity=5+Math.sin(now*0.005+i)*3;});composer.render();
+        }
+        window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);composer.setSize(window.innerWidth,window.innerHeight);});
+        updateHUD();updateRecords();animate();
+        document.getElementById('playerHudName').textContent = playerCustom.name || '🌀 بلبلك';
+    </script>
+</body>
+</html>
