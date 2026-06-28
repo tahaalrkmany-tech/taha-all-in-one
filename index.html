@@ -3,323 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>طه | Taha All in One - ألعاب وأدوات برمجية</title>
-    <!-- Font Awesome 6 (Free Icons) -->
+    <title>الألعاب والأدوات | Taha alrakamany-Teck</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #0d1b2a;
+            --secondary: #1b3a5c;
+            --gold: #ffd700;
+            --light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-dark: #1a2a3f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #f0f4f8;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: var(--text-dark);
+            direction: rtl;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        body {
-            background: linear-gradient(145deg, #f5f7fc 0%, #eef2f8 100%);
-            font-family: 'Segoe UI', system-ui, Tahoma, sans-serif;
-            color: #1a2a3f;
-            direction: rtl;
-            line-height: 1.5;
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 18px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            border-bottom: 3px solid var(--gold);
+        }
+        .header-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .logo h1 {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .logo h1 span { color: var(--gold); }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .search-box input::placeholder { color: rgba(255,255,255,0.6); }
+        .search-box input:focus {
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            border-color: var(--gold);
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.5);
         }
 
         .container {
             max-width: 1300px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 20px 20px 0;
+            flex: 1;
         }
 
-        /* header */
-        header {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .nav-container {
+        .tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #dce4ef;
+            padding-bottom: 10px;
             flex-wrap: wrap;
-            gap: 1rem;
         }
-
-        .logo h1 {
-            color: white;
-            font-size: 1.6rem;
+        .tab-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
             font-weight: 600;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.2rem;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a {
-            color: #e0e7ff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: white;
-        }
-
-        /* hero */
-        .hero {
-            background: white;
-            border-radius: 2rem;
-            padding: 2rem;
-            margin: 2rem 0;
-            text-align: center;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-        }
-
-        .hero h2 {
-            font-size: 1.8rem;
-            color: #1e3c72;
-            margin-bottom: 0.5rem;
-        }
-
-        .hero p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #4a627a;
-        }
-
-        .btn-primary {
-            display: inline-block;
-            background: #2a5298;
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 2rem;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 1rem;
-            transition: 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: #1e3c72;
-            transform: translateY(-2px);
-        }
-
-        /* sections */
-        .section {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #e2edf5;
-        }
-
-        .section h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            border-right: 4px solid #2a7faa;
-            padding-right: 0.8rem;
-        }
-
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .item-card {
-            background: #f9fbfe;
-            border-radius: 1rem;
-            padding: 1rem;
-            border: 1px solid #e9f0f5;
-            transition: 0.2s;
-        }
-
-        .item-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            border-color: #cbdff2;
-        }
-
-        .item-card h4 {
-            font-size: 1.1rem;
-            color: #1e3c72;
-            margin-bottom: 0.3rem;
-        }
-
-        .item-card p {
-            font-size: 0.8rem;
-            margin: 0.5rem 0;
             color: #5c6f87;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover { color: var(--primary); background: rgba(0,0,0,0.03); }
+        .tab-btn.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 4px 12px rgba(13, 27, 42, 0.2);
+        }
+        .tab-btn .badge {
+            background: var(--gold);
+            color: #000;
+            font-size: 11px;
+            padding: 0 8px;
+            border-radius: 20px;
+            font-weight: 700;
         }
 
-        .item-link {
-            background: #eef2fa;
-            color: #2a5298;
-            padding: 0.2rem 0.8rem;
-            border-radius: 1rem;
-            text-decoration: none;
-            font-size: 0.75rem;
-            display: inline-block;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 22px;
+            margin-top: 10px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 18px 16px 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e9f0f5;
+            transition: all 0.25s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--gold);
+            box-shadow: 0 14px 30px rgba(0,0,0,0.07);
+        }
+        .card .icon { font-size: 38px; margin-bottom: 6px; }
+        .card h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .card p {
+            font-size: 13px;
+            color: #6f8eae;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            flex: 1;
+        }
+        .card .link-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
             transition: 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .card .link-btn:hover {
+            background: var(--gold);
+            color: #000;
+            transform: scale(1.02);
         }
 
-        .item-link:hover {
-            background: #2a5298;
-            color: white;
+        .social-section {
+            margin: 30px 0 10px;
+            text-align: center;
         }
-
-        /* social icons */
         .social-links {
             display: flex;
             justify-content: center;
-            gap: 1.2rem;
-            margin: 1rem 0;
+            gap: 18px;
+            flex-wrap: wrap;
         }
-
         .social-links a {
-            background: #e2e8f0;
-            color: #1e3c72;
-            width: 38px;
-            height: 38px;
+            background: #eef2fa;
+            color: var(--primary);
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 20px;
+            transition: 0.25s;
             text-decoration: none;
-            transition: 0.2s;
-            font-size: 1.2rem;
         }
-
         .social-links a:hover {
-            background: #2a5298;
-            color: white;
-            transform: translateY(-3px);
+            background: var(--gold);
+            color: #000;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 14px rgba(201, 168, 76, 0.3);
         }
 
         footer {
+            background: var(--primary);
+            color: rgba(255,255,255,0.7);
             text-align: center;
-            padding: 1.5rem;
-            border-top: 1px solid #dee6ef;
-            margin-top: 2rem;
-            color: #6f8eae;
-            font-size: 0.75rem;
+            padding: 18px 20px;
+            margin-top: 30px;
+            border-top: 2px solid var(--gold);
+            font-size: 14px;
         }
+        footer a { color: var(--gold); text-decoration: none; font-weight: 600; }
 
         @media (max-width: 700px) {
-            .nav-container {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .hero h2 {
-                font-size: 1.3rem;
-            }
+            .header-container { flex-direction: column; align-items: stretch; text-align: center; }
+            .search-box { max-width: 100%; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            .tabs { justify-content: center; }
+        }
+        @media (max-width: 480px) {
+            .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .card { padding: 14px 10px; }
+            .card .icon { font-size: 28px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="container nav-container">
+    <div class="header-container">
         <div class="logo">
-            <h1>⚡ Taha All in One</h1>
+            <h1>⚜️ Taha <span>alrakamany</span>-Teck</h1>
         </div>
-        <div class="nav-links">
-            <a href="#">الرئيسية</a>
-            <a href="#games">ألعابي</a>
-            <a href="#tools">أدواتي</a>
-            <a href="#services">خدماتي</a>
-            <a href="https://t.me/superTsybot" target="_blank">📩 البوت</a>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="ابحث عن لعبة أو أداة...">
+            <i class="fas fa-search"></i>
         </div>
     </div>
 </header>
 
 <main class="container">
-    <div class="hero">
-        <h2>أنا طه .. أصنع لك الأدوات الفتاكة والألعاب الضاربة.</h2>
-        <p>أطور ألعاب HTML تفاعلية، وأدوات ويب ذكية، وقوالب احترافية حسب طلبك.</p>
-        <a href="https://t.me/superTsybot" class="btn-primary">✨ اطلب خدمتك ✨</a>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">5</span></button>
+        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">2</span></button>
+        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">7</span></button>
     </div>
 
-    <!-- الألعاب -->
-    <section id="games" class="section">
-        <h3>🎮 ألعابي </h3>
-        <div class="items-grid" id="gamesGrid">
-            <!-- سيتم تعبئتها بواسطة JavaScript -->
-        </div>
-    </section>
+    <div class="grid" id="cardGrid"></div>
 
-    <!-- الأدوات (مستقبلاً) -->
-    <section id="tools" class="section">
-        <h3>ادواتي</h3>
-        <div class="items-grid" id="toolsGrid">
-            <div class="item-card">
-                <h4>📢 قريباً</h4>
-                <p>أدوات برمجية مفيدة (عدادات، محولات، منسقات) قيد التطوير.</p>
-                <span class="item-link">قريباً</span>
-            </div>
+    <div class="social-section">
+        <div class="social-links">
+            <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://wa.me/963993382234" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://t.me/superTsybot" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
         </div>
-    </section>
-
-    <section id="services" class="section">
-        <h3>💎 خدماتي الاحترافية</h3>
-        <div class="items-grid">
-            <div class="item-card">
-                <h4>📄 قوالب HTML جاهزة</h4>
-                <p>سيرة ذاتية، متجر، شركة – كود نظيف وجاهز.</p>
-                <a href="https://t.me/superTsybot" class="item-link" target="_blank">طلب خدمة →</a>
-            </div>
-            <div class="item-card">
-                <h4>🎮 لعبة مخصصة</h4>
-                <p>لعبة HTML حسب فكرتك وتصميمك.</p>
-                <a href="https://t.me/superTsybot" class="item-link" target="_blank">طلب خدمة →</a>
-            </div>
-            <div class="item-card">
-                <h4>⚙️ أداة ويب تفاعلية</h4>
-                <p>عدادات، حاسبات، محولات – حسب حاجتك.</p>
-                <a href="https://t.me/superTsybot" class="item-link" target="_blank">طلب خدمة →</a>
-            </div>
-        </div>
-    </section>
+    </div>
 </main>
 
 <footer>
-    <div class="social-links">
-        <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-        <a href="https://wa.me/963993382234" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-        <a href="https://t.me/superTsybot" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
-    </div>
-    <p>© 2026 Taha All in One – جميع الحقوق محفوظة</p>
-    <p>🔗 للتواصل والخدمات: <strong>@superTsybot</strong> | صنع في سوريا 🇸🇾</p>
+    © 2026 Taha alrakamany-Teck | <a href="https://t.me/superTsybot" target="_blank">@superTsybot</a>
 </footer>
 
 <script>
-    // القائمة الصحيحة للملفات الموجودة في المستودع
-    const gamesList = [
-        { name: "🎈 لعبة البالونات", desc: "تسلية سريعة ومسلية", link: "BALLONe.html" },
-        { name: "🦖 Dino2", desc: "لعبة القفز الكلاسيكية", link: "Dino.html" },
-        { name: "🏒 لعبة الهوكي", desc: "هوكي سريع الإيقاع", link: "هوكي.html" },
-        { name: "🎨 لوحة الرسم", desc: "أداة رسم تفاعلية وإبداعية", link: "Draw.html" },
-        { name: "🦕 Dino2", desc: "نسخة مطورة وقوية من اللعبة", link: "Super-dino.html" }
-    ];
+    (function() {
+        // ============================================================
+        // القائمة النهائية بعد التعديل:
+        // - تم حذف bayblade (Three.js) و editor (تحرير النصوص)
+        // - تم الاحتفاظ بـ Super-dino.html كـ "Dino-2"
+        // - جميع الروابط مطلقة + ترميز آمن للمسافات والرموز
+        // ============================================================
+        const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
 
-    const gamesGrid = document.getElementById('gamesGrid');
-    if (gamesGrid) {
-        gamesList.forEach(game => {
-            gamesGrid.innerHTML += `
-                <div class="item-card">
-                    <h4>${game.name}</h4>
-                    <p>${game.desc}</p>
-                    <a href="${game.link}" class="item-link" target="_blank">جرب اللعبة →</a>
-                </div>
-            `;
+        // قائمة الألعاب (5 ألعاب)
+        const games = [
+            { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
+            { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
+            { id: 'Draw', icon: '🎨', name: 'تحدي الرسم', desc: 'إبداع وتلوين في لعبة تفاعلية', file: 'Draw.html' },
+            { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: 'نسخة مستقلة ومختلفة كلياً', file: 'Super-dino.html' },
+            { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' }
+        ];
+
+        // قائمة الأدوات (2 أداة)
+        const tools = [
+            { id: 'PDFCONVERTOR', icon: '📄', name: 'محول النص إلى PDF', desc: 'حوّل النصوص إلى ملفات PDF بسهولة', file: 'PDFCONVERTOR.html' },
+            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمةفورية وطقس لأي مدينة', file: 'مترجم +طقس.html' }
+        ];
+
+        // دمج الكل
+        const allItems = [
+            ...games.map(g => ({ ...g, type: 'game' })),
+            ...tools.map(t => ({ ...t, type: 'tool' }))
+        ];
+
+        // تحديث الأعداد
+        document.getElementById('gamesCount').textContent = games.length;
+        document.getElementById('toolsCount').textContent = tools.length;
+        document.getElementById('allCount').textContent = allItems.length;
+
+        const grid = document.getElementById('cardGrid');
+        const searchInput = document.getElementById('searchInput');
+
+        function renderCards(filterType = 'all', searchTerm = '') {
+            grid.innerHTML = '';
+            const lowerSearch = searchTerm.toLowerCase().trim();
+
+            const filtered = allItems.filter(item => {
+                if (filterType === 'games' && item.type !== 'game') return false;
+                if (filterType === 'tools' && item.type !== 'tool') return false;
+                if (lowerSearch) {
+                    const matchName = item.name.toLowerCase().includes(lowerSearch);
+                    const matchDesc = item.desc.toLowerCase().includes(lowerSearch);
+                    if (!matchName && !matchDesc) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#6f8eae; padding:40px 0;">🔍 لا توجد نتائج تطابق بحثك.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const absoluteUrl = `${BASE}${encodeURIComponent(item.file)}`;
+
+                card.innerHTML = `
+                    <div class="icon">${item.icon}</div>
+                    <h3>${item.name}</h3>
+                    <p>${item.desc}</p>
+                    <a href="${absoluteUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // أحداث التبويبات
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderCards(this.dataset.tab, searchInput.value);
+            });
         });
-    }
+
+        // أحداث البحث
+        searchInput.addEventListener('input', function() {
+            const activeTab = document.querySelector('.tab-btn.active');
+            renderCards(activeTab ? activeTab.dataset.tab : 'all', this.value);
+        });
+
+        // التحميل الأولي
+        renderCards('all', '');
+    })();
 </script>
 
 </body>
