@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YT Crush – النسخة المتكاملة المقدسة</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    body {
+      direction: rtl;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #startScreen, #gameScreen {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    #startScreen {
+      background: linear-gradient(45deg, #6a11cb, #2575fc);
+      color: #fff;
+    }
+    #startScreen h1 {
+      font-size: 3rem; margin-bottom: 1rem;
+    }
+    #startScreen button {
+      padding: 1rem 2rem; font-size: 1.2rem;
+      border: none; border-radius: 5px;
+      margin: 0.5rem;
+      background: #fff; color: #333; cursor: pointer;
+    }
+    #gameScreen { display: none }
+    #scoreBoard { font-size: 2rem; margin-bottom: 1rem }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+      width: 90vmin; height: 90vmin;
+      background: #ccc;
+    }
+    .grid-cell {
+      position: relative; background: #fff;
+      border: 1px solid #aaa; aspect-ratio: 1/1;
+      overflow: hidden; cursor: pointer;
+    }
+    .grid-cell canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .selected { outline: 3px solid #007bff }
+    .explosion {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; pointer-events: none;
+      background: radial-gradient(circle,
+        rgba(255,69,0,0.8) 0%, rgba(255,69,0,0) 70%);
+      animation: explosionAnim 0.5s ease-out;
+    }
+    @keyframes explosionAnim {
+      0% { transform: scale(0.5); opacity: 1 }
+      100% { transform: scale(1.5); opacity: 0 }
+    }
+    #rewardButtons {
+      margin-top: 1rem; display: flex;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    #rewardButtons button {
+      padding: 0.8rem 1.2rem; font-size: 1rem;
+      border: none; border-radius: 5px;
+      background: #fff; cursor: pointer;
+    }
+    #rewardButtons button:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    #popupContainer {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 10; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="startScreen">
+    <h1>YT Crush</h1>
+    <button id="startNormalBtn">ابدأ الوضع العادي</button>
+    <button id="startSandboxBtn">ابدأ Sandbox بدون قيود</button>
+  </div>
+
+  <div id="gameScreen">
+    <div id="scoreBoard">المشتركين: 0</div>
+    <div id="grid"></div>
+    <div id="rewardButtons">
+      <button id="singleBtn">تفجير خلية (50)</button>
+      <button id="rocketBtn">قنبلة 🚀 (450)</button>
+      <button id="shuffleBtn">خلط 🔀</button>
+      <button id="buyGoldenBtn">شراء ذهبية (1000)</button>
+      <button id="buyDiamondBtn">شراء ماسية (2000)</button>
+    </div>
+  </div>
+
+  <div id="popupContainer"></div>
+
+  <script>
+  // صوتيات
+  const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  function playTone(f,d,t='sine',v=0.1){
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=t; o.frequency.value=f;
+    g.gain.setValueAtTime(v,audioCtx.currentTime);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+d);
+  }
+  function playNoise(d=0.3,v=0.2){
+    const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*d,audioCtx.sampleRate),
+          data=buf.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      data[i]=(Math.random()*2-1)*(1-i/data.length);
+    }
+    const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
+    src.buffer=buf; g.gain.setValueAtTime(v,audioCtx.currentTime);
+    src.connect(g).connect(audioCtx.destination);
+    src.start(); src.stop(audioCtx.currentTime+d);
+  }
+  const sound = {
+    pop:()=>playTone(600,0.1,'triangle',0.1),
+    tick:()=>playTone(400,0.05,'square',0.1),
+    chime:()=>playTone(1000,0.2,'sine',0.1),
+    boom:()=>playNoise(0.3,0.3),
+    shuffle:()=>playTone(300,0.15,'sine',0.1),
+    drop:()=>playTone(500,0.05,'square',0.1)
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // DOM عناصر
+    const startNormalBtn = document.getElementById('startNormalBtn'),
+          startSandboxBtn= document.getElementById('startSandboxBtn'),
+          startSc        = document.getElementById('startScreen'),
+          gameSc         = document.getElementById('gameScreen'),
+          scoreBd        = document.getElementById('scoreBoard'),
+          grid           = document.getElementById('grid'),
+          singleBtn      = document.getElementById('singleBtn'),
+          rocketBtn      = document.getElementById('rocketBtn'),
+          shuffleBtn     = document.getElementById('shuffleBtn'),
+          buyGoldenBtn   = document.getElementById('buyGoldenBtn'),
+          buyDiamondBtn  = document.getElementById('buyDiamondBtn'),
+          popupC         = document.getElementById('popupContainer');
+
+    // ثوابت
+    const ROWS=8, COLS=8, MAX_B=2, baseB=3, DROP_INT=100,
+          costSingle=50, costRocket=450,
+          costGoldenBuy=1000, costDiamondBuy=2000;
+
+    const normalPieces = [
+      {shape:'like',color:'#FF0000'},
+      {shape:'dislike',color:'#FF0000'},
+      {shape:'back',color:'#282828'},
+      {shape:'pause',color:'#424242'},
+      {shape:'return',color:'#FFD700'},
+      {shape:'play',color:'#FF0000'},
+      {shape:'subscribe',color:'#FF0000'},
+      {shape:'notification',color:'#FFA500'},
+      {shape:'share',color:'#00BFFF'}
+    ];
+    const shapeColorMap = Object.fromEntries(normalPieces.map(p=>[p.shape,p.color]));
+
+    // حالة اللعب
+    let sandboxMode=false, board=[], sel=null;
+    let subs=0, singleMode=false, rocketMode=false;
+    let buyGoldenMode=false, buyDiamondMode=false;
+    let usedShuffle=false, lastShuffle=0, explodedB=0;
+    let pendingSpecials=[];
+
+    // بدء
+    function startGame(mode){
+      sandboxMode = (mode==='sandbox');
+      if(audioCtx.state==='suspended') audioCtx.resume();
+      startSc.style.display='none';
+      gameSc.style.display='flex';
+      initGame();
+    }
+    startNormalBtn.addEventListener('click', ()=>startGame('normal'));
+    startSandboxBtn.addEventListener('click', ()=>startGame('sandbox'));
+
+    function initGame(){
+      subs=0; explodedB=0;
+      usedShuffle=false; lastShuffle=0;
+      singleMode=rocketMode=false;
+      buyGoldenMode=buyDiamondMode=false;
+      pendingSpecials=[];
+      updateScore(); initBoard(); drawBoard();
+    }
+
+    // إنشاء لوحة
+    function countBombs(){ return board.flat().filter(p=>p?.shape==='bomb').length; }
+    function randNorm(){ return normalPieces[Math.floor(Math.random()*normalPieces.length)]; }
+    function getRandomPiece(){
+      let chance = 0.1/(explodedB+1);
+      if(Math.random()<chance && countBombs()<MAX_B)
+        return {shape:'bomb',counter:baseB,color:'#000'};
+      return randNorm();
+    }
+    function initBoard(){
+      board = Array.from({length:ROWS}, ()=>Array.from({length:COLS}, getRandomPiece));
+    }
+
+    // رسم اللوحة
+    function drawBoard(){
+      grid.innerHTML='';
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          let cell=document.createElement('div');
+          cell.className='grid-cell';
+          cell.dataset.r=r; cell.dataset.c=c;
+          cell.addEventListener('click', onCellClick);
+          let cvs=document.createElement('canvas');
+          cell.appendChild(cvs);
+          grid.appendChild(cell);
+          drawCell(r,c);
+        }
+      }
+    }
+    const SCALE=0.6;
+    function drawCell(r,c){
+      let cell=grid.querySelector(`.grid-cell[data-r='${r}'][data-c='${c}']`),
+          cvs=cell.querySelector('canvas'),
+          ctx=cvs.getContext('2d'),
+          w=cell.clientWidth, h=cell.clientHeight;
+      cvs.width=w; cvs.height=h;
+      ctx.clearRect(0,0,w,h);
+      let p=board[r][c];
+      if(p) drawPiece(ctx,p,w,h);
+      cell.classList.remove('selected');
+    }
+    function drawPiece(ctx,p,w,h){
+      let s=Math.min(w,h)*SCALE;
+      ctx.save(); ctx.translate(w/2,h/2);
+      switch(p.shape){
+        case 'bomb':    drawBomb(ctx,s,p.counter); break;
+        case 'golden':  drawGolden(ctx,s,p.baseShape,p.effect); break;
+        case 'diamond': drawDiamond(ctx,s); break;
+        default:        drawIcon(ctx,p.shape,s);
+      }
+      ctx.restore();
+    }
+
+    // دوال الرسم الناقصة
+    function drawBomb(ctx,s,counter){
+      ctx.beginPath();
+      ctx.arc(0,0,s/2,0,2*Math.PI);
+      ctx.fillStyle='#000'; ctx.fill();
+      ctx.strokeStyle='#555'; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,-s/2); ctx.lineTo(0,-s/2-5);
+      ctx.stroke(); 
+      ctx.fillStyle='#fff';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font=`${s*0.5}px sans-serif`;
+      ctx.fillText(counter,0,0);
+    }
+    function drawGolden(ctx,s,baseShape,effect){
+      ctx.fillStyle='gold'; ctx.fillRect(-s/2,-s/2,s,s);
+      ctx.strokeStyle='#daa520'; ctx.strokeRect(-s/2,-s/2,s,s);
+      drawIcon(ctx,baseShape,s*0.6);
+    }
+    function drawDiamond(ctx,s){
+      ctx.beginPath(); ctx.moveTo(0,-s/2);
+      ctx.lineTo(s/2,0); ctx.lineTo(0,s/2);
+      ctx.lineTo(-s/2,0); ctx.closePath();
+      ctx.fillStyle='#0ff'; ctx.fill();
+      ctx.strokeStyle='#0bd'; ctx.stroke();
+    }
+    function drawIcon(ctx,shape,s){
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font=`${s}px sans-serif`;
+      switch(shape){
+        case 'like': ctx.fillText('👍',0,0); break;
+        case 'dislike': ctx.fillText('👎',0,0); break;
+        case 'play': {
+          let r=s/2;
+          ctx.beginPath(); ctx.arc(0,0,r,0,2*Math.PI);
+          ctx.fillStyle='#f00'; ctx.fill();
+          ctx.beginPath(); ctx.fillStyle='#fff';
+          ctx.moveTo(-r*0.3,-r*0.5);
+          ctx.lineTo(-r*0.3,r*0.5);
+          ctx.lineTo(r*0.6,0);
+          ctx.closePath(); ctx.fill(); break;
+        }
+        case 'subscribe': {
+          ctx.fillStyle='#f00';
+          ctx.fillRect(-s/2,-s/4,s,s/2);
+          ctx.fillStyle='#fff';
+          ctx.fillRect(-s*0.1,-s/2,s*0.2,s);
+          ctx.fillRect(-s/2,-s*0.1,s,s*0.2); break;
+        }
+        case 'notification': {
+          ctx.fillStyle='#fa0'; ctx.beginPath();
+          ctx.arc(0,-s*0.15,s*0.25,Math.PI,2*Math.PI);
+          ctx.lineTo(s*0.3,s*0.25);
+          ctx.quadraticCurveTo(0,s*0.35,-s*0.3,s*0.25);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.arc(0,s*0.35,s*0.05,0,2*Math.PI);
+          ctx.fillStyle='#fff'; ctx.fill(); break;
+        }
+        case 'share': {
+          ctx.strokeStyle='#0bf'; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.moveTo(-s/2,s*0.3);
+          ctx.lineTo(0,0); ctx.lineTo(-s/2,-s*0.3);
+          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0,0);
+          ctx.lineTo(s/2,-s*0.4);
+          ctx.moveTo(0,0);
+          ctx.lineTo(s/2,s*0.4);
+          ctx.stroke(); break;
+        }
+        case 'back': {
+          ctx.fillStyle='#282828'; ctx.beginPath();
+          ctx.moveTo(s*0.3,-s*0.5);
+          ctx.lineTo(-s*0.3,0);
+          ctx.lineTo(s*0.3,s*0.5);
+          ctx.closePath(); ctx.fill(); break;
+        }
+        case 'pause': {
+          ctx.fillStyle='#424242';
+          let w=s*0.2;
+          ctx.fillRect(-s*0.3,-s*0.5,w,s);
+          ctx.fillRect(s*0.1,-s*0.5,w,s); break;
+        }
+        case 'return': {
+          ctx.strokeStyle='#fd0'; ctx.lineWidth=2;
+          let radius=s*0.3;
+          ctx.beginPath();
+          ctx.arc(0,0,radius,Math.PI*0.8,Math.PI*2.2);
+          ctx.stroke();
+          let ang=Math.PI*2.2,
+              x=radius*Math.cos(ang),
+              y=radius*Math.sin(ang);
+          ctx.beginPath(); ctx.moveTo(x,y);
+          ctx.lineTo(x-5,y-5);
+          ctx.lineTo(x+5,y-5);
+          ctx.closePath();
+          ctx.fillStyle='#fd0'; ctx.fill(); break;
+        }
+      }
+    }
+
+    // منطق المطابقات
+    function getMatchKey(p){ return p.shape==='golden'?p.baseShape:p.shape }
+    function getMatchColor(p){ return p.shape==='golden'?shapeColorMap[p.baseShape]:p.color }
+    function findClusters(){
+      const cls=[];
+      // أفقي
+      for(let r=0;r<ROWS;r++){
+        let start=0;
+        for(let c=1;c<=COLS;c++){
+          let cur=board[r][c], prev=board[r][c-1];
+          if(c<COLS && cur && prev &&
+             cur.shape!=='bomb'&&prev.shape!=='bomb'&&
+             getMatchKey(cur)===getMatchKey(prev)&&
+             getMatchColor(cur)===getMatchColor(prev)) continue;
+          let len=c-start;
+          if(prev && prev.shape!=='bomb' && len>=3)
+            cls.push({dir:'h',r,c0:start,len,shape:getMatchKey(prev)});
+          start=c;
+        }
+      }
+      // عمودي
+      for(let c=0;c<COLS;c++){
+        let start=0;
+        for(let r=1;r<=ROWS;r++){
+          let cur=board[r]?.[c], prev=board[r-1]?.[c];
+          if(r<ROWS && cur && prev &&
+             cur.shape!=='bomb'&&prev.shape!=='bomb'&&
+             getMatchKey(cur)===getMatchKey(prev)&&
+             getMatchColor(cur)===getMatchColor(prev)) continue;
+          let len=r-start;
+          if(prev && prev.shape!=='bomb' && len>=3)
+            cls.push({dir:'v',r0:start,c,len,shape:getMatchKey(prev)});
+          start=r;
+        }
+      }
+      return cls;
+    }
+
+    function handleNeighborBombs(r,c){
+      [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{
+        let nr=r+dr,nc=c+dc;
+        if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS){
+          let p=board[nr][nc];
+          if(p?.shape==='bomb'){
+            p.counter--;
+            if(p.counter<=0){
+              board[nr][nc]=null; explodedB++;
+              showExplosion(nr,nc);
+            }
+          }
+        }
+      });
+    }
+
+    function handleMatches(){
+      const cls=findClusters();
+      if(!cls.length) return false;
+      const removed=new Set(), specials=[];
+      cls.forEach(cl=>{
+        for(let k=0;k<cl.len;k++){
+          let rr=cl.dir==='h'?cl.r:cl.r0+k;
+          let cc=cl.dir==='h'?cl.c0+k:cl.c;
+          removed.add(`${rr}-${cc}`);
+        }
+        if(cl.len>=5){
+          let idx=Math.floor(cl.len/2);
+          let rr=cl.dir==='h'?cl.r:cl.r0+idx;
+          let cc=cl.dir==='h'?cl.c0+idx:cl.c;
+          specials.push({type:'diamond',r:rr,c:cc});
+        } else if(cl.len>=4){
+          let idx=Math.floor(cl.len/2);
+          let rr=cl.dir==='h'?cl.r:cl.r0+idx;
+          let cc=cl.dir==='h'?cl.c0+idx:cl.c;
+          specials.push({
+            type:'golden',r:rr,c:cc,
+            baseShape:cl.shape,effect:cl.dir
+          });
+        }
+      });
+
+      removed.forEach(key=>{
+        let [r,c]=key.split('-').map(Number),
+            p=board[r][c];
+        if(p?.shape==='golden'){
+          const {effect}=p;
+          board[r][c]=null;
+          if(effect==='h'){
+            for(let j=0;j<COLS;j++){
+              if(board[r][j]){
+                subs+=10; showExplosion(r,j);
+                handleNeighborBombs(r,j); board[r][j]=null;
+              }
+            }
+          } else {
+            for(let i=0;i<ROWS;i++){
+              if(board[i][c]){
+                subs+=10; showExplosion(i,c);
+                handleNeighborBombs(i,c); board[i][c]=null;
+              }
+            }
+          }
+        } else {
+          board[r][c]=null; subs+=10;
+          handleNeighborBombs(r,c);
+        }
+      });
+
+      updateScore();
+      removed.forEach(key=>{
+        let [r,c]=key.split('-').map(Number);
+        drawCell(r,c);
+      });
+      sound.pop();
+
+      // إضافة specials بعد الانفجارات
+      specials.forEach(sp=>{
+        if(sp.type==='diamond') board[sp.r][sp.c]={shape:'diamond'};
+        else board[sp.r][sp.c]={shape:'golden',baseShape:sp.baseShape,effect:sp.effect};
+        drawCell(sp.r,sp.c);
+      });
+
+      return true;
+    }
+
+    function transformToGolden(baseShape,effect){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+        let p=board[r][c];
+        if(p?.shape===baseShape){
+          board[r][c]={shape:'golden',baseShape,effect};
+          drawCell(r,c);
+        }
+      }
+    }
+
+    function triggerGoldenDiamondFusion(gr,gc,dr,dc){
+      const gold=board[gr][gc], dia=board[dr][dc];
+      if(!gold||gold.shape!=='golden'||!dia||dia.shape!=='diamond') return;
+      const {baseShape,effect}=gold;
+      board[gr][gc]=board[dr][dc]=null;
+      transformToGolden(baseShape,effect);
+      if(effect==='h'){
+        for(let j=0;j<COLS;j++){
+          if(board[gr][j]){
+            board[gr][j]=null; subs+=10;
+            showExplosion(gr,j); handleNeighborBombs(gr,j);
+          }
+        }
+      } else {
+        for(let i=0;i<ROWS;i++){
+          if(board[i][gc]){
+            board[i][gc]=null; subs+=10;
+            showExplosion(i,gc); handleNeighborBombs(i,gc);
+          }
+        }
+      }
+      updateScore(); drawBoard(); sound.boom();
+    }
+
+    function triggerDoubleDiamondFusion(r1,c1,r2,c2){
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+        let p=board[r][c];
+        if(p){
+          if(p.shape==='bomb'){
+            p.counter--; if(p.counter<=0) board[r][c]=null;
+          } else board[r][c]=null;
+          subs+=10; showExplosion(r,c); handleNeighborBombs(r,c);
+        }
+      }
+      updateScore(); drawBoard(); sound.boom();
+    }
+
+    function triggerDiamondNormalFusion(dr,dc,nr,nc){
+      let target=board[nr][nc]?.shape;
+      board[dr][dc]=null;
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+        let p=board[r][c];
+        if(p?.shape===target){
+          board[r][c]=null; subs+=10;
+          showExplosion(r,c); handleNeighborBombs(r,c);
+        }
+      }
+      updateScore(); drawBoard(); sound.boom();
+    }
+
+    // الجاذبية والتعبئة
+    function applyGravity(){
+      sound.drop();
+      for(let c=0;c<COLS;c++){
+        let col=board.map(r=>r[c]).filter(x=>x!==null),
+            miss=ROWS-col.length;
+        for(let i=0;i<miss;i++) col.unshift(getRandomPiece());
+        for(let r=0;r<ROWS;r++) board[r][c]=col[r];
+      }
+      drawBoard();
+      setTimeout(()=>{
+        if(handleMatches()) return setTimeout(applyGravity, DROP_INT);
+        if(!canMove()){
+          sound.shuffle(); shuffleBoard();
+          showPopup('تم الخلط لتجنب التجمّد!','#f00');
+        }
+      }, DROP_INT);
+    }
+
+    function swap(r1,c1,r2,c2){
+      [board[r1][c1],board[r2][c2]]=[board[r2][c2],board[r1][c1]];
+    }
+
+    // نقر الخلية
+    function onCellClick(e){
+      let r=+e.currentTarget.dataset.r,
+          c=+e.currentTarget.dataset.c;
+
+      if(singleMode){ manualSingle(r,c); return }
+      if(rocketMode){ manualRocket(r,c); return }
+      if(buyGoldenMode){
+        buyGoldenMode=false; updateScore();
+        let dir=Math.random()<0.5?'h':'v';
+        if(dir==='h'){
+          for(let j=0;j<COLS;j++){
+            if(board[r][j]){
+              subs+=10; showExplosion(r,j);
+              handleNeighborBombs(r,j); board[r][j]=null;
+            }
+          }
+        } else {
+          for(let i=0;i<ROWS;i++){
+            if(board[i][c]){
+              subs+=10; showExplosion(i,c);
+              handleNeighborBombs(i,c); board[i][c]=null;
+            }
+          }
+        }
+        drawBoard(); sound.boom();
+        return setTimeout(applyGravity, DROP_INT);
+      }
+      if(buyDiamondMode){
+        buyDiamondMode=false; updateScore();
+        board[r][c]={shape:'diamond'};
+        drawCell(r,c); sound.boom();
+        return;
+      }
+
+      if(!sel){
+        sel={r,c}; e.currentTarget.classList.add('selected'); return;
+      }
+      let dr=Math.abs(sel.r-r), dc=Math.abs(sel.c-c);
+      if(dr+dc!==1){
+        clearSel(); sel={r,c};
+        e.currentTarget.classList.add('selected'); return;
+      }
+
+      const prev={...sel}, cur={r,c};
+      swap(prev.r,prev.c,cur.r,cur.c);
+      drawCell(prev.r,prev.c); drawCell(cur.r,cur.c);
+      clearSel();
+
+      setTimeout(()=>{
+        let p1=board[prev.r][prev.c], p2=board[cur.r][cur.c];
+
+        if(p1?.shape==='diamond' && p2?.shape==='golden'){
+          triggerGoldenDiamondFusion(prev.r,prev.c,cur.r,cur.c);
+          return setTimeout(applyGravity, DROP_INT);
+        }
+        if(p2?.shape==='diamond' && p1?.shape==='golden'){
+          triggerGoldenDiamondFusion(cur.r,cur.c,prev.r,prev.c);
+          return setTimeout(applyGravity, DROP_INT);
+        }
+        if(p1?.shape==='diamond' && p2?.shape==='diamond'){
+          triggerDoubleDiamondFusion(prev.r,prev.c,cur.r,cur.c);
+          return setTimeout(applyGravity, DROP_INT);
+        }
+        if(p1?.shape==='diamond' && p2 && p2.shape!=='diamond'&&p2.shape!=='golden'){
+          triggerDiamondNormalFusion(prev.r,prev.c,cur.r,cur.c);
+          return setTimeout(applyGravity, DROP_INT);
+        }
+        if(p2?.shape==='diamond' && p1 && p1.shape!=='diamond'&&p1.shape!=='golden'){
+          triggerDiamondNormalFusion(cur.r,cur.c,prev.r,prev.c);
+          return setTimeout(applyGravity, DROP_INT);
+        }
+
+        if(!handleMatches()){
+          setTimeout(()=>{
+            swap(prev.r,prev.c,cur.r,cur.c);
+            drawCell(prev.r,prev.c); drawCell(cur.r,cur.c);
+            sound.tick();
+          }, DROP_INT);
+        } else {
+          setTimeout(applyGravity, DROP_INT);
+        }
+      }, DROP_INT);
+    }
+
+    function clearSel(){
+      grid.querySelectorAll('.selected')
+          .forEach(x=>x.classList.remove('selected'));
+      sel=null;
+    }
+
+    // مكافآت يدوية
+    function manualSingle(r,c){
+      sound.boom();
+      let p=board[r][c];
+      if(p?.shape==='bomb'){
+        p.counter--; if(p.counter<=0){ board[r][c]=null; explodedB++ }
+      } else board[r][c]=null;
+      showExplosion(r,c); drawCell(r,c); clearSel();
+      singleMode=false;
+      setTimeout(applyGravity, DROP_INT);
+    }
+
+    function manualRocket(r0,c0){
+      sound.boom();
+      for(let dr=-1; dr<=1; dr++){
+        for(let dc=-1; dc<=1; dc++){
+          let rr=r0+dr, cc=c0+dc;
+          if(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS){
+            let p=board[rr][cc];
+            if(p?.shape==='bomb'){
+              p.counter--; if(p.counter<=0){ board[rr][cc]=null; explodedB++ }
+            } else if(board[rr][cc]!=null){
+              board[rr][cc]=null;
+            }
+            showExplosion(rr,cc); drawCell(rr,cc);
+            handleNeighborBombs(rr,cc);
+          }
+        }
+      }
+      rocketMode=false;
+      setTimeout(applyGravity, DROP_INT);
+    }
+
+    // التحقق من إمكانية الحركة
+    function canMove(){
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          if(c<COLS-1){
+            swap(r,c,r,c+1);
+            if(findClusters().length){ swap(r,c,r,c+1); return true }
+            swap(r,c,r,c+1);
+          }
+          if(r<ROWS-1){
+            swap(r,c,r+1,c);
+            if(findClusters().length){ swap(r,c,r+1,c); return true }
+            swap(r,c,r+1,c);
+          }
+        }
+      }
+      return false;
+    }
+
+    function shuffleBoard(){
+      let all=board.flat();
+      all.sort(()=>Math.random()-0.5);
+      for(let i=0;i<all.length;i++){
+        board[Math.floor(i/COLS)][i%COLS]=all[i];
+      }
+      drawBoard();
+    }
+
+    // تأثيرات بصرية ومنبثقة
+    function showExplosion(r,c){
+      let cell=grid.querySelector(`.grid-cell[data-r='${r}'][data-c='${c}']`);
+      if(!cell) return;
+      let d=document.createElement('div');
+      d.className='explosion';
+      cell.appendChild(d);
+      setTimeout(()=>{ if(cell.contains(d)) cell.removeChild(d) },500);
+    }
+    function showPopup(msg,color='#fff'){
+      let p=document.createElement('div');
+      p.innerText=msg;
+      Object.assign(p.style,{
+        position:'absolute', top:'50%', left:'50%',
+        transform:'translate(-50%,-50%)',
+        fontSize:'2rem', fontWeight:'bold',
+        color, opacity:1,
+        transition:'opacity 1s ease-out, transform 1s ease-out'
+      });
+      popupC.appendChild(p); sound.chime();
+      setTimeout(()=>{
+        p.style.opacity=0; p.style.transform='translate(-50%,-60%)';
+      },100);
+      setTimeout(()=>{ popupC.removeChild(p) },1100);
+    }
+
+    // تحديث النقاط وأزرار الخلط
+    function updateScore(){
+      scoreBd.innerText = 'المشتركين: ' + subs;
+      let iv = Math.floor(subs/1000)*1000;
+      if(iv !== lastShuffle){
+        lastShuffle = iv; usedShuffle = false; shuffleBtn.disabled = false;
+      }
+    }
+
+    // ربط أزرار المكافآت
+    singleBtn.addEventListener('click', ()=>{
+      if(!sandboxMode && subs < costSingle) return;
+      if(!sandboxMode) subs -= costSingle;
+      singleMode = true; updateScore();
+      showPopup('اختر خلية للتفجير','#0f0');
+    });
+    rocketBtn.addEventListener('click', ()=>{
+      if(!sandboxMode && subs < costRocket) return;
+      if(!sandboxMode) subs -= costRocket;
+      rocketMode = true; updateScore();
+      showPopup('اختر موضع القنبلة 3×3','#0f0');
+    });
+    shuffleBtn.addEventListener('click', ()=>{
+      if(!sandboxMode && usedShuffle) return;
+      usedShuffle = true; shuffleBtn.disabled = true;
+      sound.shuffle(); shuffleBoard();
+      showPopup('تم الخلط','#ff0');
+    });
+    buyGoldenBtn.addEventListener('click', ()=>{
+      if(!sandboxMode && subs < costGoldenBuy) return;
+      if(!sandboxMode) subs -= costGoldenBuy;
+      buyGoldenMode = true; updateScore();
+      showPopup('اختر مكانًا لتفجير صف أو عمود','#fa0');
+    });
+    buyDiamondBtn.addEventListener('click', ()=>{
+      if(!sandboxMode && subs < costDiamondBuy) return;
+      if(!sandboxMode) subs -= costDiamondBuy;
+      buyDiamondMode = true; updateScore();
+      showPopup('اختر خلية لزرع قطعة ماسية','#0ff');
+    });
+
+    window.addEventListener('resize', drawBoard);
+  });
+  </script>
+
+</body>
+</html>
