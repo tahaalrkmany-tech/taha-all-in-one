@@ -1,1 +1,644 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>حافظ النصوص | اختر مسار الحفظ بالمحتوى</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
+    body {
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Tajawal', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 1rem;
+      margin: 0;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 2.5rem;
+      padding: 2rem 1.5rem 2rem;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: #f1f5f9;
+      font-weight: 700;
+      font-size: 1.9rem;
+      margin-bottom: 0.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    h1 span {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      font-size: 1.2rem;
+      padding: 0.2rem 0.9rem;
+      border-radius: 3rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .editor-box {
+      background: #0f172a;
+      border-radius: 1.5rem;
+      padding: 0.2rem;
+      border: 1px solid #334155;
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
+      margin-bottom: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      background: #020617;
+      border: none;
+      outline: none;
+      resize: vertical;
+      padding: 1.2rem;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      direction: ltr;
+      text-align: left;
+      border-radius: 1.3rem;
+      transition: box-shadow 0.2s;
+    }
+    textarea:focus {
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.5);
+    }
+    textarea::placeholder {
+      color: #475569;
+      font-style: italic;
+      font-family: 'Tajawal', sans-serif;
+      direction: rtl;
+      text-align: right;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 1.2rem;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+      direction: ltr;
+    }
+    .stats-bar .char-count {
+      background: #1e293b;
+      padding: 0.3rem 1rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .warning-empty {
+      color: #f59e0b;
+      display: none;
+      font-weight: 500;
+    }
+
+    .format-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      padding: 0.7rem 1rem;
+      border-radius: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid #2d3a4f;
+    }
+
+    .format-label {
+      color: #cbd5e1;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: #1e293b;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+    }
+
+    #fileName {
+      flex: 2;
+      min-width: 140px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 2rem;
+      padding: 0.7rem 1rem;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      font-weight: 500;
+    }
+    #fileName:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+    }
+
+    select {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 2rem;
+      padding: 0.65rem 1.8rem 0.65rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat;
+      background-position: left 0.7rem center;
+      background-size: 1.2rem;
+    }
+
+    #customExtension {
+      width: 70px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 2rem;
+      padding: 0.65rem 0.5rem;
+      color: white;
+      text-align: center;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .custom-ext-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.3rem;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 100px;
+      border: none;
+      border-radius: 2.5rem;
+      padding: 0.85rem 0.8rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+      letter-spacing: 0.3px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: white;
+      box-shadow: 0 10px 20px -8px #3b82f6;
+      font-size: 1rem;
+      flex: 1.8;
+    }
+
+    .btn-share {
+      background: linear-gradient(135deg, #059669, #10b981);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .info-box {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 1rem;
+      padding: 0.7rem;
+      margin: 1rem 0 0.2rem;
+      color: #93c5fd;
+      font-size: 0.8rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .footer-note {
+      margin-top: 0.8rem;
+      color: #64748b;
+      font-size: 0.75rem;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 480px) {
+      .app-container { padding: 1.5rem 1rem; }
+      .format-section { flex-direction: column; align-items: stretch; }
+      .action-buttons { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>
+      ✦ حافظ النصوص
+      <span>.io</span>
+    </h1>
+    <div class="subtitle">احفظ المحتوى في أي مجلد تختاره بصيغته الصحيحة</div>
+
+    <div class="editor-box">
+      <textarea id="textEditor" placeholder="⌨️ اكتب المحتوى هنا... (جميع اللغات والأكواد)"></textarea>
+    </div>
+
+    <div class="stats-bar">
+      <span class="char-count" id="charCounter">0 حرف</span>
+      <span class="warning-empty" id="emptyWarning">⚠️ المحتوى فارغ</span>
+    </div>
+
+    <div class="format-section">
+      <span class="format-label">📄 اسم الملف</span>
+      <input type="text" id="fileName" value="مستند" placeholder="اسم الملف">
+      <select id="extensionSelect">
+        <option value=".txt">.txt</option>
+        <option value=".html">.html</option>
+        <option value=".js">.js</option>
+        <option value=".css">.css</option>
+        <option value=".json">.json</option>
+        <option value=".md">.md</option>
+        <option value=".xml">.xml</option>
+        <option value=".csv">.csv</option>
+        <option value=".py">.py</option>
+        <option value=".svg">.svg</option>
+        <option value="custom">⚡ مخصص</option>
+      </select>
+      <div class="custom-ext-wrapper" id="customExtContainer" style="display: none;">
+        <input type="text" id="customExtension" value=".doc" placeholder="مثل .yaml">
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-outline" id="clearBtn">
+        <span>🗑️</span> مسح
+      </button>
+      <button class="btn btn-primary" id="savePickerBtn">
+        <span>📁</span> اختر مكان الحفظ
+      </button>
+    </div>
+    
+    <div class="action-buttons" style="margin-top: 0.5rem;">
+      <button class="btn btn-share" id="shareBtn">
+        <span>📤</span> مشاركة
+      </button>
+      <button class="btn" id="downloadBtn">
+        <span>💾</span> تحميل عادي
+      </button>
+    </div>
+
+    <div class="info-box" id="infoBox">
+      🟢 اضغط <strong>اختر مكان الحفظ</strong> لتحدد المجلد في ملفاتي، سيتم الحفظ مع المحتوى.
+    </div>
+    
+    <div class="footer-note">
+      <span id="filePreview">.txt</span> •
+      <span>Ctrl+S</span>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // العناصر
+      const textEditor = document.getElementById('textEditor');
+      const fileNameInput = document.getElementById('fileName');
+      const extensionSelect = document.getElementById('extensionSelect');
+      const customExtContainer = document.getElementById('customExtContainer');
+      const customExtensionInput = document.getElementById('customExtension');
+      const savePickerBtn = document.getElementById('savePickerBtn');
+      const shareBtn = document.getElementById('shareBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const filePreviewSpan = document.getElementById('filePreview');
+      const charCounter = document.getElementById('charCounter');
+      const emptyWarning = document.getElementById('emptyWarning');
+      const infoBox = document.getElementById('infoBox');
+
+      // التحقق من دعم showSaveFilePicker
+      const supportsFilePicker = typeof window.showSaveFilePicker === 'function';
+      if (!supportsFilePicker) {
+        savePickerBtn.disabled = true;
+        savePickerBtn.style.opacity = '0.5';
+        savePickerBtn.style.cursor = 'not-allowed';
+        savePickerBtn.title = 'متصفحك لا يدعم اختيار المسار المباشر';
+        infoBox.innerHTML = '⚠️ المتصفح لا يدعم اختيار المسار. استخدم <strong>مشاركة</strong> أو <strong>تحميل عادي</strong>.';
+      }
+
+      // قوالب افتراضية لبعض الامتدادات (لتجنب الملفات الفارغة تماماً عند بدء مشروع)
+      const defaultTemplates = {
+        '.html': '<!DOCTYPE html>\n<html lang="ar">\n<head>\n  <meta charset="UTF-8">\n  <title>مستند</title>\n</head>\n<body>\n  \n</body>\n</html>',
+        '.css': '/* اكتب تنسيقاتك هنا */\n',
+        '.js': '// اكتب كود JavaScript هنا\n',
+        '.json': '{\n  \n}',
+        '.md': '# عنوان\n\nاكتب هنا...',
+        '.xml': '<?xml version="1.0" encoding="UTF-8"?>\n<root>\n  \n</root>',
+        '.py': '# -*- coding: utf-8 -*-\n\ndef main():\n    pass\n\nif __name__ == "__main__":\n    main()',
+        '.csv': 'اسم,قيمة\n',
+        '.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">\n  \n</svg>'
+      };
+
+      // تحديث عداد الأحرف والتحذير
+      function updateCharCount() {
+        const len = textEditor.value.length;
+        charCounter.textContent = `${len} حرف`;
+        emptyWarning.style.display = len === 0 ? 'inline' : 'none';
+      }
+      textEditor.addEventListener('input', updateCharCount);
+
+      // إدراج قالب عند تغيير الامتداد إذا كان المحتوى فارغاً (اختياري)
+      function maybeInsertTemplate() {
+        if (textEditor.value.trim() === '') {
+          const ext = getFinalExtension();
+          if (defaultTemplates[ext]) {
+            textEditor.value = defaultTemplates[ext];
+            updateCharCount();
+            showToast(`✨ تم إدراج قالب ${ext} افتراضي`);
+          }
+        }
+      }
+
+      // تحديث الامتداد المخصص
+      function updateCustomExtensionVisibility() {
+        if (extensionSelect.value === 'custom') {
+          customExtContainer.style.display = 'flex';
+          customExtensionInput.focus();
+        } else {
+          customExtContainer.style.display = 'none';
+        }
+        updateFilePreview();
+        maybeInsertTemplate(); // إدراج قالب لو المحتوى فارغ
+      }
+
+      function getFinalExtension() {
+        if (extensionSelect.value === 'custom') {
+          let customExt = customExtensionInput.value.trim();
+          if (customExt === '') return '.txt';
+          if (!customExt.startsWith('.')) customExt = '.' + customExt;
+          return customExt;
+        }
+        return extensionSelect.value;
+      }
+
+      function updateFilePreview() {
+        filePreviewSpan.textContent = getFinalExtension();
+      }
+
+      function buildFullFilename() {
+        let baseName = fileNameInput.value.trim();
+        if (baseName === '') baseName = 'مستند';
+        baseName = baseName.replace(/\.[^/.]+$/, '');
+        return `${baseName}${getFinalExtension()}`;
+      }
+
+      function getMimeType() {
+        const ext = getFinalExtension().toLowerCase();
+        const map = {
+          '.html': 'text/html',
+          '.css': 'text/css',
+          '.js': 'application/javascript',
+          '.json': 'application/json',
+          '.xml': 'application/xml',
+          '.csv': 'text/csv',
+          '.md': 'text/markdown',
+          '.py': 'text/x-python',
+          '.svg': 'image/svg+xml',
+          '.txt': 'text/plain'
+        };
+        return (map[ext] || 'text/plain') + ';charset=utf-8';
+      }
+
+      function createBlob() {
+        return new Blob([textEditor.value], { type: getMimeType() });
+      }
+
+      // تأكيد قبل الحفظ إذا كان فارغاً
+      function confirmEmptySave() {
+        return new Promise((resolve) => {
+          if (textEditor.value.length === 0) {
+            const ok = confirm('تنبيه: المحتوى فارغ تماماً! سيتم حفظ ملف فارغ. هل تريد المتابعة؟');
+            resolve(ok);
+          } else {
+            resolve(true);
+          }
+        });
+      }
+
+      // الطريقة الأساسية: اختيار مكان الحفظ
+      async function saveWithFilePicker() {
+        if (!supportsFilePicker) {
+          showToast('المتصفح لا يدعم هذه الميزة');
+          return;
+        }
+
+        const confirmed = await confirmEmptySave();
+        if (!confirmed) return;
+
+        const filename = buildFullFilename();
+        const blob = createBlob();
+        const charCount = textEditor.value.length;
+
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: 'ملف نصي',
+                accept: { [blob.type.split(';')[0]]: [getFinalExtension()] }
+              }
+            ]
+          });
+
+          showToast('⏳ جاري الكتابة...');
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+
+          showToast(`✅ تم الحفظ بنجاح: ${filename} (${charCount} حرف)`);
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            showToast('❌ ألغيت عملية الحفظ');
+          } else {
+            console.error(err);
+            showToast('⚠️ فشل الحفظ، ربما تحتاج صلاحيات أو استخدم طريقة أخرى');
+          }
+        }
+      }
+
+      // التحميل المباشر
+      function downloadFile() {
+        confirmEmptySave().then(confirmed => {
+          if (!confirmed) return;
+          const blob = createBlob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = buildFullFilename();
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 150);
+          showToast(`📥 تم التحميل: ${buildFullFilename()} (${textEditor.value.length} حرف)`);
+        });
+      }
+
+      // المشاركة
+      async function shareFile() {
+        const confirmed = await confirmEmptySave();
+        if (!confirmed) return;
+
+        const file = new File([createBlob()], buildFullFilename(), {
+          type: getMimeType(),
+          lastModified: Date.now()
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: buildFullFilename(),
+            });
+            showToast(`📤 تمت المشاركة: ${file.name} (${file.size} بايت)`);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              downloadFile(); // fallback
+            }
+          }
+        } else {
+          downloadFile();
+        }
+      }
+
+      function clearEditor() {
+        textEditor.value = '';
+        fileNameInput.value = 'مستند';
+        extensionSelect.value = '.txt';
+        updateCustomExtensionVisibility();
+        customExtensionInput.value = '.doc';
+        textEditor.focus();
+        updateCharCount();
+        showToast('🧹 تم مسح المحتوى');
+      }
+
+      function showToast(msg) {
+        const existing = document.querySelector('.dynamic-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'dynamic-toast';
+        toast.textContent = msg;
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #0f172a;
+          color: #f8fafc;
+          padding: 0.7rem 1.8rem;
+          border-radius: 3rem;
+          font-weight: 600;
+          font-size: 0.9rem;
+          box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+          border: 1px solid #3b82f6;
+          z-index: 9999;
+          backdrop-filter: blur(12px);
+          white-space: nowrap;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.transition = 'opacity 0.3s';
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 2500);
+      }
+
+      // ربط الأحداث
+      extensionSelect.addEventListener('change', updateCustomExtensionVisibility);
+      customExtensionInput.addEventListener('input', updateFilePreview);
+      fileNameInput.addEventListener('input', updateFilePreview);
+      textEditor.addEventListener('input', () => {
+        updateCharCount();
+        updateFilePreview();
+      });
+
+      savePickerBtn.addEventListener('click', saveWithFilePicker);
+      shareBtn.addEventListener('click', shareFile);
+      downloadBtn.addEventListener('click', downloadFile);
+      clearBtn.addEventListener('click', clearEditor);
+
+      window.addEventListener('load', () => {
+        updateCustomExtensionVisibility();
+        if (fileNameInput.value === '') fileNameInput.value = 'مستند';
+        updateCharCount();
+        updateFilePreview();
+        // إذا كانت فارغة والمتصفح يدعم picker، أدخل قالب .txt صغير
+        if (textEditor.value.trim() === '' && supportsFilePicker) {
+          textEditor.value = 'ابدأ الكتابة هنا...';
+          updateCharCount();
+        }
+      });
+
+      // اختصار Ctrl+S
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          if (supportsFilePicker) {
+            saveWithFilePicker();
+          } else {
+            shareFile();
+          }
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
