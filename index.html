@@ -252,9 +252,9 @@
 
 <main class="container">
     <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">5</span></button>
-        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">2</span></button>
-        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">7</span></button>
+        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">7</span></button>
+        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">3</span></button>
+        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">10</span></button>
     </div>
 
     <div class="grid" id="cardGrid"></div>
@@ -264,38 +264,36 @@
             <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="https://wa.me/963993382234" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://t.me/superTsybot" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+            <a href="https://t.me/TahaTecH2026Bot" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
         </div>
     </div>
 </main>
 
 <footer>
-    © 2026 Taha alrakamany-Teck | <a href="https://t.me/superTsybot" target="_blank">@superTsybot</a>
+    © 2026 Taha alrakamany-Teck | <a href="https://t.me/TahaTecH2026Bot" target="_blank">@TahaTecH2026Bot</a>
 </footer>
 
 <script>
     (function() {
-        // ============================================================
-        // القائمة النهائية بعد التعديل:
-        // - تم حذف bayblade (Three.js) و editor (تحرير النصوص)
-        // - تم الاحتفاظ بـ Super-dino.html كـ "Dino-2"
-        // - جميع الروابط مطلقة + ترميز آمن للمسافات والرموز
-        // ============================================================
         const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
+        const PLAY_URL = BASE + 'Play.html?file=';
 
-        // قائمة الألعاب (5 ألعاب)
+        // قائمة الألعاب (7 ألعاب)
         const games = [
             { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
+            { id: 'bayblade', icon: '⚔️', name: 'قتال البلابل', desc: 'قتال ثلاثي الأبعاد مع مهارات وطاقة', file: 'bayblade.html' },
             { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
             { id: 'Draw', icon: '🎨', name: 'تحدي الرسم', desc: 'إبداع وتلوين في لعبة تفاعلية', file: 'Draw.html' },
+            { id: 'SeaStrike', icon: '⚓', name: 'Sea Strike', desc: 'معركة بحرية مشوقة', file: 'SeaStrike.html' },
             { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: 'نسخة مستقلة ومختلفة كلياً', file: 'Super-dino.html' },
             { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' }
         ];
 
-        // قائمة الأدوات (2 أداة)
+        // قائمة الأدوات (3 أدوات)
         const tools = [
+            { id: 'Files write and edit', icon: '✍️', name: 'محرر وتنسيق النصوص', desc: 'تحرير وتنسيق النصوص بسهولة', file: 'Files write and edit.html' },
             { id: 'PDFCONVERTOR', icon: '📄', name: 'محول النص إلى PDF', desc: 'حوّل النصوص إلى ملفات PDF بسهولة', file: 'PDFCONVERTOR.html' },
-            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمةفورية وطقس لأي مدينة', file: 'مترجم +طقس.html' }
+            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة فورية وطقس حقيقي لأي مدينة', file: 'مترجم +طقس.html' }
         ];
 
         // دمج الكل
@@ -335,13 +333,21 @@
             filtered.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                const absoluteUrl = `${BASE}${encodeURIComponent(item.file)}`;
+
+                // تحديد الملفات التي تحتاج إلى Play.html
+                const specialFiles = ['bayblade.html', 'Files write and edit.html'];
+                let finalUrl;
+                if (specialFiles.includes(item.file)) {
+                    finalUrl = PLAY_URL + encodeURIComponent(item.file);
+                } else {
+                    finalUrl = BASE + encodeURIComponent(item.file);
+                }
 
                 card.innerHTML = `
                     <div class="icon">${item.icon}</div>
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
-                    <a href="${absoluteUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
+                    <a href="${finalUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
                 `;
                 grid.appendChild(card);
             });
