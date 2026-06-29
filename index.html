@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>الألعاب والأدوات | Taha alrakamany-Teck</title>
+    <!-- سيتم إضافة رقم الإصدار تلقائياً عبر JavaScript -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -272,6 +273,29 @@
 <footer>
     © 2026 Taha alrakamany-Teck | <a href="https://t.me/TahaTecH2026Bot" target="_blank">@TahaTecH2026Bot</a>
 </footer>
+
+<script>
+    // ============================================================
+    // إضافة رقم إصدار تلقائي لكل ملف CSS و JS لتفادي الكاش
+    // ============================================================
+    (function() {
+        const version = Date.now();
+        const links = document.querySelectorAll('link[rel="stylesheet"]');
+        const scripts = document.querySelectorAll('script[src]');
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && !href.includes('?v=')) {
+                link.setAttribute('href', href + '?v=' + version);
+            }
+        });
+        scripts.forEach(script => {
+            const src = script.getAttribute('src');
+            if (src && !src.includes('?v=')) {
+                script.setAttribute('src', src + '?v=' + version);
+            }
+        });
+    })();
+</script>
 
 <script>
     (function() {
