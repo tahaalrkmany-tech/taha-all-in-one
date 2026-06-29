@@ -252,8 +252,8 @@
 
 <main class="container">
     <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">10</span></button>
-        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">3</span></button>
+        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">9</span></button>
+        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">4</span></button>
         <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">13</span></button>
     </div>
 
@@ -278,7 +278,7 @@
         const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
         const PLAY_URL = BASE + 'Play.html?file=';
 
-        // قائمة الألعاب (10 ألعاب)
+        // قائمة الألعاب (بدون بلابل)
         const games = [
             { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
             { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
@@ -291,11 +291,12 @@
             { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' }
         ];
 
-        // قائمة الأدوات (3 أدوات)
+        // قائمة الأدوات (مع إضافة QuranCalendar)
         const tools = [
             { id: 'Files write and edit', icon: '✍️', name: 'محرر وتنسيق النصوص', desc: 'تحرير وتنسيق النصوص بسهولة', file: 'Files write and edit.html' },
             { id: 'PDFCONVERTOR', icon: '📄', name: 'محول النص إلى PDF', desc: 'حوّل النصوص إلى ملفات PDF بسهولة', file: 'PDFCONVERTOR.html' },
-            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة فورية وطقس حقيقي لأي مدينة', file: 'مترجم +طقس.html' }
+            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة فورية وطقس حقيقي لأي مدينة', file: 'مترجم +طقس.html' },
+            { id: 'QuranCalendar', icon: '🕌', name: 'QuranCalendar', desc: 'روزنامة + قرآن', file: 'QuranCalendar.html' }
         ];
 
         // دمج الكل
@@ -336,8 +337,8 @@
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // استخدام Play.html فقط للملفات التالية (التي لا تعمل مباشرة)
-                const specialFiles = ['bayblade.html', 'Files write and edit.html'];
+                // استخدام Play.html فقط للملفات التي لا تعمل مباشرة
+                const specialFiles = ['Files write and edit.html'];
                 let finalUrl;
                 if (specialFiles.includes(item.file)) {
                     finalUrl = PLAY_URL + encodeURIComponent(item.file);
