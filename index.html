@@ -252,9 +252,9 @@
 
 <main class="container">
     <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">7</span></button>
+        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">10</span></button>
         <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">3</span></button>
-        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">10</span></button>
+        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">13</span></button>
     </div>
 
     <div class="grid" id="cardGrid"></div>
@@ -278,14 +278,17 @@
         const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
         const PLAY_URL = BASE + 'Play.html?file=';
 
-        // قائمة الألعاب (7 ألعاب)
+        // قائمة الألعاب (10 ألعاب)
         const games = [
             { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
             { id: 'bayblade', icon: '⚔️', name: 'قتال البلابل', desc: 'قتال ثلاثي الأبعاد مع مهارات وطاقة', file: 'bayblade.html' },
             { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
             { id: 'Draw', icon: '🎨', name: 'تحدي الرسم', desc: 'إبداع وتلوين في لعبة تفاعلية', file: 'Draw.html' },
+            { id: 'GlintRush', icon: '💫', name: 'Glint Rush', desc: 'تحدي سرعة وتركيز عالي', file: 'Glint Rush.html' },
+            { id: 'hockey', icon: '🏒', name: 'لعبة الهوكي', desc: 'هوكي سريعة وممتعة', file: 'هوكي.html' },
             { id: 'SeaStrike', icon: '⚓', name: 'Sea Strike', desc: 'معركة بحرية مشوقة', file: 'SeaStrike.html' },
             { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: 'نسخة مستقلة ومختلفة كلياً', file: 'Super-dino.html' },
+            { id: 'XOGame', icon: '❌', name: 'X-O Game', desc: 'تيك تاك تو بلمسة عصرية', file: 'X-OGame.html' },
             { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' }
         ];
 
@@ -334,7 +337,7 @@
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // تحديد الملفات التي تحتاج إلى Play.html
+                // استخدام Play.html فقط للملفات التالية (التي لا تعمل مباشرة)
                 const specialFiles = ['bayblade.html', 'Files write and edit.html'];
                 let finalUrl;
                 if (specialFiles.includes(item.file)) {
