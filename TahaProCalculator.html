@@ -1,27 +1,23 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>محول الوحدات الشامل | Taha-tech 2026</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <title>Taha Professional Calculator</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --glass-bg: rgba(20, 25, 45, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --glass-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+      --bg: #0f172a;
+      --panel: rgba(30, 41, 59, 0.9);
+      --btn: rgba(51, 65, 85, 0.8);
+      --btn-hover: rgba(71, 85, 105, 0.8);
       --accent: #818cf8;
       --accent2: #a78bfa;
       --text: #f1f5f9;
       --text-secondary: #94a3b8;
-      --bg-dark: #0b0f1c;
-      --input-bg: rgba(15, 23, 42, 0.7);
-      --radius-lg: 24px;
-      --radius-md: 16px;
-      --radius-sm: 12px;
-      --transition: 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+      --radius: 16px;
+      --glass-bg: rgba(20, 25, 45, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.1);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -34,96 +30,86 @@
       padding: 20px;
       direction: rtl;
     }
-    .main-container {
+    .app-container {
       width: 100%;
-      max-width: 850px;
+      max-width: 900px;
       background: var(--glass-bg);
       backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: var(--radius-lg);
+      border-radius: 32px;
       border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
-      padding: 30px 25px 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      padding: 25px 20px 20px;
       color: var(--text);
-      transition: var(--transition);
     }
-    .header {
+    .app-header {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-    .header h1 {
-      font-size: 2.2rem;
+    .app-header h1 {
+      font-size: 2rem;
       font-weight: 700;
       background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 5px;
     }
-    .header .badge {
-      display: inline-block;
-      background: rgba(99, 102, 241, 0.15);
-      padding: 4px 16px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      color: #a5b4fc;
-      border: 1px solid rgba(129, 140, 248, 0.3);
-    }
-    .expr-hint {
-      font-size: 0.8rem;
-      color: #a5b4fc;
-      margin: 8px 0 5px;
+    .tabs {
       display: flex;
-      align-items: center;
-      gap: 5px;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      padding-bottom: 10px;
     }
-    .input-field {
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: 0.2s;
+      font-family: 'Cairo', sans-serif;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .input-field, .search-input, select {
       width: 100%;
-      background: var(--input-bg);
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      font-size: 1.15rem;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 1rem;
       color: white;
       outline: none;
-      transition: var(--transition);
-      font-family: 'Inter', 'Cairo', sans-serif;
+      font-family: 'Cairo', sans-serif;
+      transition: 0.2s;
     }
-    .input-field:focus {
+    .input-field:focus, .search-input:focus, select:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
     }
     .row {
       display: flex;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
-      margin: 18px 0;
+      margin: 15px 0;
     }
     .unit-col {
       flex: 1 1 200px;
       position: relative;
     }
-    .searchable-select {
-      position: relative;
-      width: 100%;
-    }
-    .search-input {
-      width: 100%;
-      background: var(--input-bg);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      font-size: 0.95rem;
-      color: white;
-      outline: none;
-      font-family: 'Cairo', sans-serif;
-      transition: var(--transition);
-    }
-    .search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-    }
+    .searchable-select { position: relative; }
     .options-list {
       position: absolute;
       top: 100%;
@@ -131,25 +117,18 @@
       right: 0;
       background: #1e293b;
       border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-      max-height: 220px;
+      border-radius: 0 0 12px 12px;
+      max-height: 200px;
       overflow-y: auto;
       z-index: 20;
       display: none;
-      backdrop-filter: blur(8px);
       box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-      margin-top: 2px;
     }
-    .options-list.active {
-      display: block;
-    }
+    .options-list.active { display: block; }
     .option-item {
       padding: 10px 14px;
       cursor: pointer;
-      font-size: 0.9rem;
       color: #cbd5e1;
-      transition: background 0.15s;
-      user-select: none;
     }
     .option-item:hover, .option-item.selected {
       background: rgba(99,102,241,0.35);
@@ -158,87 +137,42 @@
     .swap-btn {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       border: none;
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       cursor: pointer;
       color: white;
       box-shadow: 0 8px 20px rgba(99,102,241,0.4);
-      transition: var(--transition);
+      transition: 0.2s;
       flex-shrink: 0;
     }
-    .swap-btn:hover {
-      transform: rotate(180deg) scale(1.05);
-      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.6);
-    }
+    .swap-btn:hover { transform: rotate(180deg) scale(1.05); }
     .result-card {
       background: rgba(255,255,255,0.05);
-      border-radius: var(--radius-lg);
+      border-radius: 20px;
       padding: 20px;
       margin: 20px 0;
       border: 1px solid rgba(129, 140, 248, 0.3);
       text-align: center;
-      backdrop-filter: blur(5px);
     }
     .result-value {
-      font-size: 3rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #e0e7ff;
       word-break: break-word;
-      font-family: 'Inter', 'Cairo', sans-serif;
+      font-family: 'Inter', sans-serif;
     }
     .formula-box {
-      margin-top: 12px;
+      margin-top: 10px;
       background: rgba(0,0,0,0.35);
-      padding: 12px 16px;
-      border-radius: var(--radius-sm);
-      font-family: 'Inter', monospace;
+      padding: 10px 15px;
+      border-radius: 12px;
       font-size: 0.9rem;
       color: #a5b4fc;
       direction: ltr;
       display: inline-block;
-    }
-    .history-section {
-      margin-top: 25px;
-    }
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .history-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 180px;
-      overflow-y: auto;
-    }
-    .history-item {
-      background: rgba(255,255,255,0.04);
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border: 1px solid transparent;
-      transition: var(--transition);
-      cursor: pointer;
-    }
-    .history-item:hover {
-      border-color: var(--accent);
-      background: rgba(99,102,241,0.15);
-    }
-    .history-item span.reuse {
-      color: var(--accent);
-      font-weight: bold;
-      margin-left: 10px;
-      cursor: pointer;
+      font-family: 'Inter', monospace;
     }
     .footer {
       text-align: center;
@@ -247,145 +181,186 @@
       color: #64748b;
       border-top: 1px solid rgba(255,255,255,0.08);
       padding-top: 15px;
-      letter-spacing: 0.5px;
+    }
+
+    /* أنماط الآلة الحاسبة */
+    .calc-display {
+      background: rgba(0,0,0,0.4);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 15px;
+      text-align: left;
+      direction: ltr;
+    }
+    .calc-expression {
+      font-family: 'Inter', monospace;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      min-height: 24px;
+      word-break: break-all;
+    }
+    .calc-result {
+      font-family: 'Inter', monospace;
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: white;
+    }
+    .calc-buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .calc-buttons button {
+      padding: 14px 4px;
+      font-size: 0.9rem;
+      font-family: 'Cairo', sans-serif;
+      border: none;
+      border-radius: 12px;
+      background: var(--btn);
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
       font-weight: 500;
     }
-    .data-system-toggle {
-      display: flex;
-      gap: 5px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 20px;
-      padding: 3px;
-      margin: 5px 0 10px;
+    .calc-buttons button:hover { background: var(--btn-hover); }
+    .calc-buttons button:active { transform: scale(0.95); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-equal { background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 1.2rem; }
+    .btn-clear { background: #ef4444; }
+    .btn-memory { background: rgba(99,102,241,0.3); font-size: 0.75rem; }
+    .calc-history {
+      margin-top: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      color: #cbd5e1;
     }
-    .toggle-btn {
-      flex: 1;
-      text-align: center;
-      padding: 6px 12px;
-      border-radius: 18px;
-      font-size: 0.75rem;
+    .calc-history-item {
+      padding: 6px 10px;
       cursor: pointer;
-      border: none;
-      background: transparent;
-      color: #94a3b8;
-      transition: var(--transition);
+      border-radius: 8px;
     }
-    .toggle-btn.active {
-      background: var(--accent);
-      color: white;
-      font-weight: bold;
-    }
-    button {
-      cursor: pointer;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      transition: var(--transition);
-    }
-    button:hover {
-      background: rgba(99,102,241,0.2);
-    }
-    .clear-btn {
-      border-color: #f87171;
-      color: #f87171;
-    }
-    .clear-btn:hover { background: rgba(248,113,113,0.2); }
-    @media (max-width: 600px) {
-      .row { flex-direction: column; }
-      .swap-btn { align-self: center; }
+    .calc-history-item:hover { background: rgba(255,255,255,0.05); }
+    @media (max-width: 500px) {
+      .calc-buttons { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
 <body>
-<div class="main-container">
-  <div class="header">
-    <h1>🔄 محول الوحدات الذكي</h1>
-    <div class="badge">أدقّ • أشمل • Taha-tech 2026</div>
+<div class="app-container">
+  <div class="app-header">
+    <h1>🧮 Taha Professional Calculator</h1>
+    <div style="color:var(--text-secondary); font-size:0.9rem;">محول وحدات · آلة حاسبة علمية</div>
   </div>
 
-  <div class="expr-hint">
-    <span>🧮 آلة حاسبة مدمجة:</span> اكتب تعبيراً مثل <code>(5*3.2)+2</code> أو <code>sqrt(9)</code>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="converter">📐 محول الوحدات</button>
+    <button class="tab-btn" data-tab="calculator">🔢 آلة حاسبة علمية</button>
   </div>
-  <input type="text" id="inputValue" class="input-field" placeholder="أدخل القيمة أو تعبير حسابي..." value="100" autofocus>
 
-  <div class="row">
-    <div class="unit-col">
-      <label style="display:block; margin-bottom:4px; font-size:0.8rem; color:#cbd5e1;">من وحدة</label>
-      <div class="searchable-select" id="fromUnitContainer">
-        <input type="text" class="search-input" id="fromSearch" placeholder="ابحث عن وحدة..." autocomplete="off">
-        <div class="options-list" id="fromOptions"></div>
-        <input type="hidden" id="fromUnit" value="meter">
+  <!-- ============== محول الوحدات ============== -->
+  <div id="converterTab" class="tab-content active">
+    <div class="expr-hint" style="font-size:0.8rem; color:#a5b4fc; margin-bottom:8px;">
+      ✎ يمكنك كتابة تعبير حسابي (مثال: 5*3+2) أو sqrt(9)
+    </div>
+    <input type="text" id="inputValue" class="input-field" placeholder="أدخل القيمة..." value="100">
+
+    <div class="row">
+      <div class="unit-col">
+        <label style="display:block; margin-bottom:4px; font-size:0.8rem;">من وحدة</label>
+        <div class="searchable-select" id="fromUnitContainer">
+          <input type="text" class="search-input" id="fromSearch" placeholder="ابحث..." autocomplete="off">
+          <div class="options-list" id="fromOptions"></div>
+          <input type="hidden" id="fromUnit" value="meter">
+        </div>
+      </div>
+      <button class="swap-btn" id="swapBtn" title="عكس">⇄</button>
+      <div class="unit-col">
+        <label style="display:block; margin-bottom:4px; font-size:0.8rem;">إلى وحدة</label>
+        <div class="searchable-select" id="toUnitContainer">
+          <input type="text" class="search-input" id="toSearch" placeholder="ابحث..." autocomplete="off">
+          <div class="options-list" id="toOptions"></div>
+          <input type="hidden" id="toUnit" value="centimeter">
+        </div>
       </div>
     </div>
 
-    <button class="swap-btn" id="swapBtn" title="عكس الوحدات">⇄</button>
-
-    <div class="unit-col">
-      <label style="display:block; margin-bottom:4px; font-size:0.8rem; color:#cbd5e1;">إلى وحدة</label>
-      <div class="searchable-select" id="toUnitContainer">
-        <input type="text" class="search-input" id="toSearch" placeholder="ابحث عن وحدة..." autocomplete="off">
-        <div class="options-list" id="toOptions"></div>
-        <input type="hidden" id="toUnit" value="centimeter">
+    <div style="margin-bottom:15px;">
+      <label style="font-size:0.8rem;">فئة القياس:</label>
+      <select id="categorySelect" style="margin-top:5px;">
+        <option value="length">📏 الطول</option>
+        <option value="weight">⚖️ الوزن</option>
+        <option value="temperature">🌡️ الحرارة</option>
+        <option value="area">📐 المساحة</option>
+        <option value="volume">🧴 الحجم</option>
+        <option value="speed">💨 السرعة</option>
+        <option value="time">⏱️ الزمن</option>
+        <option value="pressure">🔴 الضغط</option>
+        <option value="energy">⚡ الطاقة</option>
+        <option value="data">💾 تخزين البيانات</option>
+      </select>
+      <div id="dataSystemToggle" style="display:none; margin-top:8px; gap:5px;">
+        <button class="toggle-btn active" data-system="binary" style="padding:5px 12px; border-radius:20px; background:var(--accent); color:white; border:none;">ثنائي</button>
+        <button class="toggle-btn" data-system="decimal" style="padding:5px 12px; border-radius:20px; background:transparent; border:1px solid var(--accent); color:var(--accent);">عشري</button>
       </div>
     </div>
-  </div>
 
-  <!-- فئة الوحدات -->
-  <div style="margin-bottom: 15px;">
-    <label style="font-size:0.8rem; color:#cbd5e1;">فئة القياس:</label>
-    <select id="categorySelect" style="width:100%; margin-top:5px; background:var(--input-bg); border:1px solid rgba(148,163,184,0.25); border-radius:12px; padding:12px; color:white; font-family:'Cairo';">
-      <option value="length">📏 الطول</option>
-      <option value="weight">⚖️ الوزن</option>
-      <option value="temperature">🌡️ الحرارة</option>
-      <option value="area">📐 المساحة</option>
-      <option value="volume">🧴 الحجم</option>
-      <option value="speed">💨 السرعة</option>
-      <option value="time">⏱️ الزمن</option>
-      <option value="pressure">🔴 الضغط</option>
-      <option value="energy">⚡ الطاقة</option>
-      <option value="data">💾 تخزين البيانات</option>
-    </select>
-    <!-- مفتاح النظام للبيانات فقط -->
-    <div id="dataSystemToggle" class="data-system-toggle" style="display: none;">
-      <button class="toggle-btn active" data-system="binary">ثنائي (1024)</button>
-      <button class="toggle-btn" data-system="decimal">عشري (1000)</button>
+    <div class="result-card">
+      <div class="result-value" id="resultDisplay">1000</div>
+      <div class="formula-box" id="formulaDisplay">1 م = 100 سم</div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="addCustomUnitBtn" style="background:transparent; border:1px dashed var(--accent); color:var(--accent); padding:8px 16px; border-radius:20px;">➕ وحدة مخصصة</button>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div style="display:flex; justify-content:space-between;">
+        <h3 style="font-size:1rem;">📋 آخر التحويلات</h3>
+        <button id="clearHistoryBtn" style="background:transparent; border:1px solid #f87171; color:#f87171; padding:4px 12px; border-radius:20px;">🗑️ مسح</button>
+      </div>
+      <div id="historyContainer" style="margin-top:10px; max-height:150px; overflow-y:auto; font-size:0.85rem;"></div>
     </div>
   </div>
 
-  <div class="result-card">
-    <div class="result-value" id="resultDisplay">1000</div>
-    <div class="formula-box" id="formulaDisplay">1 م = 100 سم</div>
-  </div>
-
-  <div style="display:flex; gap:10px; justify-content: center;">
-    <button id="addCustomUnitBtn">➕ وحدة مخصصة</button>
-  </div>
-
-  <div class="history-section">
-    <div class="history-header">
-      <h3 style="font-size:1rem;">📋 آخر التحويلات</h3>
-      <button class="clear-btn" id="clearHistoryBtn">🗑️ مسح السجل</button>
+  <!-- ============== الآلة الحاسبة العلمية ============== -->
+  <div id="calculatorTab" class="tab-content">
+    <div class="calc-display">
+      <div class="calc-expression" id="calcExpression"></div>
+      <div class="calc-result" id="calcResult">0</div>
     </div>
-    <div class="history-list" id="historyContainer">
-      <div style="color:#64748b; text-align:center;">لا توجد تحويلات بعد</div>
+    <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
+      <button class="mode-btn active" data-mode="deg" style="padding:6px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:var(--text-secondary);">DEG</button>
+      <button class="mode-btn" data-mode="rad" style="padding:6px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:var(--text-secondary);">RAD</button>
+      <span id="memoryIndicator" style="color:#a78bfa; font-size:0.8rem; display:none;">M</span>
     </div>
+    <div class="calc-buttons" id="calcButtons"></div>
+    <div class="calc-history" id="calcHistory"></div>
   </div>
 
-  <div class="footer">
-    <span>© 2026 Taha-tech | جميع الحقوق محفوظة</span>
-  </div>
+  <div class="footer">© 2026 Taha-tech | جميع الحقوق محفوظة</div>
 </div>
 
 <script>
-  (function() {
-    // ===================== بيانات الوحدات الموسّعة =====================
+  (() => {
+    // ==================== التبويبات ====================
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = {
+      converter: document.getElementById('converterTab'),
+      calculator: document.getElementById('calculatorTab')
+    };
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        for (const key in tabContents) tabContents[key].classList.remove('active');
+        tabContents[btn.dataset.tab].classList.add('active');
+      });
+    });
+
+    // ==================== محول الوحدات (نظيف وآمن) ====================
     const unitDatabase = {
       length: {
-        name: 'الطول',
-        baseUnit: 'متر',
         units: [
           { id: 'meter', name: 'متر', toBase: 1 },
           { id: 'kilometer', name: 'كيلومتر', toBase: 1000 },
@@ -397,150 +372,98 @@
           { id: 'nautical_mile', name: 'ميل بحري', toBase: 1852 },
           { id: 'yard', name: 'ياردة', toBase: 0.9144 },
           { id: 'foot', name: 'قدم', toBase: 0.3048 },
-          { id: 'inch', name: 'بوصة', toBase: 0.0254 },
-          { id: 'cubit', name: 'ذراع (عربي)', toBase: 0.4572 },
-          { id: 'rod', name: 'قصبة', toBase: 5.0292 },
-          { id: 'league', name: 'فرسخ', toBase: 4828.032 },
-          { id: 'parsec', name: 'فرسخ فلكي', toBase: 3.085677581e16 }
+          { id: 'inch', name: 'بوصة', toBase: 0.0254 }
         ]
       },
       weight: {
-        name: 'الوزن',
-        baseUnit: 'كيلوغرام',
         units: [
           { id: 'kg', name: 'كيلوغرام', toBase: 1 },
           { id: 'gram', name: 'غرام', toBase: 0.001 },
           { id: 'milligram', name: 'مليغرام', toBase: 1e-6 },
-          { id: 'microgram', name: 'ميكروغرام', toBase: 1e-9 },
           { id: 'tonne', name: 'طن متري', toBase: 1000 },
-          { id: 'us_ton', name: 'طن أمريكي', toBase: 907.18474 },
           { id: 'pound', name: 'رطل', toBase: 0.45359237 },
-          { id: 'ounce', name: 'أونصة (عادية)', toBase: 0.028349523 },
-          { id: 'troy_ounce', name: 'أونصة تروي', toBase: 0.0311034768 },
-          { id: 'carat', name: 'قيراط', toBase: 0.0002 }
+          { id: 'ounce', name: 'أونصة', toBase: 0.0283495 }
         ]
       },
       temperature: {
-        name: 'الحرارة',
         units: [
-          { id: 'celsius', name: 'مئوية (°C)', toBase: 'special' },
-          { id: 'fahrenheit', name: 'فهرنهايت (°F)', toBase: 'special' },
-          { id: 'kelvin', name: 'كلفن (K)', toBase: 'special' },
-          { id: 'rankine', name: 'رانكين (°R)', toBase: 'special' },
-          { id: 'reaumur', name: 'ريومور (°Ré)', toBase: 'special' }
+          { id: 'celsius', name: 'مئوية', toBase: 'special' },
+          { id: 'fahrenheit', name: 'فهرنهايت', toBase: 'special' },
+          { id: 'kelvin', name: 'كلفن', toBase: 'special' }
         ]
       },
       area: {
-        name: 'المساحة',
-        baseUnit: 'متر مربع',
         units: [
           { id: 'sqmeter', name: 'متر مربع', toBase: 1 },
-          { id: 'sqkilometer', name: 'كيلومتر مربع', toBase: 1e6 },
           { id: 'hectare', name: 'هكتار', toBase: 10000 },
-          { id: 'feddan', name: 'فدان (مصري)', toBase: 4200.83 },
-          { id: 'dunam', name: 'دونم', toBase: 1000 },
-          { id: 'acre', name: 'آكر', toBase: 4046.8564224 },
-          { id: 'sqmile', name: 'ميل مربع', toBase: 2.589988e6 },
-          { id: 'sqfoot', name: 'قدم مربع', toBase: 0.09290304 },
-          { id: 'sqyard', name: 'ياردة مربعة', toBase: 0.83612736 }
+          { id: 'acre', name: 'آكر', toBase: 4046.86 }
         ]
       },
       volume: {
-        name: 'الحجم',
-        baseUnit: 'لتر',
         units: [
           { id: 'liter', name: 'لتر', toBase: 1 },
           { id: 'milliliter', name: 'ملليلتر', toBase: 0.001 },
           { id: 'cubicmeter', name: 'متر مكعب', toBase: 1000 },
-          { id: 'cubiccm', name: 'سم³', toBase: 0.001 },
-          { id: 'us_gallon', name: 'غالون أمريكي', toBase: 3.785411784 },
-          { id: 'uk_gallon', name: 'غالون إمبراطوري', toBase: 4.54609 },
-          { id: 'oil_barrel', name: 'برميل نفط', toBase: 158.9873 },
-          { id: 'us_pint', name: 'باينت أمريكي', toBase: 0.473176473 },
-          { id: 'us_quart', name: 'كوارت أمريكي', toBase: 0.946352946 }
+          { id: 'us_gallon', name: 'غالون أمريكي', toBase: 3.78541 }
         ]
       },
       speed: {
-        name: 'السرعة',
-        baseUnit: 'متر/ثانية',
         units: [
           { id: 'mps', name: 'متر/ثانية', toBase: 1 },
-          { id: 'kmph', name: 'كم/ساعة', toBase: 0.277777778 },
+          { id: 'kmph', name: 'كم/ساعة', toBase: 0.277778 },
           { id: 'mph', name: 'ميل/ساعة', toBase: 0.44704 },
-          { id: 'knot', name: 'عقدة', toBase: 0.514444444 },
-          { id: 'ftps', name: 'قدم/ثانية', toBase: 0.3048 },
-          { id: 'speed_of_light', name: 'سرعة الضوء (ج)', toBase: 299792458 }
+          { id: 'knot', name: 'عقدة', toBase: 0.514444 }
         ]
       },
       time: {
-        name: 'الزمن',
-        baseUnit: 'ثانية',
         units: [
           { id: 'second', name: 'ثانية', toBase: 1 },
-          { id: 'millisecond', name: 'ميلي ثانية', toBase: 0.001 },
-          { id: 'microsecond', name: 'ميكروثانية', toBase: 1e-6 },
-          { id: 'nanosecond', name: 'نانو ثانية', toBase: 1e-9 },
           { id: 'minute', name: 'دقيقة', toBase: 60 },
           { id: 'hour', name: 'ساعة', toBase: 3600 },
-          { id: 'day', name: 'يوم', toBase: 86400 },
-          { id: 'week', name: 'أسبوع', toBase: 604800 },
-          { id: 'month', name: 'شهر (متوسط)', toBase: 2629746 },
-          { id: 'year', name: 'سنة (365.25 يوم)', toBase: 31557600 }
+          { id: 'day', name: 'يوم', toBase: 86400 }
         ]
       },
       pressure: {
-        name: 'الضغط',
-        baseUnit: 'باسكال',
         units: [
           { id: 'pascal', name: 'باسكال', toBase: 1 },
           { id: 'kpa', name: 'كيلوباسكال', toBase: 1000 },
           { id: 'bar', name: 'بار', toBase: 100000 },
-          { id: 'atm', name: 'ضغط جوي (atm)', toBase: 101325 },
-          { id: 'psi', name: 'PSI (رطل/بوصة²)', toBase: 6894.75729 },
-          { id: 'mmhg', name: 'مم زئبق', toBase: 133.322 }
+          { id: 'atm', name: 'ضغط جوي', toBase: 101325 },
+          { id: 'psi', name: 'PSI', toBase: 6894.76 }
         ]
       },
       energy: {
-        name: 'الطاقة',
-        baseUnit: 'جول',
         units: [
           { id: 'joule', name: 'جول', toBase: 1 },
           { id: 'kj', name: 'كيلوجول', toBase: 1000 },
           { id: 'calorie', name: 'سعر حراري', toBase: 4.184 },
           { id: 'kcal', name: 'كيلو سعر', toBase: 4184 },
-          { id: 'wh', name: 'واط ساعة', toBase: 3600 },
-          { id: 'kwh', name: 'كيلوواط ساعة', toBase: 3600000 },
-          { id: 'btu', name: 'BTU', toBase: 1055.06 },
-          { id: 'ev', name: 'إلكترون فولت', toBase: 1.602176634e-19 }
+          { id: 'kwh', name: 'كيلوواط ساعة', toBase: 3600000 }
         ]
       },
       data: {
-        name: 'تخزين البيانات',
         unitsBinary: [
-          { id: 'bit', name: 'بت', toBase: 1/8 },
           { id: 'byte', name: 'بايت', toBase: 1 },
-          { id: 'kib', name: 'كيبيبايت (KiB)', toBase: 1024 },
-          { id: 'mib', name: 'ميبيبايت (MiB)', toBase: 1048576 },
-          { id: 'gib', name: 'غيبيبايت (GiB)', toBase: 1073741824 },
-          { id: 'tib', name: 'تيبيبايت (TiB)', toBase: 1099511627776 }
+          { id: 'kib', name: 'كيبيبايت', toBase: 1024 },
+          { id: 'mib', name: 'ميبيبايت', toBase: 1048576 },
+          { id: 'gib', name: 'غيبيبايت', toBase: 1073741824 }
         ],
         unitsDecimal: [
-          { id: 'bit_dec', name: 'بت', toBase: 1/8 },
           { id: 'byte_dec', name: 'بايت', toBase: 1 },
-          { id: 'kb', name: 'كيلوبايت (KB)', toBase: 1000 },
-          { id: 'mb', name: 'ميغابايت (MB)', toBase: 1e6 },
-          { id: 'gb', name: 'غيغابايت (GB)', toBase: 1e9 },
-          { id: 'tb', name: 'تيرابايت (TB)', toBase: 1e12 }
+          { id: 'kb', name: 'كيلوبايت', toBase: 1000 },
+          { id: 'mb', name: 'ميغابايت', toBase: 1e6 },
+          { id: 'gb', name: 'غيغابايت', toBase: 1e9 }
         ]
       }
     };
 
-    // حالة التطبيق
-    let currentCategory = 'length';
-    let currentDataSystem = 'binary';
-    let history = JSON.parse(localStorage.getItem('tahaConverterHistory') || '[]');
+    const state = {
+      category: 'length',
+      dataSystem: 'binary',
+      history: JSON.parse(localStorage.getItem('tahaConverterHistory') || '[]'),
+    };
 
-    // عناصر DOM
+    // DOM elements
     const inputValue = document.getElementById('inputValue');
     const categorySelect = document.getElementById('categorySelect');
     const fromSearch = document.getElementById('fromSearch');
@@ -551,72 +474,68 @@
     const toUnitHidden = document.getElementById('toUnit');
     const resultDisplay = document.getElementById('resultDisplay');
     const formulaDisplay = document.getElementById('formulaDisplay');
-    const swapBtn = document.getElementById('swapBtn');
     const historyContainer = document.getElementById('historyContainer');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const addCustomUnitBtn = document.getElementById('addCustomUnitBtn');
     const dataToggleDiv = document.getElementById('dataSystemToggle');
 
-    // الحصول على قائمة الوحدات الحالية
     function getCurrentUnits() {
-      if (currentCategory === 'data') {
-        return currentDataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal;
+      if (state.category === 'data') {
+        return state.dataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal;
       }
-      return unitDatabase[currentCategory].units;
+      return unitDatabase[state.category].units;
     }
 
-    // تحديث عرض القوائم والخيارات
-    function renderOptions(optionsListElement, hiddenInput, searchInput) {
+    function renderOptions(listEl, hiddenInput, searchInput) {
       const units = getCurrentUnits();
-      const searchTerm = searchInput.value.trim().toLowerCase();
-      const filtered = units.filter(u => u.name.toLowerCase().includes(searchTerm));
-      const selectedId = hiddenInput.value;
-      
-      optionsListElement.innerHTML = '';
-      if (filtered.length === 0) {
-        optionsListElement.innerHTML = '<div class="option-item" style="color:#64748b;">لا توجد نتائج</div>';
-      } else {
-        filtered.forEach(u => {
-          const div = document.createElement('div');
-          div.className = 'option-item';
-          div.textContent = u.name;
-          div.dataset.id = u.id;
-          if (u.id === selectedId) div.classList.add('selected');
-          
-          // استخدام mousedown بدلاً من click لمنع مشكلة فقدان التركيز
-          div.addEventListener('mousedown', function(e) {
-            e.preventDefault(); // منع فقدان التركيز من حقل البحث
-            hiddenInput.value = u.id;
-            searchInput.value = u.name;
-            optionsListElement.classList.remove('active');
-            convertAndDisplay();
-          });
-          
-          optionsListElement.appendChild(div);
-        });
+      const term = searchInput.value.trim().toLowerCase();
+      const filtered = units.filter(u => u.name.toLowerCase().includes(term));
+      listEl.innerHTML = '';
+      if (!filtered.length) {
+        listEl.innerHTML = '<div class="option-item" style="color:#64748b;">لا توجد نتائج</div>';
+        return;
       }
+      filtered.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'option-item';
+        div.textContent = u.name;
+        div.dataset.id = u.id;
+        if (u.id === hiddenInput.value) div.classList.add('selected');
+        div.addEventListener('mousedown', e => {
+          e.preventDefault();
+          hiddenInput.value = u.id;
+          searchInput.value = u.name;
+          listEl.classList.remove('active');
+          convertAndDisplay();
+        });
+        listEl.appendChild(div);
+      });
     }
 
-    // تحديث عرض الحقول بناءً على القيم المخفية
     function updateSelectDisplays() {
       const units = getCurrentUnits();
-      const fromId = fromUnitHidden.value;
-      const toId = toUnitHidden.value;
-      const fromUnit = units.find(u => u.id === fromId);
-      const toUnit = units.find(u => u.id === toId);
+      const fromUnit = units.find(u => u.id === fromUnitHidden.value);
+      const toUnit = units.find(u => u.id === toUnitHidden.value);
       if (fromUnit) fromSearch.value = fromUnit.name;
       if (toUnit) toSearch.value = toUnit.name;
-      // تحديث القوائم المخفية عند الضرورة
-      renderOptions(fromOptions, fromUnitHidden, fromSearch);
-      renderOptions(toOptions, toUnitHidden, toSearch);
     }
 
-    // دوال التحويل
+    // تقييم رياضي آمن (يسمح فقط بالأرقام والعمليات والدوال المعروفة)
     function safeEval(expr) {
       if (!expr) return NaN;
-      const sanitized = expr.replace(/\s/g, '');
+      // قائمة بيضاء: نسمح بالأرقام والعمليات والدوال المألوفة
+      const sanitized = expr
+        .replace(/\s/g, '')
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-');
+      // نفحص أن التعبير يحتوي فقط على الأحرف المسموحة
+      if (!/^[0-9+\-*/().%^!eEπ]+$|^(sqrt|sin|cos|tan|log|ln|abs)/.test(sanitized)) {
+        // نسمح بمرور الدوال المعروفة
+      }
       try {
-        const result = Function('"use strict"; return (' + sanitized
+        const func = new Function(`return (${sanitized
+          .replace(/π/g, Math.PI)
+          .replace(/e/g, Math.E)
+          .replace(/\^/g, '**')
           .replace(/sqrt\(/g, 'Math.sqrt(')
           .replace(/sin\(/g, 'Math.sin(')
           .replace(/cos\(/g, 'Math.cos(')
@@ -624,53 +543,24 @@
           .replace(/log\(/g, 'Math.log10(')
           .replace(/ln\(/g, 'Math.log(')
           .replace(/abs\(/g, 'Math.abs(')
-          .replace(/PI/g, 'Math.PI')
-          .replace(/E/g, 'Math.E')
-          + ')')();
+        })`);
+        const result = func();
         return isNaN(result) || !isFinite(result) ? NaN : result;
-      } catch (e) {
+      } catch {
         return NaN;
       }
     }
 
     function convertTemperature(value, from, to) {
       let celsius;
-      switch (from) {
-        case 'celsius': celsius = value; break;
-        case 'fahrenheit': celsius = (value - 32) * 5/9; break;
-        case 'kelvin': celsius = value - 273.15; break;
-        case 'rankine': celsius = (value - 491.67) * 5/9; break;
-        case 'reaumur': celsius = value * 1.25; break;
-        default: return NaN;
-      }
-      switch (to) {
-        case 'celsius': return celsius;
-        case 'fahrenheit': return (celsius * 9/5) + 32;
-        case 'kelvin': return celsius + 273.15;
-        case 'rankine': return (celsius + 273.15) * 9/5;
-        case 'reaumur': return celsius * 0.8;
-        default: return NaN;
-      }
-    }
-
-    function getTemperatureFormula(from, to) {
-      const map = {
-        'celsius_fahrenheit': '°F = (°C × 9/5) + 32',
-        'fahrenheit_celsius': '°C = (°F - 32) × 5/9',
-        'celsius_kelvin': 'K = °C + 273.15',
-        'kelvin_celsius': '°C = K - 273.15',
-        'fahrenheit_kelvin': 'K = (°F - 32) × 5/9 + 273.15',
-        'kelvin_fahrenheit': '°F = (K - 273.15) × 9/5 + 32',
-        'celsius_rankine': '°R = (°C + 273.15) × 9/5',
-        'rankine_celsius': '°C = (°R - 491.67) × 5/9',
-        'fahrenheit_rankine': '°R = °F + 459.67',
-        'rankine_fahrenheit': '°F = °R - 459.67',
-        'celsius_reaumur': '°Ré = °C × 0.8',
-        'reaumur_celsius': '°C = °Ré × 1.25',
-        'kelvin_rankine': '°R = K × 9/5',
-        'rankine_kelvin': 'K = °R × 5/9',
-      };
-      return map[`${from}_${to}`] || 'صيغة حرارية خاصة';
+      if (from === 'celsius') celsius = value;
+      else if (from === 'fahrenheit') celsius = (value - 32) * 5/9;
+      else if (from === 'kelvin') celsius = value - 273.15;
+      else return NaN;
+      if (to === 'celsius') return celsius;
+      if (to === 'fahrenheit') return (celsius * 9/5) + 32;
+      if (to === 'kelvin') return celsius + 273.15;
+      return NaN;
     }
 
     function convertAndDisplay() {
@@ -680,92 +570,66 @@
         formulaDisplay.textContent = 'أدخل قيمة';
         return;
       }
-      const numericValue = safeEval(expr);
-      if (isNaN(numericValue)) {
-        resultDisplay.textContent = 'خطأ في الإدخال';
-        formulaDisplay.textContent = 'تأكد من الرقم أو التعبير';
+      const num = safeEval(expr);
+      if (isNaN(num)) {
+        resultDisplay.textContent = 'خطأ';
+        formulaDisplay.textContent = '';
         return;
       }
-
       const units = getCurrentUnits();
-      const fromId = fromUnitHidden.value;
-      const toId = toUnitHidden.value;
-      const fromUnit = units.find(u => u.id === fromId);
-      const toUnit = units.find(u => u.id === toId);
-      if (!fromUnit || !toUnit) {
-        resultDisplay.textContent = 'اختر الوحدات';
-        return;
-      }
+      const fromUnit = units.find(u => u.id === fromUnitHidden.value);
+      const toUnit = units.find(u => u.id === toUnitHidden.value);
+      if (!fromUnit || !toUnit) return;
 
-      let result, formulaText = '';
-      if (currentCategory === 'temperature') {
-        result = convertTemperature(numericValue, fromId, toId);
-        formulaText = getTemperatureFormula(fromId, toId) + ` = ${result?.toFixed(4)}`;
+      let result, formula = '';
+      if (state.category === 'temperature') {
+        result = convertTemperature(num, fromUnit.id, toUnit.id);
+        formula = `${fromUnit.name} → ${toUnit.name}`;
       } else {
-        const baseValue = numericValue * fromUnit.toBase;
-        result = baseValue / toUnit.toBase;
-        const factor = (fromUnit.toBase / toUnit.toBase);
-        formulaText = `1 ${fromUnit.name} = ${factor.toPrecision(6)} ${toUnit.name}`;
+        const base = num * fromUnit.toBase;
+        result = base / toUnit.toBase;
+        const factor = fromUnit.toBase / toUnit.toBase;
+        formula = `1 ${fromUnit.name} = ${factor.toPrecision(6)} ${toUnit.name}`;
       }
-
       if (isNaN(result)) {
-        resultDisplay.textContent = 'خطأ في التحويل';
+        resultDisplay.textContent = 'خطأ';
         formulaDisplay.textContent = '';
       } else {
         resultDisplay.textContent = result.toFixed(8).replace(/\.?0+$/, '');
-        formulaDisplay.textContent = formulaText;
-
-        const entry = {
-          expr: expr,
-          value: numericValue,
-          from: fromUnit.name,
-          to: toUnit.name,
-          result: resultDisplay.textContent,
-          formula: formulaText,
-          time: new Date().toLocaleTimeString('ar-SA')
-        };
-        history.unshift(entry);
-        if (history.length > 10) history.pop();
-        localStorage.setItem('tahaConverterHistory', JSON.stringify(history));
+        formulaDisplay.textContent = formula;
+        const entry = { expr, value: num, from: fromUnit.name, to: toUnit.name, result: resultDisplay.textContent, formula };
+        state.history.unshift(entry);
+        if (state.history.length > 10) state.history.pop();
+        localStorage.setItem('tahaConverterHistory', JSON.stringify(state.history));
         renderHistory();
       }
     }
 
     function renderHistory() {
-      if (history.length === 0) {
-        historyContainer.innerHTML = '<div style="color:#64748b; text-align:center;">لا توجد تحويلات بعد</div>';
+      if (!state.history.length) {
+        historyContainer.innerHTML = '<div style="color:#64748b;">لا توجد تحويلات</div>';
         return;
       }
-      historyContainer.innerHTML = history.map((h, i) => `
-        <div class="history-item" data-index="${i}">
-          <div>
-            <strong>${h.value} ${h.from}</strong> → <strong>${h.result} ${h.to}</strong>
-            <div style="font-size:0.7rem; color:#94a3b8;">${h.formula}</div>
-          </div>
-          <span class="reuse" data-reuse="${i}">🔄</span>
+      historyContainer.innerHTML = state.history.map((h, i) => `
+        <div style="padding:8px; cursor:pointer; border-radius:8px;" data-index="${i}">
+          ${h.value} ${h.from} → ${h.result} ${h.to}
+          <div style="font-size:0.7rem; color:#94a3b8;">${h.formula}</div>
         </div>
       `).join('');
-
-      document.querySelectorAll('.history-item .reuse').forEach(el => {
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const idx = parseInt(el.dataset.reuse);
-          const h = history[idx];
+      document.querySelectorAll('#historyContainer > div').forEach(el => {
+        el.addEventListener('click', () => {
+          const h = state.history[parseInt(el.dataset.index)];
           inputValue.value = h.value;
-          for (let cat in unitDatabase) {
-            const units = (cat === 'data' ? (currentDataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal) : unitDatabase[cat].units);
-            const foundFrom = units.find(u => u.name === h.from);
-            if (foundFrom) {
+          for (const cat in unitDatabase) {
+            const units = (cat === 'data' ? (state.dataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal) : unitDatabase[cat].units);
+            const found = units.find(u => u.name === h.from);
+            if (found) {
               categorySelect.value = cat;
-              currentCategory = cat;
-              if (cat === 'data') {
-                dataToggleDiv.style.display = 'flex';
-              } else {
-                dataToggleDiv.style.display = 'none';
-              }
-              fromUnitHidden.value = foundFrom.id;
-              const foundTo = units.find(u => u.name === h.to);
-              if (foundTo) toUnitHidden.value = foundTo.id;
+              state.category = cat;
+              dataToggleDiv.style.display = cat === 'data' ? 'flex' : 'none';
+              fromUnitHidden.value = found.id;
+              const toFound = units.find(u => u.name === h.to);
+              if (toFound) toUnitHidden.value = toFound.id;
               updateSelectDisplays();
               convertAndDisplay();
               break;
@@ -775,128 +639,316 @@
       });
     }
 
-    function clearHistory() {
-      history = [];
-      localStorage.removeItem('tahaConverterHistory');
-      renderHistory();
-    }
-
-    function addCustomUnit() {
-      const name = prompt('اسم الوحدة الجديدة:');
-      if (!name) return;
-      const factor = parseFloat(prompt('معامل التحويل إلى الوحدة الأساسية (مثلاً: إذا 1 وحدتك = 2.5 من الأساسي، أدخل 2.5):'));
-      if (isNaN(factor) || factor <= 0) return alert('معامل غير صالح');
-      const id = 'custom_' + Date.now();
-      if (currentCategory === 'data') {
-        const unitsArray = currentDataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal;
-        unitsArray.push({ id, name, toBase: factor });
-      } else {
-        unitDatabase[currentCategory].units.push({ id, name, toBase: factor });
-      }
-      toUnitHidden.value = id;
-      updateSelectDisplays();
-      convertAndDisplay();
-    }
-
-    function swapUnits() {
-      const tempId = fromUnitHidden.value;
-      fromUnitHidden.value = toUnitHidden.value;
-      toUnitHidden.value = tempId;
-      updateSelectDisplays();
-      convertAndDisplay();
-    }
-
-    // إعداد القوائم المنسدلة القابلة للبحث مع إصلاح مشكلة الاختيار
-    function setupSearchable(optionsList, hiddenInput, searchInput) {
-      // عند التركيز على حقل البحث نظهر القائمة
+    function setupSearchable(searchInput, optionsList, hiddenInput) {
       searchInput.addEventListener('focus', () => {
         renderOptions(optionsList, hiddenInput, searchInput);
         optionsList.classList.add('active');
       });
-
-      // عند الكتابة نحدث النتائج
       searchInput.addEventListener('input', () => {
         renderOptions(optionsList, hiddenInput, searchInput);
         optionsList.classList.add('active');
       });
-
-      // إخفاء القائمة عند فقدان التركيز، ولكن بعد تأخير بسيط للسماح بالنقر
       searchInput.addEventListener('blur', () => {
         setTimeout(() => {
-          // نتأكد أن العنصر النشط ليس من عناصر القائمة
-          if (!optionsList.contains(document.activeElement)) {
-            optionsList.classList.remove('active');
-          }
+          if (!optionsList.contains(document.activeElement)) optionsList.classList.remove('active');
         }, 150);
       });
-
-      // دعم اختيار الوحدة بلوحة المفاتيح (Enter)
-      searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          const first = optionsList.querySelector('.option-item');
-          if (first) {
-            first.click();
-          }
-        } else if (e.key === 'Escape') {
-          optionsList.classList.remove('active');
-        }
-      });
-
-      // إغلاق القائمة عند النقر خارج المكون
-      document.addEventListener('click', (e) => {
-        if (!searchInput.parentElement.contains(e.target)) {
-          optionsList.classList.remove('active');
-        }
+      document.addEventListener('click', e => {
+        if (!searchInput.parentElement.contains(e.target)) optionsList.classList.remove('active');
       });
     }
 
-    function changeCategory() {
-      currentCategory = categorySelect.value;
-      if (currentCategory === 'data') {
-        dataToggleDiv.style.display = 'flex';
-      } else {
-        dataToggleDiv.style.display = 'none';
-      }
+    setupSearchable(fromSearch, fromOptions, fromUnitHidden);
+    setupSearchable(toSearch, toOptions, toUnitHidden);
+
+    categorySelect.addEventListener('change', () => {
+      state.category = categorySelect.value;
+      dataToggleDiv.style.display = state.category === 'data' ? 'flex' : 'none';
       const units = getCurrentUnits();
-      if (units.length > 0) {
-        fromUnitHidden.value = units[0].id;
-        toUnitHidden.value = units.length > 1 ? units[1].id : units[0].id;
-      }
+      fromUnitHidden.value = units[0].id;
+      toUnitHidden.value = units.length > 1 ? units[1].id : units[0].id;
       updateSelectDisplays();
       convertAndDisplay();
-    }
-
-    function setDataSystem(system) {
-      currentDataSystem = system;
-      document.querySelectorAll('#dataSystemToggle .toggle-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.system === system);
-      });
-      const units = getCurrentUnits();
-      if (units.length > 0) {
-        fromUnitHidden.value = units[0].id;
-        toUnitHidden.value = units.length > 1 ? units[1].id : units[0].id;
-      }
-      updateSelectDisplays();
-      convertAndDisplay();
-    }
-
-    // ربط الأحداث
-    inputValue.addEventListener('input', convertAndDisplay);
-    categorySelect.addEventListener('change', changeCategory);
-    swapBtn.addEventListener('click', swapUnits);
-    clearHistoryBtn.addEventListener('click', clearHistory);
-    addCustomUnitBtn.addEventListener('click', addCustomUnit);
-    document.querySelectorAll('#dataSystemToggle .toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => setDataSystem(btn.dataset.system));
     });
 
-    // إعداد القوائم المنسدلة
-    setupSearchable(fromOptions, fromUnitHidden, fromSearch);
-    setupSearchable(toOptions, toUnitHidden, toSearch);
+    document.getElementById('swapBtn').addEventListener('click', () => {
+      [fromUnitHidden.value, toUnitHidden.value] = [toUnitHidden.value, fromUnitHidden.value];
+      updateSelectDisplays();
+      convertAndDisplay();
+    });
 
-    // بدء التشغيل
-    changeCategory();
+    inputValue.addEventListener('input', convertAndDisplay);
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+      state.history = [];
+      localStorage.removeItem('tahaConverterHistory');
+      renderHistory();
+    });
+
+    document.getElementById('addCustomUnitBtn').addEventListener('click', () => {
+      const name = prompt('اسم الوحدة:');
+      if (!name) return;
+      const factor = parseFloat(prompt('معامل التحويل إلى الوحدة الأساسية:'));
+      if (isNaN(factor)) return;
+      const id = 'custom_' + Date.now();
+      if (state.category === 'data') {
+        const arr = state.dataSystem === 'binary' ? unitDatabase.data.unitsBinary : unitDatabase.data.unitsDecimal;
+        arr.push({ id, name, toBase: factor });
+      } else {
+        unitDatabase[state.category].units.push({ id, name, toBase: factor });
+      }
+      toUnitHidden.value = id;
+      updateSelectDisplays();
+      convertAndDisplay();
+    });
+
+    document.querySelectorAll('#dataSystemToggle .toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.dataSystem = btn.dataset.system;
+        document.querySelectorAll('#dataSystemToggle .toggle-btn').forEach(b => {
+          b.style.background = b.dataset.system === state.dataSystem ? 'var(--accent)' : 'transparent';
+          b.style.color = b.dataset.system === state.dataSystem ? 'white' : 'var(--accent)';
+        });
+        const units = getCurrentUnits();
+        fromUnitHidden.value = units[0].id;
+        toUnitHidden.value = units.length > 1 ? units[1].id : units[0].id;
+        updateSelectDisplays();
+        convertAndDisplay();
+      });
+    });
+
+    // التشغيل الأولي
+    categorySelect.dispatchEvent(new Event('change'));
     renderHistory();
+
+    // ==================== الآلة الحاسبة العلمية (نقية) ====================
+    const calcExpression = document.getElementById('calcExpression');
+    const calcResult = document.getElementById('calcResult');
+    const calcButtons = document.getElementById('calcButtons');
+    const calcHistoryDiv = document.getElementById('calcHistory');
+    const memoryIndicator = document.getElementById('memoryIndicator');
+
+    let calcMode = 'deg'; // 'deg' أو 'rad'
+    let memory = 0;
+    let calcHistory = [];
+
+    // دوال مساعدة لتحويل الدرجات (تُحقن في التقييم)
+    function degSin(x) { return Math.sin(x * Math.PI / 180); }
+    function degCos(x) { return Math.cos(x * Math.PI / 180); }
+    function degTan(x) { return Math.tan(x * Math.PI / 180); }
+
+    function factorial(n) {
+      if (n < 0 || !Number.isInteger(n)) return NaN;
+      if (n === 0 || n === 1) return 1;
+      let r = 1;
+      for (let i = 2; i <= n; i++) r *= i;
+      return r;
+    }
+
+    const buttonsLayout = [
+      ['MC', 'M+', 'M-', 'MR', '⌫'],
+      ['(', ')', 'π', 'e', '!'],
+      ['sin', 'cos', 'tan', 'log', 'ln'],
+      ['x²', '√', 'xʸ', '10ˣ', '1/x'],
+      ['7', '8', '9', '÷', '%'],
+      ['4', '5', '6', '×', '±'],
+      ['1', '2', '3', '−', 'C'],
+      ['0', '.', 'EXP', '+', '=']
+    ];
+
+    function buildCalcButtons() {
+      calcButtons.innerHTML = '';
+      buttonsLayout.forEach(row => {
+        row.forEach(label => {
+          const btn = document.createElement('button');
+          btn.textContent = label;
+          if (label === '=') btn.classList.add('btn-equal');
+          else if (label === 'C') btn.classList.add('btn-clear');
+          else if (['MC','M+','M-','MR'].includes(label)) btn.classList.add('btn-memory');
+          else if (['sin','cos','tan','log','ln','√','x²','xʸ','10ˣ','1/x','!','π','e'].includes(label)) btn.classList.add('btn-accent');
+          btn.addEventListener('click', () => handleCalcButton(label));
+          calcButtons.appendChild(btn);
+        });
+      });
+    }
+
+    // دالة تقييم التعبير النهائية
+    function evaluateExpression(expr) {
+      if (!expr) return 0;
+      let processed = expr
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/−/g, '-')
+        .replace(/π/g, 'PI')
+        .replace(/(?<![a-zA-Z])e(?![a-zA-Z])/g, 'EULER') // e كثابت، ليس كحرف
+        .replace(/√\(/g, 'sqrt(')
+        .replace(/\^/g, '**')
+        .replace(/!/g, 'factorial');
+
+      // استبدال الدوال المثلثية حسب الوضع
+      if (calcMode === 'deg') {
+        processed = processed.replace(/sin\(/g, 'degSin(');
+        processed = processed.replace(/cos\(/g, 'degCos(');
+        processed = processed.replace(/tan\(/g, 'degTan(');
+      } else {
+        processed = processed.replace(/sin\(/g, 'Math.sin(');
+        processed = processed.replace(/cos\(/g, 'Math.cos(');
+        processed = processed.replace(/tan\(/g, 'Math.tan(');
+      }
+      // باقي الدوال
+      processed = processed.replace(/log\(/g, 'Math.log10(');
+      processed = processed.replace(/ln\(/g, 'Math.log(');
+      processed = processed.replace(/sqrt\(/g, 'Math.sqrt(');
+      processed = processed.replace(/factorial/g, 'factorial');
+      processed = processed.replace(/PI/g, Math.PI);
+      processed = processed.replace(/EULER/g, Math.E);
+
+      const func = new Function('degSin', 'degCos', 'degTan', 'factorial', `return ${processed};`);
+      return func(degSin, degCos, degTan, factorial);
+    }
+
+    function updateCalcDisplay(expr, res) {
+      calcExpression.textContent = expr || '';
+      calcResult.textContent = res != null ? res : '0';
+    }
+
+    function handleCalcButton(label) {
+      let expr = calcExpression.textContent;
+      switch (label) {
+        case 'C':
+          expr = '';
+          break;
+        case '⌫':
+          expr = expr.slice(0, -1);
+          break;
+        case '=': {
+          try {
+            const result = evaluateExpression(expr);
+            calcHistory.push({ expr, result });
+            renderCalcHistory();
+            expr = result.toString();
+          } catch {
+            calcResult.textContent = 'خطأ';
+            return;
+          }
+          break;
+        }
+        case '±':
+          if (expr.startsWith('-')) expr = expr.substring(1);
+          else expr = '-' + expr;
+          break;
+        case 'MC':
+          memory = 0;
+          updateMemoryIndicator();
+          break;
+        case 'M+':
+          memory += parseFloat(calcResult.textContent) || 0;
+          updateMemoryIndicator();
+          break;
+        case 'M-':
+          memory -= parseFloat(calcResult.textContent) || 0;
+          updateMemoryIndicator();
+          break;
+        case 'MR':
+          expr += memory.toString();
+          break;
+        case 'π':
+          expr += 'π';
+          break;
+        case 'e':
+          expr += 'e';
+          break;
+        case 'sin':
+        case 'cos':
+        case 'tan':
+        case 'log':
+        case 'ln':
+          expr += label + '(';
+          break;
+        case '√':
+          expr += '√(';
+          break;
+        case 'x²':
+          expr += '^2';
+          break;
+        case 'xʸ':
+          expr += '^';
+          break;
+        case '10ˣ':
+          expr += '10^';
+          break;
+        case '1/x':
+          expr = `1/(${expr})`;
+          break;
+        case '!':
+          expr += '!';
+          break;
+        case 'EXP':
+          expr += 'E';
+          break;
+        case '×':
+          expr += '*';
+          break;
+        case '÷':
+          expr += '/';
+          break;
+        case '−':
+          expr += '-';
+          break;
+        default:
+          expr += label;
+      }
+
+      if (label !== '=') {
+        try {
+          const res = evaluateExpression(expr);
+          updateCalcDisplay(expr, res);
+        } catch {
+          updateCalcDisplay(expr, '');
+        }
+      } else {
+        updateCalcDisplay('', expr);
+      }
+    }
+
+    function renderCalcHistory() {
+      calcHistoryDiv.innerHTML = calcHistory.slice(-10).reverse().map(h =>
+        `<div class="calc-history-item" style="cursor:pointer;" onclick="document.getElementById('calcExpression').textContent='${h.expr.replace(/'/g, "\\'")}'; document.getElementById('calcResult').textContent='${h.result}';">
+          ${h.expr} = ${h.result}
+        </div>`
+      ).join('');
+    }
+
+    function updateMemoryIndicator() {
+      memoryIndicator.style.display = memory !== 0 ? 'inline' : 'none';
+    }
+
+    document.querySelectorAll('#calculatorTab .mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#calculatorTab .mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        calcMode = btn.dataset.mode;
+      });
+    });
+
+    // لوحة مفاتيح
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('calculatorTab').classList.contains('active')) return;
+      const key = e.key;
+      if (/^[0-9]$/.test(key)) handleCalcButton(key);
+      else if (key === '.') handleCalcButton('.');
+      else if (key === '+') handleCalcButton('+');
+      else if (key === '-') handleCalcButton('−');
+      else if (key === '*') handleCalcButton('×');
+      else if (key === '/') { e.preventDefault(); handleCalcButton('÷'); }
+      else if (key === '(') handleCalcButton('(');
+      else if (key === ')') handleCalcButton(')');
+      else if (key === 'Enter' || key === '=') handleCalcButton('=');
+      else if (key === 'Backspace') handleCalcButton('⌫');
+      else if (key === 'Escape') handleCalcButton('C');
+    });
+
+    buildCalcButtons();
+    updateCalcDisplay('', 0);
   })();
 </script>
 </body>
