@@ -84,6 +84,57 @@
             color: rgba(255,255,255,0.5);
         }
 
+        /* ============================================ */
+        /* 🎯 البصمة العصرية: شريط الدعاية للقناة (Banner) */
+        /* ============================================ */
+        .cta-banner {
+            background: linear-gradient(135deg, #1a2f3f, #0d1b2a);
+            border-bottom: 2px solid var(--gold);
+            border-top: 2px solid var(--gold);
+            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 15px 30px;
+            text-align: center;
+            box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.05);
+        }
+        .cta-banner p {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin: 0;
+        }
+        .cta-banner p i {
+            color: var(--gold);
+            margin: 0 5px;
+        }
+        .cta-banner .btn-gold {
+            background: var(--gold);
+            color: #0d1b2a;
+            font-weight: 700;
+            padding: 8px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+        .cta-banner .btn-gold:hover {
+            background: #fff;
+            border-color: var(--gold);
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+        .cta-banner .btn-gold i {
+            font-size: 1.1rem;
+        }
+
         .container {
             max-width: 1300px;
             margin: 0 auto;
@@ -161,8 +212,20 @@
             font-size: 13px;
             color: #6f8eae;
             line-height: 1.4;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
             flex: 1;
+        }
+        /* نص دعائي صغير داخل البطاقة */
+        .card .channel-tag {
+            font-size: 11px;
+            color: var(--gold);
+            font-weight: 600;
+            background: rgba(13, 27, 42, 0.04);
+            padding: 2px 10px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 10px;
+            border: 1px dashed var(--gold);
         }
         .card .link-btn {
             background: var(--primary);
@@ -229,6 +292,8 @@
             .search-box { max-width: 100%; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .tabs { justify-content: center; }
+            .cta-banner { flex-direction: column; gap: 8px; padding: 15px; }
+            .cta-banner p { font-size: 0.95rem; }
         }
         @media (max-width: 480px) {
             .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -251,11 +316,24 @@
     </div>
 </header>
 
+<!-- ============================================ -->
+<!-- 🎯 البصمة العصرية: شريط الدعاية للقناة (مطبّق) -->
+<!-- ============================================ -->
+<div class="cta-banner">
+    <p>
+        <i class="fas fa-bullhorn"></i> 
+        انضم إلى قناتنا على تيليغرام للمزيد من الأدوات والألعاب الحصرية!
+    </p>
+    <a href="https://t.me/TahaAllinOne" target="_blank" class="btn-gold">
+        <i class="fab fa-telegram-plane"></i> انضم الآن
+    </a>
+</div>
+
 <main class="container">
     <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">9</span></button>
-        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">4</span></button>
-        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">13</span></button>
+        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">11</span></button>
+        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">5</span></button>
+        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">16</span></button>
     </div>
 
     <div class="grid" id="cardGrid"></div>
@@ -271,7 +349,9 @@
 </main>
 
 <footer>
-    © 2026 Taha alrakamany-Teck | <a href="https://t.me/TahaTecH2026Bot" target="_blank">@TahaTecH2026Bot</a>
+    © 2026 Taha alrakamany-Teck | 
+    <a href="https://t.me/TahaAllinOne" target="_blank">قناتنا @TahaAllinOne</a> | 
+    <a href="https://t.me/TahaTecH2026Bot" target="_blank">بوتنا @TahaTecH2026Bot</a>
 </footer>
 
 <script>
@@ -302,7 +382,7 @@
         const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
         const PLAY_URL = BASE + 'Play.html?file=';
 
-        // قائمة الألعاب (بدون بلابل)
+        // قائمة الألعاب (تم إضافة Summerblaze و Falcon's Fortune، واستبعاد bayblade)
         const games = [
             { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
             { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
@@ -312,15 +392,20 @@
             { id: 'SeaStrike', icon: '⚓', name: 'Sea Strike', desc: 'معركة بحرية مشوقة', file: 'SeaStrike.html' },
             { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: 'نسخة مستقلة ومختلفة كلياً', file: 'Super-dino.html' },
             { id: 'XOGame', icon: '❌', name: 'X-O Game', desc: 'تيك تاك تو بلمسة عصرية', file: 'X-OGame.html' },
-            { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' }
+            { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' },
+            // الألعاب الجديدة (من ديب سيك)
+            { id: 'Summerblaze', icon: '🔥', name: 'Summerblaze', desc: 'مغامرة نارية ومثيرة', file: 'Summerblaze.html' },
+            { id: 'FalconsFortune', icon: '🦅', name: 'Falcon\'s Fortune', desc: 'حظ الصقر في لعبة جديدة', file: 'Falcon\'s Fortune.html' }
         ];
 
-        // قائمة الأدوات (مع إضافة QuranCalendar)
+        // قائمة الأدوات (تم إضافة TahaProCalculator)
         const tools = [
             { id: 'Files write and edit', icon: '✍️', name: 'محرر وتنسيق النصوص', desc: 'تحرير وتنسيق النصوص بسهولة', file: 'Files write and edit.html' },
             { id: 'PDFCONVERTOR', icon: '📄', name: 'محول النص إلى PDF', desc: 'حوّل النصوص إلى ملفات PDF بسهولة', file: 'PDFCONVERTOR.html' },
             { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة فورية وطقس حقيقي لأي مدينة', file: 'مترجم +طقس.html' },
-            { id: 'QuranCalendar', icon: '🕌', name: 'QuranCalendar', desc: 'روزنامة + قرآن', file: 'QuranCalendar.html' }
+            { id: 'QuranCalendar', icon: '🕌', name: 'QuranCalendar', desc: 'روزنامة + قرآن', file: 'QuranCalendar.html' },
+            // الأدوات الجديدة (من ديب سيك)
+            { id: 'TahaProCalculator', icon: '🧮', name: 'TahaProCalculator', desc: 'حاسبة علمية ومحول وحدات', file: 'TahaProCalculator.html' }
         ];
 
         // دمج الكل
@@ -361,7 +446,7 @@
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // استخدام Play.html فقط للملفات التي لا تعمل مباشرة
+                // استخدام Play.html للملفات الخاصة
                 const specialFiles = ['Files write and edit.html'];
                 let finalUrl;
                 if (specialFiles.includes(item.file)) {
@@ -374,6 +459,7 @@
                     <div class="icon">${item.icon}</div>
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
+                    <span class="channel-tag">✨ المزيد على @TahaAllinOne</span>
                     <a href="${finalUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
                 `;
                 grid.appendChild(card);
