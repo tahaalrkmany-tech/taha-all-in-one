@@ -1,327 +1,550 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة رسم تفاعلية متجاوبة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ لوحة الرسم السحرية | Kaleidoscope Drawing Board</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
+        :root {
+            --bg: #1a1a2e;
+            --panel-bg: rgba(22, 22, 40, 0.85);
+            --text: #e0e0e0;
+            --accent: #6c63ff;
+            --accent2: #00d2ff;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --warning: #ffa502;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.12);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Cairo', 'Tajawal', sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(0,210,255,0.10) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(255,71,87,0.08) 0%, transparent 60%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
+            min-height: 100vh;
+            padding: 16px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
+        .app-container {
+            display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: center;
+            max-width: 1100px; width: 100%;
+        }
+        .canvas-wrapper {
+            position: relative; background: var(--glass); backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border);
+            border-radius: var(--radius); box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.05) inset;
+            padding: 10px; transition: all 0.3s; flex-shrink: 0;
+        }
+        .canvas-wrapper:hover { box-shadow: 0 12px 40px rgba(108,99,255,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset; }
         canvas {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            touch-action: none;
-            max-width: 100%;
-            height: auto;
+            display: block; border-radius: 10px; cursor: crosshair; touch-action: none;
+            background: #fff; box-shadow: inset 0 0 30px rgba(0,0,0,0.06); max-width: 100%; height: auto;
         }
-        button, select {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            flex-shrink: 0;
+        .control-panel {
+            background: var(--panel-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+            padding: 20px 18px; display: flex; flex-direction: column; gap: 14px;
+            min-width: 260px; max-width: 300px; width: 100%; color: var(--text);
         }
-        button:hover, select:hover {
-            background-color: #45a049;
+        .control-panel h2 {
+            text-align: center; font-size: 1.4em;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;
         }
-        .dropdown {
-            margin-bottom: 10px;
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label {
+            font-size: 0.8em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa;
         }
-        @media (max-width: 600px) {
-            button, select {
-                padding: 8px 16px;
-                font-size: 14px;
-            }
+        select, input[type="range"], input[type="color"] {
+            width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.06); color: #fff; font-size: 0.95em;
+            font-family: inherit; cursor: pointer; transition: all 0.25s; outline: none;
+            -webkit-appearance: none; appearance: none;
         }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: left 12px center; padding-left: 32px;
+        }
+        select:hover, input[type="range"]:hover { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+        select:focus, input[type="range"]:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(0,210,255,0.2); }
+        input[type="color"] { height: 44px; padding: 4px 8px; background: transparent; border: 2px dashed var(--border); }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border-radius: 8px; border: none; }
+        input[type="range"] {
+            -webkit-appearance: none; height: 6px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; padding: 0; margin: 8px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5); cursor: pointer; border: 2px solid var(--accent);
+        }
+        .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        button {
+            flex: 1 1 auto; padding: 11px 14px; font-size: 0.9em; font-weight: 600; letter-spacing: 0.5px;
+            border: none; border-radius: 12px; cursor: pointer; transition: all 0.25s; font-family: inherit;
+            text-transform: uppercase; background: var(--glass); color: #fff; border: 1px solid var(--border);
+            backdrop-filter: blur(4px); white-space: nowrap; min-width: 60px; position: relative; overflow: hidden;
+        }
+        button::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            opacity: 0; transition: opacity 0.3s; border-radius: 12px;
+        }
+        button:hover::after { opacity: 1; }
+        button:active { transform: scale(0.96); }
+        button.primary { background: linear-gradient(135deg, var(--accent), #5a52d5); border-color: transparent; box-shadow: 0 4px 15px rgba(108,99,255,0.4); }
+        button.accent { background: linear-gradient(135deg, var(--accent2), #00a8cc); border-color: transparent; box-shadow: 0 4px 15px rgba(0,210,255,0.4); }
+        button.danger { background: linear-gradient(135deg, var(--danger), #c0392b); border-color: transparent; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
+        button.success { background: linear-gradient(135deg, var(--success), #1eaa52); border-color: transparent; box-shadow: 0 4px 15px rgba(46,213,115,0.4); }
+        .color-indicator {
+            display: inline-block; width: 20px; height: 20px; border-radius: 50%; vertical-align: middle;
+            margin-right: 6px; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 10px currentColor;
+        }
+        .stats-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.75em; color: #888; margin-top: 4px; }
+        .badge { background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; font-size: 0.7em; letter-spacing: 1px; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal {
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px; max-width: 600px; width: 90%; max-height: 80vh;
+            overflow-y: auto; color: #fff;
+        }
+        .gallery-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .gallery-item {
+            position: relative; width: 100px; height: 100px; border-radius: 8px; overflow: hidden;
+            border: 2px solid var(--border); cursor: pointer; transition: transform 0.2s;
+        }
+        .gallery-item:hover { transform: scale(1.05); border-color: var(--accent); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item .delete-btn {
+            position: absolute; top: 2px; right: 2px; background: var(--danger); border: none;
+            color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close { display: block; margin: 15px auto 0; background: var(--glass); border: 1px solid var(--border); padding: 8px 20px; border-radius: 20px; color: #fff; cursor: pointer; }
+        @media (max-width: 750px) {
+            .app-container { flex-direction: column; align-items: center; }
+            .control-panel { max-width: 100%; min-width: auto; width: 100%; flex-direction: row; flex-wrap: wrap; gap: 10px; padding: 14px; }
+            .control-group { flex: 1 1 45%; min-width: 120px; }
+            .btn-row { flex: 1 1 100%; justify-content: center; }
+            canvas { width: 100%; height: auto; }
+        }
+        @keyframes pulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(46,213,115,0.7); } 50%{ box-shadow: 0 0 0 14px rgba(46,213,115,0); } }
+        .pulse { animation: pulse 0.6s ease-out; }
     </style>
 </head>
 <body>
-    <h1>لوحة رسم تفاعلية</h1>
-    <div class="dropdown">
-        <select id="drawType" onchange="setDrawType(this.value)">
-            <option value="">اختر نوع الرسم</option>
-            <option value="squareSymmetry">× رباعي متناظر</option>
-            <option value="plusSymmetry">+ رباعي متناظر آخر</option>
-            <option value="horizontalSymmetry">÷ متناظرين حول الخط الأفقي</option>
-            <option value="circle">@ دائرة</option>
-        </select>
+<div class="app-container">
+    <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="500" height="500" aria-label="لوحة الرسم التفاعلية"></canvas>
     </div>
-    <div class="dropdown">
-        <select id="glowEffect" onchange="setGlowEffect(this.value)">
-            <option value="">اختر خاصية التلألؤ</option>
-            <option value="none">بدون تلألؤ</option>
-            <option value="softGlow">تلألؤ خفيف</option>
-            <option value="brightGlow">تلألؤ ساطع</option>
-            <option value="neonGlow">تلألؤ نيون</option>
-        </select>
+    <div class="control-panel">
+        <h2>🎨 لوحة التحكم</h2>
+        <div class="control-group">
+            <label>🎯 نوع التناظر</label>
+            <select id="symmetryType">
+                <option value="none">✏️ رسم حر</option>
+                <option value="squareSymmetry">🔲 تناظر رباعي</option>
+                <option value="plusSymmetry">➕ تناظر متصالب</option>
+                <option value="horizontalSymmetry">↔️ تناظر أفقي</option>
+                <option value="circle">⭕ دائرة كاليدوسكوب</option>
+                <option value="spiral">🌀 تناظر حلزوني</option>
+                <option value="dna">🧬 تناظر DNA</option>
+                <option value="snail">🐚 تناظر قوقعي</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>✨ تأثير التوهج</label>
+            <select id="glowEffect">
+                <option value="none">⚫ بدون توهج</option>
+                <option value="softGlow">🌙 توهج ناعم</option>
+                <option value="brightGlow">🌟 توهج ساطع</option>
+                <option value="neonGlow">💡 توهج نيون</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>🖌️ نمط الفرشاة</label>
+            <select id="brushStyle">
+                <option value="solid">━━━ صلبة</option>
+                <option value="dotted">┅┅┅ منقطة</option>
+                <option value="dashed">┅ ┅ ┅ متقطعة</option>
+                <option value="zigzag">╱╲╱╲ متعرجة</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>🔵 شكل رأس الفرشاة</label>
+            <select id="brushShape">
+                <option value="round">⚫ دائري</option>
+                <option value="square">◼️ مربع</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>📏 حجم الفرشاة: <span id="brushSizeValue">8</span>px</label>
+            <input type="range" id="brushSize" min="1" max="40" value="8" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>🎨 اللون الحالي <span class="color-indicator" id="colorDot" style="background:#000000;"></span></label>
+            <input type="color" id="colorPicker" value="#000000">
+        </div>
+        <div class="btn-row">
+            <button class="primary" id="btnRotate">🔄 تدوير</button>
+            <button class="accent" id="btnSpeedDown">🐢 أبطأ</button>
+            <button class="accent" id="btnSpeedUp">🐇 أسرع</button>
+        </div>
+        <div class="btn-row">
+            <button class="danger" id="btnClear">🗑️ مسح</button>
+            <button class="success" id="btnUndo">↩️ تراجع</button>
+        </div>
+        <div class="btn-row">
+            <button id="btnDownloadImage">🖼️ حفظ PNG</button>
+            <button id="btnSaveGallery">🖼️ حفظ للمعرض</button>
+            <button id="btnOpenGallery">📂 المعرض</button>
+        </div>
+        <div class="stats-row">
+            <span class="badge" id="rotationStatus">⏸️ دوران متوقف</span>
+            <span class="badge" id="symmetryBadge">🎯 حر</span>
+        </div>
     </div>
-    <div class="dropdown">
-        <select id="brushStyle" onchange="setBrushStyle(this.value)">
-            <option value="">اختر نمط الفرشاة</option>
-            <option value="solid">صلبة</option>
-            <option value="dotted">منقطة</option>
-            <option value="dashed">متقطعة</option>
-            <option value="zigzag">متعرجة</option>
-        </select>
+</div>
+<div class="modal-overlay" id="galleryModal">
+    <div class="modal">
+        <h3>🖼️ معرض الرسومات</h3>
+        <div class="gallery-grid" id="galleryGrid"></div>
+        <button class="modal-close" id="closeGallery">إغلاق</button>
     </div>
-    <div class="dropdown">
-        <select id="brushShape" onchange="setBrushShape(this.value)">
-            <option value="">اختر شكل الفرشاة</option>
-            <option value="round">دائرية</option>
-            <option value="square">مربعة</option>
-        </select>
-    </div>
-    <canvas id="canvas" width="500" height="500"></canvas>
-    <div>
-        <button onclick="changeColor()">تغيير اللون</button>
-        <button onclick="startRotation()">ابدأ الدوران</button>
-        <button onclick="stopRotation()">توقف</button>
-    </div>
-    <div>
-        <button onclick="decreaseSpeed()">&#x3c; تقليل السرعة</button>
-        <button onclick="increaseSpeed()">زيادة السرعة &#x3e;</button>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-        let color = '#000000';
-        let rotationInterval;
-        let angle = 0;
-        let speed = 60 / 1000; // 60fps
-        let drawType = "";
-        let glowEffect = "none";
-        let brushStyle = "solid";
-        let brushShape = "round";
-        let points = [];
-        const offscreenCanvas = document.createElement('canvas');
-        const offscreenCtx = offscreenCanvas.getContext('2d');
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchend', stopDrawing);
-        canvas.addEventListener('touchmove', draw);
-
-        function setDrawType(type) {
-            drawType = type;
-        }
-
-        function setGlowEffect(effect) {
-            glowEffect = effect;
-        }
-
-        function setBrushStyle(style) {
-            brushStyle = style;
-        }
-
-        function setBrushShape(shape) {
-            brushShape = shape;
-        }
-
-        function startDrawing(event) {
-            drawing = true;
-            points = [];
-            ctx.beginPath(); // ابدأ مسار جديد للرسم الحالي
-            draw(event);
-        }
-
-        function stopDrawing() {
-            drawing = false;
-            ctx.beginPath(); // انهاء المسار الحالي
-            applySymmetry();
-            saveCanvasState();
-        }
-
-        function draw(event) {
-            if (!drawing) return;
-
-            event.preventDefault();
-            let rect = canvas.getBoundingClientRect();
-            let x = event.clientX ? event.clientX - rect.left : event.touches[0].clientX - rect.left;
-            let y = event.clientY ? event.clientY - rect.top : event.touches[0].clientY - rect.top;
-
-            points.push({ x, y });
-
-            ctx.lineWidth = 5;
-            ctx.lineCap = brushShape;
-            ctx.strokeStyle = color;
-
-            applyGlowEffect();
-            applyBrushStyle();
-
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-        }
-
-        function applyBrushStyle() {
-            if (brushStyle === "dotted") {
-                ctx.setLineDash([1, 5]);
-            } else if (brushStyle === "dashed") {
-                ctx.setLineDash([10, 5]);
-            } else if (brushStyle === "zigzag") {
-                ctx.setLineDash([15, 10]);
-            } else {
-                ctx.setLineDash([]);
-            }
-        }
-
-        function changeColor() {
-            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFA500', '#800080', '#008000'];
-            color = colors[Math.floor(Math.random() * colors.length)];
-        }
-
-        function startRotation() {
-            if (rotationInterval) return;
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            function rotate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(angle);
-                ctx.translate(-centerX, -centerY);
-                ctx.drawImage(offscreenCanvas, 0, 0);
-                ctx.restore();
-                angle += speed;
-                rotationInterval = requestAnimationFrame(rotate);
-            }
-
-            rotate();
-        }
-
-        function stopRotation() {
-            cancelAnimationFrame(rotationInterval);
-            rotationInterval = null;
-        }
-
-        function decreaseSpeed() {
-            speed -= 0.01; // تقليل السرعة
-            if (rotationInterval) {
-                stopRotation();
-                startRotation();
-            }
-        }
-
-        function increaseSpeed() {
-            speed += 0.01; // زيادة السرعة
-            if (rotationInterval) {
-                stopRotation();
-                startRotation();
-            }
-        }
-
-        function saveCanvasState() {
-            offscreenCanvas.width = canvas.width;
-            offscreenCanvas.height = canvas.height;
-            offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-            offscreenCtx.drawImage(canvas, 0, 0);
-        }
-
-        function applySymmetry() {
-            points.forEach(({ x, y }) => {
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-
-                if (drawType === "squareSymmetry") {
-                    drawSquareSymmetry(x, y);
-                } else if (drawType === "plusSymmetry") {
-                    drawPlusSymmetry(x, y);
-                } else if (drawType === "horizontalSymmetry") {
-                    drawHorizontalSymmetry(x, y);
-                } else if (drawType === "circle") {
-                    drawCircle(x, y);
-                }
+</div>
+<script>
+(function() {
+    // Service Worker للتحديث التلقائي
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            const CACHE_NAME = 'drawing-board-v3';
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => {
+                e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
+                self.clients.claim();
             });
-        }
+            self.addEventListener('fetch', e => {
+                e.respondWith(
+                    fetch(e.request).then(res => {
+                        const clone = res.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                        return res;
+                    }).catch(() => caches.match(e.request))
+                );
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).then(reg => {
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        window.location.reload();
+                    }
+                });
+            });
+        }).catch(() => {});
+    }
 
-function applyGlowEffect() {
-            if (glowEffect === "softGlow") {
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = color;
-            } else if (glowEffect === "brightGlow") {
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = color;
-            } else if (glowEffect === "neonGlow") {
-                ctx.shadowBlur = 30;
-                ctx.shadowColor = color;
-            } else {
-                ctx.shadowBlur = 0;
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const offscreen = document.createElement('canvas');
+    const offCtx = offscreen.getContext('2d');
+    offscreen.width = canvas.width; offscreen.height = canvas.height;
+
+    let isDrawing = false, currentColor = '#000000', brushSize = 8;
+    let symmetryType = 'none', glowEffect = 'none', brushStyle = 'solid', brushShape = 'round';
+    let rotationAngle = 0, rotationSpeed = 0.02, isRotating = false, animationFrameId = null;
+    let historyStack = [], MAX_HISTORY = 30, lastPoint = null;
+
+    const elements = {
+        colorPicker: document.getElementById('colorPicker'),
+        colorDot: document.getElementById('colorDot'),
+        brushSizeSlider: document.getElementById('brushSize'),
+        brushSizeValue: document.getElementById('brushSizeValue'),
+        symmetrySelect: document.getElementById('symmetryType'),
+        glowSelect: document.getElementById('glowEffect'),
+        brushStyleSelect: document.getElementById('brushStyle'),
+        brushShapeSelect: document.getElementById('brushShape'),
+        btnRotate: document.getElementById('btnRotate'),
+        btnSpeedDown: document.getElementById('btnSpeedDown'),
+        btnSpeedUp: document.getElementById('btnSpeedUp'),
+        btnClear: document.getElementById('btnClear'),
+        btnUndo: document.getElementById('btnUndo'),
+        btnDownloadImage: document.getElementById('btnDownloadImage'),
+        btnSaveGallery: document.getElementById('btnSaveGallery'),
+        btnOpenGallery: document.getElementById('btnOpenGallery'),
+        rotationStatus: document.getElementById('rotationStatus'),
+        symmetryBadge: document.getElementById('symmetryBadge'),
+        galleryModal: document.getElementById('galleryModal'),
+        galleryGrid: document.getElementById('galleryGrid'),
+        closeGalleryBtn: document.getElementById('closeGallery')
+    };
+
+    function getCanvasPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function applyBrushSettings(context) {
+        context.lineWidth = brushSize;
+        context.lineCap = brushShape === 'round' ? 'round' : 'butt';
+        context.lineJoin = 'round';
+        context.strokeStyle = currentColor;
+        context.fillStyle = currentColor;
+        if (brushStyle === 'dotted') context.setLineDash([brushSize*0.2, brushSize*1.2]);
+        else if (brushStyle === 'dashed') context.setLineDash([brushSize*1.5, brushSize*0.8]);
+        else if (brushStyle === 'zigzag') context.setLineDash([brushSize*0.8, brushSize*0.6]);
+        else context.setLineDash([]);
+        if (glowEffect === 'softGlow') { context.shadowBlur = brushSize*1.5; context.shadowColor = currentColor; }
+        else if (glowEffect === 'brightGlow') { context.shadowBlur = brushSize*3; context.shadowColor = currentColor; }
+        else if (glowEffect === 'neonGlow') { context.shadowBlur = brushSize*5; context.shadowColor = currentColor; }
+        else { context.shadowBlur = 0; context.shadowColor = 'transparent'; }
+    }
+
+    function seg(ctxTarget, x1, y1, x2, y2) {
+        ctxTarget.beginPath(); ctxTarget.moveTo(x1, y1); ctxTarget.lineTo(x2, y2); ctxTarget.stroke();
+    }
+
+    function drawSymmetricalLine(ctxTarget, fromX, fromY, toX, toY) {
+        if (fromX == null || fromY == null || toX == null || toY == null) return;
+        const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2;
+        seg(ctxTarget, fromX, fromY, toX, toY);
+        switch (symmetryType) {
+            case 'squareSymmetry':
+                seg(ctxTarget, w-fromX, fromY, w-toX, toY);
+                seg(ctxTarget, fromX, h-fromY, toX, h-toY);
+                seg(ctxTarget, w-fromX, h-fromY, w-toX, h-toY);
+                break;
+            case 'plusSymmetry':
+                seg(ctxTarget, w-fromX, h-fromY, w-toX, h-toY);
+                seg(ctxTarget, fromX, h-fromY, toX, h-toY);
+                seg(ctxTarget, w-fromX, fromY, w-toX, toY);
+                break;
+            case 'horizontalSymmetry':
+                seg(ctxTarget, fromX, h-fromY, toX, h-toY);
+                break;
+            case 'circle': {
+                const d1 = Math.sqrt((fromX-cx)**2 + (fromY-cy)**2);
+                const d2 = Math.sqrt((toX-cx)**2 + (toY-cy)**2);
+                ctxTarget.beginPath(); ctxTarget.arc(cx, cy, d1, 0, Math.PI*2); ctxTarget.stroke();
+                if (Math.abs(d2-d1) > 0.5) {
+                    ctxTarget.beginPath(); ctxTarget.arc(cx, cy, d2, 0, Math.PI*2); ctxTarget.stroke();
+                }
+                break;
+            }
+            case 'spiral': {
+                const total = 12;
+                for (let i = 1; i < total; i++) {
+                    const angle = (Math.PI*2/total)*i;
+                    const cos = Math.cos(angle), sin = Math.sin(angle);
+                    const expand = Math.pow(1.02, i);
+                    const dx1 = fromX-cx, dy1 = fromY-cy, dx2 = toX-cx, dy2 = toY-cy;
+                    seg(ctxTarget,
+                        cx + (dx1*cos - dy1*sin)*expand, cy + (dx1*sin + dy1*cos)*expand,
+                        cx + (dx2*cos - dy2*sin)*expand, cy + (dx2*sin + dy2*cos)*expand);
+                }
+                break;
+            }
+            case 'dna':
+                seg(ctxTarget, w-fromX, fromY-15, w-toX, toY-15);
+                seg(ctxTarget, w-fromX, fromY+15, w-toX, toY+15);
+                seg(ctxTarget, w-fromX, fromY, w-toX, toY);
+                break;
+            case 'snail': {
+                // تناظر قوقعي: رسم القطعة عدة مرات مع دوران وتقليص نحو المركز
+                const steps = 10;
+                for (let i = 0; i <= steps; i++) {
+                    const progress = i / steps;
+                    const angle = progress * Math.PI * 4; // لفتين كاملتين
+                    const scale = 1 - progress * 0.9; // يتقلص حتى 0.1
+                    const cos = Math.cos(angle), sin = Math.sin(angle);
+                    const dx1 = fromX - cx, dy1 = fromY - cy;
+                    const dx2 = toX - cx, dy2 = toY - cy;
+                    const x1 = cx + (dx1 * cos - dy1 * sin) * scale;
+                    const y1 = cy + (dx1 * sin + dy1 * cos) * scale;
+                    const x2 = cx + (dx2 * cos - dy2 * sin) * scale;
+                    const y2 = cy + (dx2 * sin + dy2 * cos) * scale;
+                    seg(ctxTarget, x1, y1, x2, y2);
+                }
+                break;
             }
         }
+    }
 
-        function drawSquareSymmetry(x, y) {
-            ctx.lineTo(canvas.width - x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - x, y);
+    function saveToHistory() {
+        historyStack.push(offCtx.getImageData(0,0,offscreen.width,offscreen.height));
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+    }
+    function restoreFromHistory() {
+        if (!historyStack.length) return false;
+        offCtx.putImageData(historyStack.pop(), 0, 0);
+        syncMainCanvas(); return true;
+    }
+    function syncMainCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(offscreen,0,0); }
 
-            ctx.lineTo(x, canvas.height - y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, canvas.height - y);
+    function startDrawing(e) {
+        e.preventDefault(); saveToHistory(); isDrawing = true;
+        const pos = getCanvasPos(e); lastPoint = {x:pos.x, y:pos.y};
+        applyBrushSettings(offCtx);
+        offCtx.beginPath(); offCtx.moveTo(pos.x, pos.y);
+        offCtx.lineTo(pos.x, pos.y); offCtx.stroke(); offCtx.beginPath(); offCtx.moveTo(pos.x, pos.y);
+        syncMainCanvas();
+    }
+    function draw(e) {
+        if (!isDrawing) return; e.preventDefault();
+        const pos = getCanvasPos(e), curr = {x:pos.x, y:pos.y};
+        applyBrushSettings(offCtx);
+        drawSymmetricalLine(offCtx, lastPoint.x, lastPoint.y, curr.x, curr.y);
+        lastPoint = curr; syncMainCanvas();
+    }
+    function stopDrawing() { if (!isDrawing) return; isDrawing = false; lastPoint = null; offCtx.beginPath(); syncMainCanvas(); }
 
-            ctx.lineTo(canvas.width - x, canvas.height - y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - x, canvas.height - y);
-        }
+    function clearCanvas() { saveToHistory(); offCtx.clearRect(0,0,offscreen.width,offscreen.height); offCtx.fillStyle='#fff'; offCtx.fillRect(0,0,offscreen.width,offscreen.height); syncMainCanvas(); }
+    function undoLastAction() { if (restoreFromHistory()) { canvas.parentElement.classList.add('pulse'); setTimeout(()=>canvas.parentElement.classList.remove('pulse'),600); } }
 
-        function drawPlusSymmetry(x, y) {
-            ctx.lineTo(canvas.width - x, canvas.height - y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - x, canvas.height - y);
+    function startRotation() {
+        if (isRotating) return; isRotating = true;
+        elements.rotationStatus.textContent = '🔄 جاري الدوران...';
+        elements.btnRotate.textContent = '⏹️ إيقاف'; elements.btnRotate.classList.add('danger'); elements.btnRotate.classList.remove('primary');
+        animateRotation();
+    }
+    function stopRotation() {
+        isRotating = false; if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        rotationAngle = 0; elements.rotationStatus.textContent = '⏸️ دوران متوقف';
+        elements.btnRotate.textContent = '🔄 تدوير'; elements.btnRotate.classList.add('primary'); elements.btnRotate.classList.remove('danger');
+        syncMainCanvas();
+    }
+    function toggleRotation() { isRotating ? stopRotation() : startRotation(); }
+    function animateRotation() {
+        if (!isRotating) return;
+        const cx=canvas.width/2, cy=canvas.height/2;
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save();
+        ctx.translate(cx, cy); ctx.rotate(rotationAngle); ctx.translate(-cx, -cy);
+        ctx.drawImage(offscreen,0,0); ctx.restore();
+        rotationAngle += rotationSpeed;
+        animationFrameId = requestAnimationFrame(animateRotation);
+    }
+    function changeSpeed(delta) {
+        rotationSpeed = Math.max(0.0001, rotationSpeed + delta);
+        elements.rotationStatus.textContent = `⚡ السرعة: ${(rotationSpeed*100).toFixed(1)}`;
+        setTimeout(() => { elements.rotationStatus.textContent = isRotating ? '🔄 جاري الدوران...' : '⏸️ دوران متوقف'; }, 1500);
+    }
 
-            ctx.lineTo(x, canvas.height - y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, canvas.height - y);
+    function getExportCanvas() {
+        const ec = document.createElement('canvas'); ec.width = canvas.width; ec.height = canvas.height;
+        const ectx = ec.getContext('2d'); ectx.fillStyle='#fff'; ectx.fillRect(0,0,ec.width,ec.height);
+        if (isRotating) {
+            const cx=canvas.width/2, cy=canvas.height/2;
+            ectx.save(); ectx.translate(cx, cy); ectx.rotate(rotationAngle); ectx.translate(-cx, -cy);
+            ectx.drawImage(offscreen,0,0); ectx.restore();
+        } else ectx.drawImage(offscreen,0,0);
+        return ec;
+    }
+    function downloadImage() {
+        const ec = getExportCanvas();
+        if (ec.toBlob) ec.toBlob(b => { const u=URL.createObjectURL(b); triggerDownload(u,`لوحتي.png`); },'image/png');
+        else { const d=ec.toDataURL('image/png'); triggerDownload(d,`لوحتي.png`); }
+    }
+    function triggerDownload(url, filename) {
+        const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    function saveToGallery() {
+        try {
+            const ec = getExportCanvas(); const dataURL = ec.toDataURL('image/jpeg',0.7);
+            const gallery = getGallery();
+            if (gallery.length >= 20) { alert('المعرض ممتلئ (الحد 20).'); return; }
+            gallery.push({id:Date.now(), dataURL});
+            localStorage.setItem('drawingGallery', JSON.stringify(gallery));
+            elements.btnSaveGallery.textContent='✅ تم الحفظ';
+            setTimeout(()=>{ elements.btnSaveGallery.textContent='🖼️ حفظ للمعرض'; },1500);
+        } catch(e) { alert('فشل الحفظ.'); }
+    }
+    function getGallery() { try { return JSON.parse(localStorage.getItem('drawingGallery')) || []; } catch(e) { return []; } }
+    function renderGallery() {
+        const gallery = getGallery();
+        elements.galleryGrid.innerHTML = '';
+        if (!gallery.length) { elements.galleryGrid.innerHTML = '<p style="color:#aaa;">المعرض فارغ.</p>'; return; }
+        gallery.forEach((item, idx) => {
+            const div = document.createElement('div'); div.className = 'gallery-item';
+            const img = document.createElement('img'); img.src = item.dataURL; div.appendChild(img);
+            const del = document.createElement('button'); del.className='delete-btn'; del.innerHTML='×';
+            del.onclick = e => { e.stopPropagation(); gallery.splice(idx,1); localStorage.setItem('drawingGallery', JSON.stringify(gallery)); renderGallery(); };
+            div.appendChild(del);
+            div.onclick = () => triggerDownload(item.dataURL, `رسمة.jpg`);
+            elements.galleryGrid.appendChild(div);
+        });
+    }
+    function openGallery() { renderGallery(); elements.galleryModal.style.display='flex'; }
+    function closeGallery() { elements.galleryModal.style.display='none'; }
 
-            ctx.lineTo(canvas.width - x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width - x, ي );
-        }
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing, {passive:false});
+    canvas.addEventListener('touchmove', draw, {passive:false});
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+    elements.colorPicker.addEventListener('input', e => { currentColor=e.target.value; elements.colorDot.style.backgroundColor=currentColor; });
+    elements.brushSizeSlider.addEventListener('input', e => { brushSize=+e.target.value; elements.brushSizeValue.textContent=brushSize; });
+    elements.symmetrySelect.addEventListener('change', e => {
+        symmetryType = e.target.value;
+        const labels = { none:'🎯 حر', squareSymmetry:'🔲 رباعي', plusSymmetry:'➕ متصالب', horizontalSymmetry:'↔️ أفقي', circle:'⭕ دائري', spiral:'🌀 حلزوني', dna:'🧬 DNA', snail:'🐚 قوقعي' };
+        elements.symmetryBadge.textContent = labels[symmetryType] || '🎯 حر';
+    });
+    elements.glowSelect.addEventListener('change', e => glowEffect=e.target.value);
+    elements.brushStyleSelect.addEventListener('change', e => brushStyle=e.target.value);
+    elements.brushShapeSelect.addEventListener('change', e => brushShape=e.target.value);
+    elements.btnRotate.addEventListener('click', toggleRotation);
+    elements.btnSpeedDown.addEventListener('click', ()=>changeSpeed(-0.01));
+    elements.btnSpeedUp.addEventListener('click', ()=>changeSpeed(0.01));
+    elements.btnClear.addEventListener('click', clearCanvas);
+    elements.btnUndo.addEventListener('click', undoLastAction);
+    elements.btnDownloadImage.addEventListener('click', downloadImage);
+    elements.btnSaveGallery.addEventListener('click', saveToGallery);
+    elements.btnOpenGallery.addEventListener('click', openGallery);
+    elements.closeGalleryBtn.addEventListener('click', closeGallery);
+    elements.galleryModal.addEventListener('click', e => { if (e.target===elements.galleryModal) closeGallery(); });
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key==='z') { e.preventDefault(); undoLastAction(); }
+        else if (e.ctrlKey && e.key==='s') { e.preventDefault(); downloadImage(); }
+        else if (e.key==='r' || e.key==='R') { if (!e.ctrlKey) { e.preventDefault(); toggleRotation(); } }
+        else if (e.key==='ArrowLeft') { e.preventDefault(); changeSpeed(-0.005); }
+        else if (e.key==='ArrowRight') { e.preventDefault(); changeSpeed(0.005); }
+    });
 
-        function drawHorizontalSymmetry(x, y) {
-            ctx.lineTo(x, canvas.height - y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, canvas.height - ي );
-        }
-
-        function drawCircle(x, y) {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-
-        // حفظ حالة اللوحة عند التحميل
-        window.onload = saveCanvasState;
-    </script>
+    offCtx.fillStyle='#fff'; offCtx.fillRect(0,0,offscreen.width,offscreen.height);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    historyStack.push(offCtx.getImageData(0,0,offscreen.width,offscreen.height));
+    elements.brushSizeValue.textContent = brushSize;
+    elements.brushSizeSlider.value = brushSize;
+    elements.symmetrySelect.value = symmetryType;
+    elements.symmetryBadge.textContent = '🎯 حر';
+})();
+</script>
 </body>
 </html>
