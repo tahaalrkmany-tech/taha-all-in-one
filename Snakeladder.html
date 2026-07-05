@@ -1,1 +1,1357 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🐍 الأفعى والسلالم</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            font-family: 'Cairo', sans-serif;
+            background: #0a0a1a;
+        }
+
+        #gameCanvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Floating UI overlay */
+        .ui-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 15px 20px;
+            background: linear-gradient(to top, rgba(10,10,26,0.95) 0%, rgba(10,10,26,0.7) 70%, transparent 100%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .ui-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 600px;
+            margin: 0 auto;
+            pointer-events: auto;
+            gap: 10px;
+        }
+
+        .player-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 14px;
+            border-radius: 25px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .player-badge.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .player-badge.p1.active { border-color: #ff6b9d; box-shadow: 0 0 15px rgba(255, 107, 157, 0.3); background: rgba(255, 107, 157, 0.15); }
+        .player-badge.p2.active { border-color: #74c0fc; box-shadow: 0 0 15px rgba(116, 192, 252, 0.3); background: rgba(116, 192, 252, 0.15); }
+        .player-badge.p3.active { border-color: #ffd43b; box-shadow: 0 0 15px rgba(255, 212, 59, 0.3); background: rgba(255, 212, 59, 0.15); }
+        .player-badge.p4.active { border-color: #a78bfa; box-shadow: 0 0 15px rgba(167, 139, 250, 0.3); background: rgba(167, 139, 250, 0.15); }
+
+        .player-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .player-dot.p1 { background: #e94560; }
+        .player-dot.p2 { background: #3498db; }
+        .player-dot.p3 { background: #f39c12; }
+        .player-dot.p4 { background: #9b59b6; }
+
+        .player-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .roll-btn {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.5);
+            transition: all 0.2s;
+            pointer-events: auto;
+            white-space: nowrap;
+        }
+
+        .roll-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(233, 69, 96, 0.3);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .menu-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 14px;
+            font-size: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            pointer-events: auto;
+            transition: all 0.2s;
+        }
+
+        .menu-btn:active { background: rgba(255,255,255,0.2); }
+
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 15px;
+            background: linear-gradient(to bottom, rgba(10,10,26,0.9) 0%, rgba(10,10,26,0.5) 70%, transparent 100%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .status-text {
+            color: #ffd700;
+            font-size: 15px;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            min-height: 24px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.88);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            background: linear-gradient(135deg, #1a1a3e, #0d1b2a);
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            max-width: 360px;
+            width: 90%;
+            animation: modalPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .modal-title { font-size: 28px; color: #ffd700; margin-bottom: 10px; font-weight: 900; }
+        .modal-text { font-size: 16px; color: #e9ecef; margin-bottom: 20px; }
+
+        .modal-btn {
+            background: linear-gradient(135deg, #51cf66, #2ecc71);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .modal-btn.secondary {
+            background: linear-gradient(135deg, #495057, #6c757d);
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, #339af0, #228be6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            width: 100%;
+            margin: 6px 0;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:active { transform: scale(0.97); }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="status-bar">
+        <div class="status-text" id="statusText">🎲 اختر وضع اللعب</div>
+    </div>
+
+    <div class="ui-overlay" id="gameUI" style="display:none;">
+        <div class="ui-content" id="uiContent">
+            <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 رمي</button>
+            <div style="display:flex; gap:6px;">
+                <button class="menu-btn" onclick="toggleSound()" id="soundBtn">🔊</button>
+                <button class="menu-btn" onclick="showMenu()">⚙️</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-title" id="modalTitle">🎉 مبروك!</div>
+            <div class="modal-text" id="modalText">فاز اللاعب 1</div>
+            <div id="modalButtons"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME CONFIG ====================
+        const CONFIG = {
+            MIN_SNAKE_LENGTH: 8,      // minimum cells a snake drops
+            MAX_SNAKE_LENGTH: 35,     // maximum cells a snake drops
+            MIN_LADDER_LENGTH: 8,     // minimum cells a ladder climbs
+            MAX_LADDER_LENGTH: 30,    // maximum cells a ladder climbs
+            SNAKE_COUNT: 8,
+            LADDER_COUNT: 8,
+            MIN_VERTICAL_GAP: 3,      // minimum rows between start and end
+        };
+
+        const PLAYER_COLORS = [
+            { main: '#e94560', glow: '#ff6b9d', name: 'الأحمر' },
+            { main: '#3498db', glow: '#74c0fc', name: 'الأزرق' },
+            { main: '#f39c12', glow: '#ffd43b', name: 'الأصفر' },
+            { main: '#9b59b6', glow: '#d0bfff', name: 'البنفسجي' }
+        ];
+
+        // ==================== PROCEDURAL GENERATION ====================
+        function generateBoard() {
+            const snakes = {};
+            const ladders = {};
+            const occupied = new Set();
+
+            function getRow(cell) {
+                return Math.floor((cell - 1) / 10);
+            }
+
+            function getCol(cell) {
+                const row = getRow(cell);
+                const colInRow = (cell - 1) % 10;
+                return (row % 2 === 0) ? (9 - colInRow) : colInRow;
+            }
+
+            function isValidSnake(start, end) {
+                if (end <= 0 || end >= start) return false;
+                const drop = start - end;
+                if (drop < CONFIG.MIN_SNAKE_LENGTH || drop > CONFIG.MAX_SNAKE_LENGTH) return false;
+                const startRow = getRow(start), endRow = getRow(end);
+                if (Math.abs(startRow - endRow) < CONFIG.MIN_VERTICAL_GAP) return false;
+                if (occupied.has(start) || occupied.has(end)) return false;
+                // Check not horizontal (must have vertical component)
+                if (Math.abs(getCol(start) - getCol(end)) > 6 && Math.abs(startRow - endRow) < 2) return false;
+                return true;
+            }
+
+            function isValidLadder(start, end) {
+                if (end > 100 || end <= start) return false;
+                const climb = end - start;
+                if (climb < CONFIG.MIN_LADDER_LENGTH || climb > CONFIG.MAX_LADDER_LENGTH) return false;
+                const startRow = getRow(start), endRow = getRow(end);
+                if (Math.abs(endRow - startRow) < CONFIG.MIN_VERTICAL_GAP) return false;
+                if (occupied.has(start) || occupied.has(end)) return false;
+                // Check not horizontal
+                if (Math.abs(getCol(start) - getCol(end)) > 6 && Math.abs(endRow - startRow) < 2) return false;
+                return true;
+            }
+
+            const snakeNames = [
+                "الأفعى الحمراء", "الأفعى الخضراء", "الأفعى السوداء",
+                "الأفعى الصفراء", "الأفعى الزرقاء", "الأفعى البرتقالية",
+                "الأفعى البنية", "الأفعى الرمادية", "الأفعى البنفسجية",
+                "الأفعى البيضاء", "الأفعى الذهبية", "الأفعى الفضية"
+            ];
+
+            const ladderNames = [
+                "السلم الخشبي", "السلم الحديدي", "السلم الذهبي",
+                "السلم الفضي", "السلم البرونزي", "السلم الحجري",
+                "السلم السحري", "السلم المتوهج", "السلم الطويل",
+                "السلم القصير", "السلم المتوسط", "السلم العظيم"
+            ];
+
+            // Generate snakes
+            let attempts = 0;
+            while (Object.keys(snakes).length < CONFIG.SNAKE_COUNT && attempts < 500) {
+                attempts++;
+                const start = Math.floor(Math.random() * 85) + 16; // 16-100
+                const minEnd = Math.max(1, start - CONFIG.MAX_SNAKE_LENGTH);
+                const maxEnd = start - CONFIG.MIN_SNAKE_LENGTH;
+                const end = Math.floor(Math.random() * (maxEnd - minEnd + 1)) + minEnd;
+
+                if (isValidSnake(start, end)) {
+                    const name = snakeNames[Object.keys(snakes).length % snakeNames.length];
+                    snakes[start] = { end: end, name: name };
+                    occupied.add(start);
+                    occupied.add(end);
+                }
+            }
+
+            // Generate ladders
+            attempts = 0;
+            while (Object.keys(ladders).length < CONFIG.LADDER_COUNT && attempts < 500) {
+                attempts++;
+                const start = Math.floor(Math.random() * 80) + 2; // 2-81
+                const minEnd = start + CONFIG.MIN_LADDER_LENGTH;
+                const maxEnd = Math.min(100, start + CONFIG.MAX_LADDER_LENGTH);
+                if (minEnd > maxEnd) continue;
+                const end = Math.floor(Math.random() * (maxEnd - minEnd + 1)) + minEnd;
+
+                if (isValidLadder(start, end)) {
+                    const name = ladderNames[Object.keys(ladders).length % ladderNames.length];
+                    ladders[start] = { end: end, name: name };
+                    occupied.add(start);
+                    occupied.add(end);
+                }
+            }
+
+            return { snakes, ladders };
+        }
+
+        // ==================== GAME DATA ====================
+        let SNAKES = {};
+        let LADDERS = {};
+
+        // ==================== STATE ====================
+        let players = []; // { pos, isAI, colorIndex }
+        let totalPlayers = 2;
+        let aiCount = 0;
+        let currentPlayer = 0;
+        let isRolling = false, gameOver = false;
+        let soundEnabled = true;
+        let animating = false;
+        let gameMode = 'menu'; // menu, playing
+
+        // ==================== AUDIO ====================
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playTone(freq, duration, type = 'sine', vol = 0.1) {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playDiceRollSound() {
+            if (!soundEnabled || !audioCtx) return;
+            initAudio();
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800 + Math.random() * 600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.05);
+                }, i * 70 + Math.random() * 30);
+            }
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.15);
+            }, 900);
+        }
+
+        function playSound(type) {
+            initAudio();
+            switch(type) {
+                case 'roll': playDiceRollSound(); break;
+                case 'move':
+                    playTone(520, 0.1, 'sine', 0.08);
+                    setTimeout(() => playTone(720, 0.1, 'sine', 0.08), 60);
+                    break;
+                case 'snake':
+                    playTone(500, 0.12, 'sine', 0.08);
+                    setTimeout(() => playTone(380, 0.12, 'sine', 0.08), 100);
+                    setTimeout(() => playTone(280, 0.18, 'sine', 0.08), 200);
+                    break;
+                case 'ladder':
+                    playTone(440, 0.1, 'sine', 0.08);
+                    setTimeout(() => playTone(554, 0.1, 'sine', 0.08), 80);
+                    setTimeout(() => playTone(659, 0.1, 'sine', 0.08), 160);
+                    setTimeout(() => playTone(880, 0.15, 'sine', 0.08), 240);
+                    break;
+                case 'win':
+                    [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => {
+                        setTimeout(() => playTone(f, 0.18, 'sine', 0.1), i * 130);
+                    });
+                    break;
+                case 'bounce':
+                    playTone(220, 0.12, 'triangle', 0.06);
+                    setTimeout(() => playTone(160, 0.12, 'triangle', 0.06), 80);
+                    break;
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        // ==================== CANVAS SETUP ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let W, H, cellSize, boardX, boardY, boardSize;
+        let animFrameId;
+
+        let diceVisible = false;
+        let diceValue = 1;
+        let diceAnimating = false;
+        let diceAngle = 0;
+        let diceBounce = 0;
+
+        function resize() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * window.devicePixelRatio;
+            canvas.height = H * window.devicePixelRatio;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+
+            if (gameMode === 'menu') {
+                drawMenu();
+                return;
+            }
+
+            const margin = Math.min(W, H) * 0.03;
+            const topSpace = H * 0.1;
+            const bottomSpace = H * 0.16;
+            const availableH = H - topSpace - bottomSpace;
+            const availableW = W - margin * 2;
+
+            boardSize = Math.min(availableW, availableH);
+            boardSize = Math.floor(boardSize);
+            cellSize = boardSize / 10;
+
+            boardX = (W - boardSize) / 2;
+            boardY = topSpace + (availableH - boardSize) / 2;
+
+            draw();
+        }
+
+        // ==================== MENU ====================
+        function drawMenu() {
+            ctx.clearRect(0, 0, W, H);
+
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#0a0a1a');
+            bgGrad.addColorStop(0.5, '#1a1a3e');
+            bgGrad.addColorStop(1, '#0d1b2a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#ffd700';
+            ctx.font = `bold ${Math.min(W * 0.08, 42)}px Cairo`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🐍 الأفعى والسلالم 🪜', W / 2, H * 0.18);
+
+            ctx.fillStyle = '#adb5bd';
+            ctx.font = `${Math.min(W * 0.035, 18)}px Cairo`;
+            ctx.fillText('اختر وضع اللعب', W / 2, H * 0.28);
+
+            const btnW = Math.min(W * 0.7, 280);
+            const btnH = 50;
+            const startY = H * 0.38;
+            const gap = 15;
+
+            const modes = [
+                { text: '👤 ضد 🤖 (لاعب ضد الكمبيوتر)', mode: 'vsAI', players: 2, ai: 1 },
+                { text: '👤 ضد 👤 (لاعبان)', mode: '2p', players: 2, ai: 0 },
+                { text: '👤👤 ضد 👤👤 (4 لاعبين)', mode: '4p', players: 4, ai: 0 },
+                { text: '🤖 ضد 🤖 (مشاهدة الكمبيوتر)', mode: 'aiOnly', players: 2, ai: 2 }
+            ];
+
+            modes.forEach((m, i) => {
+                const y = startY + i * (btnH + gap);
+                const x = (W - btnW) / 2;
+
+                const btnGrad = ctx.createLinearGradient(x, y, x + btnW, y + btnH);
+                btnGrad.addColorStop(0, '#339af0');
+                btnGrad.addColorStop(1, '#228be6');
+
+                roundRect(x, y, btnW, btnH, 15, btnGrad);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold ${Math.min(W * 0.032, 16)}px Cairo`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(m.text, W / 2, y + btnH / 2);
+            });
+
+            // Store button positions for click detection
+            window.menuButtons = modes.map((m, i) => ({
+                x: (W - btnW) / 2,
+                y: startY + i * (btnH + gap),
+                w: btnW,
+                h: btnH,
+                ...m
+            }));
+        }
+
+        // ==================== COORDINATES ====================
+        function getCellPos(num) {
+            const row = 9 - Math.floor((num - 1) / 10);
+            const colInRow = (num - 1) % 10;
+            const col = (Math.floor((num - 1) / 10) % 2 === 0) ? (9 - colInRow) : colInRow;
+            return {
+                x: boardX + col * cellSize,
+                y: boardY + row * cellSize,
+                cx: boardX + col * cellSize + cellSize / 2,
+                cy: boardY + row * cellSize + cellSize / 2
+            };
+        }
+
+        // ==================== DRAWING ====================
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#0a0a1a');
+            bgGrad.addColorStop(0.5, '#1a1a3e');
+            bgGrad.addColorStop(1, '#0d1b2a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // Board shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetY = 10;
+
+            const boardGrad = ctx.createLinearGradient(boardX, boardY, boardX + boardSize, boardY + boardSize);
+            boardGrad.addColorStop(0, '#3d2317');
+            boardGrad.addColorStop(0.5, '#2a1810');
+            boardGrad.addColorStop(1, '#1f1209');
+
+            roundRect(boardX - 4, boardY - 4, boardSize + 8, boardSize + 8, 12, boardGrad);
+            ctx.restore();
+
+            ctx.strokeStyle = '#5c3d2e';
+            ctx.lineWidth = 3;
+            roundRectStroke(boardX - 4, boardY - 4, boardSize + 8, boardSize + 8, 12);
+
+            for (let num = 1; num <= 100; num++) {
+                drawCell(num);
+            }
+
+            Object.entries(SNAKES).forEach(([start, data]) => {
+                drawSnake(parseInt(start), data.end);
+            });
+            Object.entries(LADDERS).forEach(([start, data]) => {
+                drawLadder(parseInt(start), data.end);
+            });
+
+            drawPlayers();
+
+            if (diceVisible) {
+                drawDiceOnCanvas();
+            }
+        }
+
+        function drawCell(num) {
+            const pos = getCellPos(num);
+            const isSnakeStart = SNAKES[num];
+            const isLadderStart = LADDERS[num];
+            const isSnakeEnd = Object.values(SNAKES).some(s => s.end === num);
+            const isLadderEnd = Object.values(LADDERS).some(l => l.end === num);
+
+            let bgColor, borderColor, textColor;
+
+            if (isSnakeStart) {
+                bgColor = '#c0392b';
+                borderColor = '#e74c3c';
+                textColor = '#fff';
+            } else if (isLadderStart) {
+                bgColor = '#27ae60';
+                borderColor = '#2ecc71';
+                textColor = '#fff';
+            } else if (isSnakeEnd) {
+                bgColor = '#e74c3c';
+                borderColor = '#ff6b6b';
+                textColor = '#fff';
+            } else if (isLadderEnd) {
+                bgColor = '#2ecc71';
+                borderColor = '#51cf66';
+                textColor = '#fff';
+            } else {
+                const isDark = ((Math.floor((num - 1) / 10) + (num - 1) % 10) % 2 === 0);
+                bgColor = isDark ? '#c4936a' : '#e8d5b7';
+                borderColor = 'rgba(0,0,0,0.12)';
+                textColor = '#3d2317';
+            }
+
+            const pad = 1;
+            const cellGrad = ctx.createLinearGradient(pos.x, pos.y, pos.x, pos.y + cellSize);
+            cellGrad.addColorStop(0, lighten(bgColor, 15));
+            cellGrad.addColorStop(1, bgColor);
+
+            roundRect(pos.x + pad, pos.y + pad, cellSize - pad * 2, cellSize - pad * 2, 5, cellGrad);
+
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 1;
+            roundRectStroke(pos.x + pad, pos.y + pad, cellSize - pad * 2, cellSize - pad * 2, 5);
+
+            ctx.fillStyle = textColor;
+            ctx.font = `bold ${Math.max(9, cellSize * 0.22)}px Cairo`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (isSnakeStart || isLadderStart) {
+                ctx.fillText(num.toString(), pos.cx, pos.cy - cellSize * 0.12);
+
+                ctx.font = `${cellSize * 0.28}px serif`;
+                ctx.fillText(isSnakeStart ? '🐍' : '🪜', pos.cx, pos.cy + cellSize * 0.18);
+
+                ctx.font = `bold ${Math.max(8, cellSize * 0.18)}px Cairo`;
+                ctx.fillStyle = '#ffd700';
+                const dest = isSnakeStart ? SNAKES[num].end : LADDERS[num].end;
+                const arrow = isSnakeStart ? '↓' : '↑';
+                ctx.fillText(`${arrow}${dest}`, pos.cx, pos.cy + cellSize * 0.42);
+            } else if (isSnakeEnd || isLadderEnd) {
+                ctx.fillText(num.toString(), pos.cx, pos.cy - cellSize * 0.12);
+
+                const startNum = isSnakeEnd 
+                    ? Object.keys(SNAKES).find(k => SNAKES[k].end === num)
+                    : Object.keys(LADDERS).find(k => LADDERS[k].end === num);
+
+                ctx.font = `bold ${Math.max(8, cellSize * 0.16)}px Cairo`;
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.fillText(`←${startNum}`, pos.cx, pos.cy + cellSize * 0.32);
+            } else {
+                ctx.fillText(num.toString(), pos.cx, pos.cy);
+            }
+        }
+
+        function drawSnake(start, end) {
+            const s = getCellPos(start);
+            const e = getCellPos(end);
+
+            const sx = s.cx, sy = s.cy;
+            const ex = e.cx, ey = e.cy;
+
+            ctx.save();
+
+            const steps = 30;
+            const bodyWidth = Math.max(3, cellSize * 0.1);
+
+            for (let t = 0; t <= 1; t += 0.02) {
+                const x = sx + (ex - sx) * t;
+                const y = sy + (ey - sy) * t;
+                const wave = Math.sin(t * Math.PI * 4) * cellSize * 0.15;
+
+                const angle = Math.atan2(ey - sy, ex - sx);
+                const perpX = Math.cos(angle + Math.PI / 2);
+                const perpY = Math.sin(angle + Math.PI / 2);
+
+                const px = x + perpX * wave;
+                const py = y + perpY * wave;
+
+                const r = Math.floor(231 - t * 50);
+                const g = Math.floor(76 - t * 30);
+                const b = Math.floor(60 - t * 20);
+
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                ctx.arc(px, py, bodyWidth * (1 - t * 0.3), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const headR = cellSize * 0.22;
+
+            ctx.shadowColor = '#e74c3c';
+            ctx.shadowBlur = 15;
+
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(sx, sy, headR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            const eyeOffset = headR * 0.35;
+            const eyeR = headR * 0.25;
+
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(sx - eyeOffset, sy - eyeOffset * 0.5, eyeR, 0, Math.PI * 2);
+            ctx.arc(sx + eyeOffset, sy - eyeOffset * 0.5, eyeR, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(sx - eyeOffset, sy - eyeOffset * 0.5, eyeR * 0.5, 0, Math.PI * 2);
+            ctx.arc(sx + eyeOffset, sy - eyeOffset * 0.5, eyeR * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + headR * 0.6);
+            ctx.lineTo(sx, sy + headR * 1.3);
+            ctx.stroke();
+
+            ctx.fillStyle = '#c0392b';
+            ctx.beginPath();
+            ctx.arc(ex, ey, cellSize * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawLadder(start, end) {
+            const s = getCellPos(start);
+            const e = getCellPos(end);
+
+            const sx = s.cx, sy = s.cy;
+            const ex = e.cx, ey = e.cy;
+
+            ctx.save();
+
+            const offset = cellSize * 0.1;
+            const angle = Math.atan2(ey - sy, ex - sx);
+            const perpX = Math.cos(angle + Math.PI / 2) * offset;
+            const perpY = Math.sin(angle + Math.PI / 2) * offset;
+
+            const railWidth = Math.max(2, cellSize * 0.06);
+
+            const railGrad1 = ctx.createLinearGradient(sx - perpX, sy - perpY, ex - perpX, ey - perpY);
+            railGrad1.addColorStop(0, '#8B4513');
+            railGrad1.addColorStop(1, '#A0522D');
+            ctx.strokeStyle = railGrad1;
+            ctx.lineWidth = railWidth;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(sx - perpX, sy - perpY);
+            ctx.lineTo(ex - perpX, ey - perpY);
+            ctx.stroke();
+
+            const railGrad2 = ctx.createLinearGradient(sx + perpX, sy + perpY, ex + perpX, ey + perpY);
+            railGrad2.addColorStop(0, '#A0522D');
+            railGrad2.addColorStop(1, '#CD853F');
+            ctx.strokeStyle = railGrad2;
+            ctx.beginPath();
+            ctx.moveTo(sx + perpX, sy + perpY);
+            ctx.lineTo(ex + perpX, ey + perpY);
+            ctx.stroke();
+
+            const dist = Math.sqrt((ex - sx) ** 2 + (ey - sy) ** 2);
+            const rungCount = Math.max(3, Math.floor(dist / (cellSize * 0.35)));
+            ctx.strokeStyle = '#CD853F';
+            ctx.lineWidth = Math.max(1.5, cellSize * 0.04);
+
+            for (let i = 1; i < rungCount; i++) {
+                const t = i / rungCount;
+                const x = sx + (ex - sx) * t;
+                const y = sy + (ey - sy) * t;
+                ctx.beginPath();
+                ctx.moveTo(x - perpX, y - perpY);
+                ctx.lineTo(x + perpX, y + perpY);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.25)';
+            ctx.beginPath();
+            ctx.arc(ex, ey, cellSize * 0.18, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawPlayers() {
+            players.forEach((p, i) => {
+                if (p.pos > 0) drawPlayerToken(p.pos, i, PLAYER_COLORS[p.colorIndex], i === currentPlayer);
+            });
+        }
+
+        function drawPlayerToken(pos, playerIndex, colors, isActive) {
+            const coords = getCellPos(pos);
+            const totalPlayers = players.length;
+            let offsetX = 0, offsetY = 0;
+
+            if (totalPlayers === 2) {
+                offsetX = playerIndex === 0 ? -cellSize * 0.18 : cellSize * 0.18;
+            } else if (totalPlayers === 3) {
+                const offsets = [
+                    { x: -cellSize * 0.15, y: -cellSize * 0.15 },
+                    { x: cellSize * 0.15, y: -cellSize * 0.15 },
+                    { x: 0, y: cellSize * 0.15 }
+                ];
+                offsetX = offsets[playerIndex].x;
+                offsetY = offsets[playerIndex].y;
+            } else {
+                const offsets = [
+                    { x: -cellSize * 0.15, y: -cellSize * 0.15 },
+                    { x: cellSize * 0.15, y: -cellSize * 0.15 },
+                    { x: -cellSize * 0.15, y: cellSize * 0.15 },
+                    { x: cellSize * 0.15, y: cellSize * 0.15 }
+                ];
+                offsetX = offsets[playerIndex].x;
+                offsetY = offsets[playerIndex].y;
+            }
+
+            const x = coords.cx + offsetX;
+            const y = coords.cy + offsetY;
+            const r = cellSize * 0.18;
+
+            ctx.save();
+
+            if (isActive) {
+                const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+                ctx.shadowColor = colors.glow;
+                ctx.shadowBlur = 20 * pulse;
+            }
+
+            const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+            grad.addColorStop(0, colors.glow);
+            grad.addColorStop(1, colors.main);
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = Math.max(2, cellSize * 0.035);
+            ctx.stroke();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.max(11, cellSize * 0.25)}px Cairo`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 0;
+            ctx.fillText((playerIndex + 1).toString(), x, y);
+
+            if (isActive) {
+                const arrowY = y - r - cellSize * 0.06;
+                ctx.fillStyle = colors.glow;
+                ctx.beginPath();
+                ctx.moveTo(x, arrowY);
+                ctx.lineTo(x - 5, arrowY - 8);
+                ctx.lineTo(x + 5, arrowY - 8);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function drawDiceOnCanvas() {
+            const diceSize = Math.min(W, H) * 0.18;
+            const dx = W / 2;
+            const dy = H * 0.45;
+
+            ctx.save();
+            ctx.translate(dx, dy);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, diceSize * 0.6, diceSize * 0.5, diceSize * 0.15, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const bounceY = diceBounce;
+            ctx.translate(0, bounceY);
+            ctx.rotate(diceAngle);
+
+            const faceSize = diceSize;
+            const half = faceSize / 2;
+
+            ctx.fillStyle = '#f8f9fa';
+            roundRect(-half, -half, faceSize, faceSize, faceSize * 0.15, '#f8f9fa');
+
+            ctx.strokeStyle = '#dee2e6';
+            ctx.lineWidth = 2;
+            roundRectStroke(-half, -half, faceSize, faceSize, faceSize * 0.15);
+
+            const dotR = faceSize * 0.08;
+            const offset = faceSize * 0.25;
+
+            ctx.fillStyle = '#212529';
+            const dotPositions = {
+                1: [[0, 0]],
+                2: [[-offset, -offset], [offset, offset]],
+                3: [[-offset, -offset], [0, 0], [offset, offset]],
+                4: [[-offset, -offset], [offset, -offset], [-offset, offset], [offset, offset]],
+                5: [[-offset, -offset], [offset, -offset], [0, 0], [-offset, offset], [offset, offset]],
+                6: [[-offset, -offset], [offset, -offset], [-offset, 0], [offset, 0], [-offset, offset], [offset, offset]]
+            };
+
+            const positions = dotPositions[diceValue] || dotPositions[1];
+            positions.forEach(([px, py]) => {
+                ctx.beginPath();
+                ctx.arc(px, py, dotR, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(px - dotR * 0.3, py - dotR * 0.3, dotR * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#212529';
+            });
+
+            ctx.restore();
+        }
+
+        function roundRect(x, y, w, h, r, fill) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+        }
+
+        function roundRectStroke(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function lighten(hex, percent) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+            const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return `rgb(${R},${G},${B})`;
+        }
+
+        // ==================== ANIMATION LOOP ====================
+        function animate() {
+            if (diceAnimating) {
+                diceAngle += 0.3;
+                diceBounce = Math.sin(Date.now() / 80) * 8;
+                diceValue = Math.floor(Math.random() * 6) + 1;
+            }
+            if (gameMode === 'menu') {
+                drawMenu();
+            } else {
+                draw();
+            }
+            animFrameId = requestAnimationFrame(animate);
+        }
+
+        // ==================== GAME LOGIC ====================
+        function startGame(mode, playerCount, aiPlayers) {
+            gameMode = 'playing';
+            totalPlayers = playerCount;
+            aiCount = aiPlayers;
+
+            // Generate new board
+            const board = generateBoard();
+            SNAKES = board.snakes;
+            LADDERS = board.ladders;
+
+            // Initialize players
+            players = [];
+            for (let i = 0; i < playerCount; i++) {
+                players.push({
+                    pos: 0,
+                    isAI: i >= (playerCount - aiPlayers),
+                    colorIndex: i
+                });
+            }
+
+            currentPlayer = 0;
+            gameOver = false;
+            isRolling = false;
+            animating = false;
+            diceVisible = false;
+
+            // Setup UI
+            document.getElementById('gameUI').style.display = 'block';
+            updatePlayerBadges();
+
+            const status = document.getElementById('statusText');
+            if (aiCount > 0 && players[0].isAI) {
+                status.textContent = '🤖 الكمبيوتر يلعب...';
+                setTimeout(() => rollDice(), 1000);
+            } else {
+                status.textContent = `🎲 دور ${getPlayerName(0)}`;
+            }
+
+            resize();
+        }
+
+        function getPlayerName(index) {
+            const colors = PLAYER_COLORS;
+            if (players[index].isAI) {
+                return `🤖 الكمبيوتر ${colors[index].name}`;
+            }
+            return `👤 اللاعب ${index + 1} ${colors[index].name}`;
+        }
+
+        function updatePlayerBadges() {
+            const uiContent = document.getElementById('uiContent');
+            // Keep roll button and menu buttons
+            const rollBtn = uiContent.querySelector('.roll-btn');
+            const menuDiv = uiContent.querySelector('div:last-child');
+
+            uiContent.innerHTML = '';
+
+            // Add player badges
+            players.forEach((p, i) => {
+                const badge = document.createElement('div');
+                badge.className = `player-badge p${i + 1} ${i === currentPlayer ? 'active' : ''}`;
+                badge.id = `badge${i}`;
+                badge.innerHTML = `
+                    <div class="player-dot p${i + 1}"></div>
+                    <span class="player-name">${p.isAI ? '🤖' : '👤'}${i + 1}</span>
+                `;
+                uiContent.appendChild(badge);
+            });
+
+            uiContent.appendChild(rollBtn);
+            uiContent.appendChild(menuDiv);
+        }
+
+        function rollDice() {
+            if (isRolling || gameOver || animating) return;
+
+            isRolling = true;
+            diceAnimating = true;
+            diceVisible = true;
+            document.getElementById('rollBtn').disabled = true;
+            document.getElementById('statusText').textContent = '... جاري الرمي';
+
+            playSound('roll');
+
+            setTimeout(() => {
+                diceAnimating = false;
+                const result = Math.floor(Math.random() * 6) + 1;
+                diceValue = result;
+                diceAngle = 0;
+                diceBounce = 0;
+
+                document.getElementById('statusText').textContent = `🎲 النتيجة: ${result}`;
+
+                setTimeout(() => {
+                    diceVisible = false;
+                    processMove(result);
+                }, 1200);
+
+            }, 1200);
+        }
+
+        function processMove(steps) {
+            const status = document.getElementById('statusText');
+            const player = players[currentPlayer];
+            const oldPos = player.pos;
+            const newPos = player.pos + steps;
+
+            if (newPos > 100) {
+                status.textContent = `❌ يجب الحصول على ${100 - oldPos} بالضبط!`;
+                playSound('bounce');
+                switchPlayer();
+                return;
+            }
+
+            animateMovePlayer(currentPlayer, oldPos, newPos, () => {
+                player.pos = newPos;
+                status.textContent = `${getPlayerName(currentPlayer)} رمى ${steps} ووصل للمربع ${player.pos}`;
+                playSound('move');
+                setTimeout(() => checkSpecial(currentPlayer), 300);
+            });
+        }
+
+        function animateMovePlayer(playerIdx, from, to, onDone) {
+            animating = true;
+            const startTime = performance.now();
+            const duration = 500;
+
+            function step(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                const current = Math.floor(from + (to - from) * eased);
+
+                // Temporarily set position for drawing
+                const savedPos = players[playerIdx].pos;
+                players[playerIdx].pos = current > 0 ? current : 0;
+                draw();
+                players[playerIdx].pos = savedPos;
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    animating = false;
+                    if (onDone) onDone();
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function checkSpecial(playerIdx) {
+            const status = document.getElementById('statusText');
+            const player = players[playerIdx];
+            const pos = player.pos;
+
+            if (SNAKES[pos]) {
+                const data = SNAKES[pos];
+                const newPos = data.end;
+                status.textContent = `🐍 ${getPlayerName(playerIdx)} وقع في ${data.name}! نزل إلى ${newPos}`;
+
+                player.pos = newPos;
+                playSound('snake');
+
+                animateMovePlayer(playerIdx, pos, newPos, () => {
+                    checkWin(playerIdx);
+                });
+            } else if (LADDERS[pos]) {
+                const data = LADDERS[pos];
+                const newPos = data.end;
+                status.textContent = `🪜 ${getPlayerName(playerIdx)} صعد ${data.name}! إلى ${newPos}`;
+
+                player.pos = newPos;
+                playSound('ladder');
+
+                animateMovePlayer(playerIdx, pos, newPos, () => {
+                    checkWin(playerIdx);
+                });
+            } else {
+                checkWin(playerIdx);
+            }
+        }
+
+        function checkWin(playerIdx) {
+            const player = players[playerIdx];
+
+            if (player.pos === 100) {
+                gameOver = true;
+                playSound('win');
+
+                document.getElementById('modalTitle').textContent = '🎉 مبروك!';
+                document.getElementById('modalText').textContent = `${getPlayerName(playerIdx)} فاز باللعبة!`;
+
+                const buttonsDiv = document.getElementById('modalButtons');
+                buttonsDiv.innerHTML = `
+                    <button class="modal-btn" onclick="closeModal(); startGame('${gameMode === 'vsAI' ? 'vsAI' : totalPlayers === 2 ? '2p' : '4p'}', ${totalPlayers}, ${aiCount});">🔄 لعبة جديدة (نفس الوضع)</button>
+                    <button class="modal-btn secondary" onclick="closeModal(); showMainMenu();">🏠 القائمة الرئيسية</button>
+                `;
+
+                document.getElementById('modal').classList.add('show');
+                document.getElementById('statusText').textContent = `🏆 ${getPlayerName(playerIdx)} فاز!`;
+                createConfetti();
+            } else {
+                switchPlayer();
+            }
+        }
+
+        function switchPlayer() {
+            currentPlayer = (currentPlayer + 1) % totalPlayers;
+
+            // Update badges
+            players.forEach((p, i) => {
+                const badge = document.getElementById(`badge${i}`);
+                if (badge) badge.classList.toggle('active', i === currentPlayer);
+            });
+
+            isRolling = false;
+            document.getElementById('rollBtn').disabled = false;
+
+            const status = document.getElementById('statusText');
+
+            if (players[currentPlayer].isAI) {
+                status.textContent = `🤖 ${getPlayerName(currentPlayer)} يفكر...`;
+                document.getElementById('rollBtn').disabled = true;
+                setTimeout(() => rollDice(), 1200 + Math.random() * 800);
+            } else {
+                status.textContent = `🎲 دور ${getPlayerName(currentPlayer)}`;
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff6b6b', '#51cf66', '#74c0fc', '#ff9ff3'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.style.cssText = `
+                        position: fixed;
+                        width: ${Math.random() * 8 + 6}px;
+                        height: ${Math.random() * 8 + 6}px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        left: ${Math.random() * 100}vw;
+                        top: -10px;
+                        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                        z-index: 999;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(el);
+
+                    el.animate([
+                        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                        { transform: `translateY(${H + 20}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                    ], { duration: (Math.random() * 2 + 2) * 1000, easing: 'ease-out' });
+
+                    setTimeout(() => el.remove(), 4000);
+                }, i * 50);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        function showMainMenu() {
+            gameMode = 'menu';
+            document.getElementById('gameUI').style.display = 'none';
+            document.getElementById('statusText').textContent = '🎲 اختر وضع اللعب';
+            resize();
+        }
+
+        function showMenu() {
+            const buttonsDiv = document.getElementById('modalButtons');
+            buttonsDiv.innerHTML = `
+                <button class="modal-btn" onclick="closeModal(); startGame('${gameMode === 'vsAI' ? 'vsAI' : totalPlayers === 2 ? '2p' : '4p'}', ${totalPlayers}, ${aiCount});">🔄 لعبة جديدة</button>
+                <button class="modal-btn secondary" onclick="closeModal(); showMainMenu();">🏠 القائمة الرئيسية</button>
+            `;
+            document.getElementById('modalTitle').textContent = '⚙️ القائمة';
+            document.getElementById('modalText').textContent = 'ماذا تريد أن تفعل؟';
+            document.getElementById('modal').classList.add('show');
+        }
+
+        // ==================== INPUT HANDLING ====================
+        canvas.addEventListener('click', (e) => {
+            if (gameMode !== 'menu') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width / window.devicePixelRatio);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height / window.devicePixelRatio);
+
+            if (window.menuButtons) {
+                window.menuButtons.forEach(btn => {
+                    if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+                        startGame(btn.mode, btn.players, btn.ai);
+                    }
+                });
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameMode !== 'menu') return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (canvas.width / rect.width / window.devicePixelRatio);
+            const y = (touch.clientY - rect.top) * (canvas.height / rect.height / window.devicePixelRatio);
+
+            if (window.menuButtons) {
+                window.menuButtons.forEach(btn => {
+                    if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+                        startGame(btn.mode, btn.players, btn.ai);
+                    }
+                });
+            }
+        }, { passive: false });
+
+        // ==================== INIT ====================
+        window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+
+        window.addEventListener('load', () => {
+            resize();
+            animate();
+        });
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+    </script>
+</body>
+</html>
