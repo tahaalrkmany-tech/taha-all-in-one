@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بلياردو 3D - نسخة مستقرة</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #0d0d1a;
+            color: #eee;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 24px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        #top-bar h1 {
+            font-size: 1.3rem;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            letter-spacing: 1px;
+        }
+
+        #score-board {
+            display: flex;
+            gap: 28px;
+            font-size: 0.95rem;
+        }
+
+        #score-board span {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #score-board b {
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+
+        #main-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 260px;
+            min-width: 220px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 16px 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            z-index: 5;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.2);
+        }
+
+        .panel h3 {
+            font-size: 0.85rem;
+            color: #ffd700;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .option-group {
+            margin-bottom: 12px;
+        }
+
+        .option-group label {
+            display: block;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+            color: #aaa;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .btn-grid button {
+            padding: 8px 4px;
+            font-size: 0.72rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #1e1e32;
+            color: #bbb;
+            transition: all 0.25s ease;
+            font-family: 'Tajawal', sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .btn-grid button:hover {
+            background: #2a2a4a;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-grid button.active {
+            background: #ffd700;
+            color: #1a1a2e;
+            font-weight: 700;
+            border-color: #ffd700;
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-grid button:active {
+            transform: scale(0.95);
+        }
+
+        .slider-group {
+            margin-bottom: 10px;
+        }
+
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #1e1e32;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            border: none;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #e74c3c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
+        }
+
+        #canvas-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0a0a14;
+        }
+
+        #gameCanvas {
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 120px rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            cursor: crosshair;
+            max-width: 95%;
+            max-height: 90%;
+            touch-action: none;
+        }
+
+        #power-meter {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            height: 22px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 11px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        #power-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2ecc71, #f1c40f, #e67e22, #e74c3c);
+            transition: width 0.04s linear;
+            border-radius: 9px;
+        }
+
+        #power-label {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #aaa;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 12px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        #status-bar {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #ddd;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        #status-bar.show {
+            opacity: 1;
+        }
+
+        #winner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            backdrop-filter: blur(4px);
+        }
+
+        #winner-overlay.show {
+            display: flex;
+        }
+
+        #winner-box {
+            background: rgba(10, 10, 20, 0.95);
+            padding: 40px 60px;
+            border-radius: 24px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.2);
+        }
+
+        #winner-box h2 {
+            font-size: 2.5rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        #winner-box p {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        #winner-box button {
+            padding: 12px 36px;
+            background: #ffd700;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        #winner-box button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* ===== شاشة البداية ===== */
+        #start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 15, 0.92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+            flex-direction: column;
+            padding: 20px;
+            transition: opacity 0.6s ease;
+        }
+
+        #start-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #start-box {
+            background: rgba(20, 20, 40, 0.95);
+            border-radius: 30px;
+            padding: 30px 40px;
+            max-width: 800px;
+            width: 100%;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 80px rgba(255, 215, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #start-box h2 {
+            color: #ffd700;
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .start-section {
+            margin-bottom: 20px;
+        }
+
+        .start-section h3 {
+            color: #ddd;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+            padding-bottom: 6px;
+        }
+
+        .start-btns {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
+        }
+
+        .start-btns button {
+            padding: 8px 6px;
+            background: #1e1e32;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #bbb;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .start-btns button:hover {
+            background: #2a2a4a;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .start-btns button.active {
+            background: #ffd700;
+            color: #1a1a2e;
+            font-weight: 700;
+            border-color: #ffd700;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .mode-selector button {
+            padding: 10px 30px;
+            border-radius: 12px;
+            border: 2px solid #555;
+            background: #1e1e32;
+            color: #ccc;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+
+        .mode-selector button.active {
+            border-color: #ffd700;
+            background: #ffd700;
+            color: #1a1a2e;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        #start-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            background: #ffd700;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        #start-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        @media (max-width: 900px) {
+            #sidebar {
+                width: 180px;
+                min-width: 160px;
+                padding: 10px 8px;
+            }
+            .btn-grid {
+                grid-template-columns: 1fr;
+            }
+            #top-bar h1 {
+                font-size: 1rem;
+            }
+            #score-board {
+                gap: 12px;
+                font-size: 0.8rem;
+            }
+            #start-box {
+                padding: 20px;
+            }
+            .start-btns {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+            .mode-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            #sidebar {
+                display: none;
+            }
+            #top-bar {
+                padding: 6px 12px;
+            }
+            #top-bar h1 {
+                font-size: 0.9rem;
+            }
+            #score-board {
+                gap: 6px;
+                font-size: 0.7rem;
+            }
+            #score-board span {
+                padding: 2px 8px;
+            }
+            #power-meter {
+                width: 200px;
+                height: 16px;
+                bottom: 16px;
+            }
+            #power-label {
+                bottom: 36px;
+                font-size: 0.6rem;
+            }
+            #start-box {
+                padding: 15px;
+            }
+            .start-btns {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="top-bar">
+            <h1>🎱 بلياردو 3D</h1>
+            <div id="score-board">
+                <span>اللاعب 1: <b id="p1-score">0</b></span>
+                <span>اللاعب 2: <b id="p2-score">0</b></span>
+                <span>الدور: <b id="current-turn">1</b></span>
+            </div>
+        </div>
+        <div id="main-area">
+            <div id="sidebar">
+                <div class="panel">
+                    <h3>🎱 تشكيلة الكرات</h3>
+                    <div class="option-group">
+                        <label>اختر النمط</label>
+                        <div class="btn-grid" id="rack-btns">
+                            <button class="active" data-rack="standard">قياسي</button>
+                            <button data-rack="diamond">ماسي</button>
+                            <button data-rack="circle">دائري</button>
+                            <button data-rack="random">عشوائي</button>
+                            <button data-rack="triangle">مثلث</button>
+                            <button data-rack="line">خطي</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>⚪ الكرة البيضاء</h3>
+                    <div class="option-group">
+                        <label>اختر النوع</label>
+                        <div class="btn-grid" id="cueball-btns">
+                            <button class="active" data-cue="classic">كلاسيكي</button>
+                            <button data-cue="red">أحمر</button>
+                            <button data-cue="blue">أزرق</button>
+                            <button data-cue="gold">ذهبي</button>
+                            <button data-cue="glow">مضيء</button>
+                            <button data-cue="crystal">كريستال</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>🎯 أنماط العصا</h3>
+                    <div class="option-group">
+                        <label>اختر الشكل</label>
+                        <div class="btn-grid" id="cue-btns">
+                            <button class="active" data-cuestyle="classic">كلاسيكي</button>
+                            <button data-cuestyle="modern">عصري</button>
+                            <button data-cuestyle="neon">نيون</button>
+                            <button data-cuestyle="golden">ذهبي</button>
+                            <button data-cuestyle="carbon">كربون</button>
+                            <button data-cuestyle="laser">ليزر</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>⚙️ الإعدادات</h3>
+                    <div class="slider-group">
+                        <label>الاحتكاك الخطي: <span id="fric-val">0.94</span></label>
+                        <input type="range" min="0.88" max="0.98" step="0.001" value="0.94" id="friction-slider">
+                    </div>
+                    <div class="slider-group">
+                        <label>الاحتكاك الدوراني: <span id="spin-fric-val">0.92</span></label>
+                        <input type="range" min="0.85" max="0.97" step="0.001" value="0.92" id="spin-friction-slider">
+                    </div>
+                    <div class="slider-group">
+                        <label>معامل الارتداد: <span id="rest-val">0.82</span></label>
+                        <input type="range" min="0.6" max="0.95" step="0.01" value="0.82" id="restitution-slider">
+                    </div>
+                    <div class="slider-group">
+                        <label>حساسية التوقف: <span id="stop-threshold-val">0.12</span></label>
+                        <input type="range" min="0.04" max="0.30" step="0.01" value="0.12" id="stop-threshold-slider">
+                    </div>
+                    <button class="reset-btn" id="reset-btn">🔄 إعادة اللعبة</button>
+                </div>
+            </div>
+            <div id="canvas-wrapper">
+                <canvas id="gameCanvas"></canvas>
+                <div id="power-label">قوة الضربة</div>
+                <div id="power-meter"><div id="power-fill"></div></div>
+                <div id="status-bar"></div>
+
+                <!-- شاشة البداية -->
+                <div id="start-overlay">
+                    <div id="start-box">
+                        <h2>🎱 بلياردو 3D</h2>
+                        <div class="start-section">
+                            <h3>🎱 تشكيلة الكرات</h3>
+                            <div class="start-btns" id="start-rack">
+                                <button class="active" data-rack="standard">قياسي</button>
+                                <button data-rack="diamond">ماسي</button>
+                                <button data-rack="circle">دائري</button>
+                                <button data-rack="random">عشوائي</button>
+                                <button data-rack="triangle">مثلث</button>
+                                <button data-rack="line">خطي</button>
+                            </div>
+                        </div>
+                        <div class="start-section">
+                            <h3>⚪ الكرة البيضاء</h3>
+                            <div class="start-btns" id="start-cueball">
+                                <button class="active" data-cue="classic">كلاسيكي</button>
+                                <button data-cue="red">أحمر</button>
+                                <button data-cue="blue">أزرق</button>
+                                <button data-cue="gold">ذهبي</button>
+                                <button data-cue="glow">مضيء</button>
+                                <button data-cue="crystal">كريستال</button>
+                            </div>
+                        </div>
+                        <div class="start-section">
+                            <h3>🎯 أنماط العصا</h3>
+                            <div class="start-btns" id="start-cue">
+                                <button class="active" data-cuestyle="classic">كلاسيكي</button>
+                                <button data-cuestyle="modern">عصري</button>
+                                <button data-cuestyle="neon">نيون</button>
+                                <button data-cuestyle="golden">ذهبي</button>
+                                <button data-cuestyle="carbon">كربون</button>
+                                <button data-cuestyle="laser">ليزر</button>
+                            </div>
+                        </div>
+                        <div class="start-section">
+                            <h3>🎮 وضع اللعب</h3>
+                            <div class="mode-selector" id="mode-selector">
+                                <button class="active" data-mode="pvp">👥 لاعب ضد لاعب</button>
+                                <button data-mode="pvc">🤖 لاعب ضد كمبيوتر</button>
+                            </div>
+                        </div>
+                        <button id="start-btn">🚀 ابدأ اللعبة</button>
+                    </div>
+                </div>
+
+                <div id="winner-overlay">
+                    <div id="winner-box">
+                        <h2>🏆 فوز!</h2>
+                        <p id="winner-text">اللاعب 1</p>
+                        <button id="play-again-btn">🎮 لعب مرة أخرى</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // =====================================================================
+            // 1. العناصر الأساسية والثوابت
+            // =====================================================================
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const powerFill = document.getElementById('power-fill');
+            const statusBar = document.getElementById('status-bar');
+            const winnerOverlay = document.getElementById('winner-overlay');
+            const winnerText = document.getElementById('winner-text');
+            const startOverlay = document.getElementById('start-overlay');
+            const startBtn = document.getElementById('start-btn');
+
+            const TABLE_WIDTH = 1000;
+            const TABLE_HEIGHT = 500;
+            const BALL_RADIUS = 12;
+            const POCKET_RADIUS = 28;
+            const WALL_THICKNESS = 30;
+            const FRICTION_DEFAULT = 0.98;
+            const SPIN_FRICTION_DEFAULT = 0.92;
+            const RESTITUTION_DEFAULT = 0.82;
+            const MAX_POWER = 30;
+            const AIM_MAX_DIST = 180;
+            const MAX_PARTICLES = 150;
+            const MAX_BALL_SPEED = 22;
+            const STOP_THRESHOLD_DEFAULT = 0.12;
+
+            // =====================================================================
+            // 2. إدارة الصوت
+            // =====================================================================
+            let audioCtx = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            function playTone(freq, duration, volume = 0.15, type = 'sine') {
+                try {
+                    initAudio();
+                    const oscillator = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    oscillator.type = type;
+                    oscillator.frequency.value = freq;
+                    gain.gain.value = volume;
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    oscillator.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + duration);
+                } catch (e) { /* تجاهل */ }
+            }
+
+            function soundCueHit() {
+                playTone(600, 0.08, 0.2, 'sawtooth');
+                setTimeout(() => playTone(400, 0.06, 0.15, 'sawtooth'), 50);
+            }
+
+            function soundBallCollision() {
+                playTone(800, 0.05, 0.12, 'sine');
+            }
+
+            function soundPocket() {
+                playTone(300, 0.15, 0.25, 'sine');
+                setTimeout(() => playTone(500, 0.1, 0.2, 'sine'), 100);
+            }
+
+            function soundCueBallPocket() {
+                playTone(200, 0.2, 0.3, 'square');
+                setTimeout(() => playTone(150, 0.15, 0.2, 'square'), 150);
+            }
+
+            function soundWallHit() {
+                playTone(250, 0.04, 0.1, 'triangle');
+            }
+
+            function soundGameOver() {
+                playTone(523, 0.15, 0.3, 'sine');
+                setTimeout(() => playTone(659, 0.15, 0.3, 'sine'), 150);
+                setTimeout(() => playTone(784, 0.2, 0.4, 'sine'), 300);
+            }
+
+            // =====================================================================
+            // 3. ألوان الكرات
+            // =====================================================================
+            const BALL_COLORS = [
+                '#f1c40f', '#2c3e50', '#e74c3c', '#8e44ad', '#f39c12',
+                '#27ae60', '#c0392b', '#000000', '#ecf0f1', '#1abc9c',
+                '#e67e22', '#2980b9', '#d35400', '#16a085', '#8e44ad'
+            ];
+
+            // =====================================================================
+            // 4. دوال مساعدة للألوان
+            // =====================================================================
+            function lighten(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = Math.min(255, (num >> 16) + amt);
+                const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+                const B = Math.min(255, (num & 0x0000FF) + amt);
+                return `rgb(${R},${G},${B})`;
+            }
+
+            function darken(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = Math.max(0, (num >> 16) - amt);
+                const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+                const B = Math.max(0, (num & 0x0000FF) - amt);
+                return `rgb(${R},${G},${B})`;
+            }
+
+            // =====================================================================
+            // 5. كلاس الكرة
+            // =====================================================================
+            class Ball {
+                constructor(x, y, color, number, isCue = false) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = 0;
+                    this.vy = 0;
+                    this.radius = BALL_RADIUS;
+                    this.color = color;
+                    this.number = number;
+                    this.isCue = isCue;
+                    this.mass = 1;
+                    this.inPocket = false;
+                    this.pocketAnim = 0;
+                    this.active = true;
+                    this.wallHitCooldown = 0;
+
+                    this.rotation = 0;
+                    this.spin = 0;
+                    this.elevation = 0;
+                    this.trail = [];
+                }
+
+                update(friction, spinFriction, restitution, stopThreshold) {
+                    if (!this.active || this.inPocket) {
+                        if (this.inPocket) this.pocketAnim += 0.04;
+                        return;
+                    }
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= friction;
+                    this.vy *= friction;
+
+                    this.spin *= spinFriction;
+                    this.rotation += this.spin;
+
+                    const speed = Math.hypot(this.vx, this.vy);
+                    if (speed > MAX_BALL_SPEED) {
+                        this.vx = (this.vx / speed) * MAX_BALL_SPEED;
+                        this.vy = (this.vy / speed) * MAX_BALL_SPEED;
+                    }
+
+                    // توقف تام عند عتبة منخفضة
+                    if (Math.abs(this.vx) < stopThreshold) this.vx = 0;
+                    if (Math.abs(this.vy) < stopThreshold) this.vy = 0;
+
+                    // جاذبية وهمية خفيفة جداً
+                    if (speed < 1.0 && speed > 0.1) {
+                        this.vy += 0.002 * (this.y > TABLE_HEIGHT / 2 ? -1 : 1);
+                    }
+
+                    this.elevation = Math.sin(this.rotation * 0.5) * 0.3;
+
+                    // الأثر
+                    if (speed > 1.5 && Math.random() < 0.2) {
+                        this.trail.push({ x: this.x, y: this.y, life: 1 });
+                        if (this.trail.length > 8) this.trail.shift();
+                    }
+                    for (let i = this.trail.length - 1; i >= 0; i--) {
+                        this.trail[i].life -= 0.08;
+                        if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+                    }
+
+                    if (this.wallHitCooldown > 0) this.wallHitCooldown--;
+                }
+
+                draw(ctx, scale, offsetX, offsetY) {
+                    if (!this.active) return;
+                    if (this.inPocket) {
+                        const alpha = Math.max(0, 1 - this.pocketAnim);
+                        if (alpha <= 0) {
+                            this.active = false;
+                            return;
+                        }
+                        ctx.globalAlpha = alpha;
+                    }
+
+                    const depthFactor = 1 + (this.y - TABLE_HEIGHT / 2) / TABLE_HEIGHT * 0.04;
+                    const r = this.radius * scale * depthFactor;
+                    const sx = this.x * scale + offsetX;
+                    const sy = (this.y + this.elevation * 0.5) * scale + offsetY;
+
+                    // الأثر
+                    for (const t of this.trail) {
+                        const tx = t.x * scale + offsetX;
+                        const ty = (t.y + this.elevation * 0.3) * scale + offsetY;
+                        ctx.globalAlpha = t.life * 0.12;
+                        ctx.beginPath();
+                        ctx.arc(tx, ty, r * 0.25 * t.life, 0, Math.PI * 2);
+                        ctx.fillStyle = this.isCue ? '#fff' : this.color;
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+
+                    // ظل
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        sx + 3 * scale,
+                        sy + (4 + this.elevation * 2) * scale,
+                        r * 0.85,
+                        r * 0.45,
+                        0, 0, Math.PI * 2
+                    );
+                    ctx.fillStyle = `rgba(0,0,0,${0.2 + this.elevation * 0.05})`;
+                    ctx.fill();
+
+                    // تدرج الكرة
+                    const grad = ctx.createRadialGradient(
+                        sx - r * 0.35, sy - r * 0.35 - this.elevation * 2 * scale, r * 0.08,
+                        sx, sy, r
+                    );
+
+                    if (this.isCue) {
+                        switch (cueBallStyle) {
+                            case 'red':
+                                grad.addColorStop(0, '#ff7675');
+                                grad.addColorStop(0.5, '#d63031');
+                                grad.addColorStop(1, '#a71e1e');
+                                break;
+                            case 'blue':
+                                grad.addColorStop(0, '#74b9ff');
+                                grad.addColorStop(0.5, '#0984e3');
+                                grad.addColorStop(1, '#065a9e');
+                                break;
+                            case 'gold':
+                                grad.addColorStop(0, '#ffeaa7');
+                                grad.addColorStop(0.5, '#fdcb6e');
+                                grad.addColorStop(1, '#e1b12c');
+                                break;
+                            case 'glow':
+                                grad.addColorStop(0, '#ffffff');
+                                grad.addColorStop(0.4, '#a8e6cf');
+                                grad.addColorStop(1, '#00b894');
+                                ctx.shadowColor = '#00b894';
+                                ctx.shadowBlur = 20 * scale;
+                                break;
+                            case 'crystal':
+                                grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+                                grad.addColorStop(0.4, 'rgba(200,230,255,0.6)');
+                                grad.addColorStop(0.8, 'rgba(150,200,255,0.3)');
+                                grad.addColorStop(1, 'rgba(100,170,255,0.2)');
+                                break;
+                            default:
+                                grad.addColorStop(0, '#ffffff');
+                                grad.addColorStop(0.5, '#f0f0f0');
+                                grad.addColorStop(1, '#cccccc');
+                        }
+                    } else {
+                        const baseColor = this.color;
+                        grad.addColorStop(0, lighten(baseColor, 60));
+                        grad.addColorStop(0.3, baseColor);
+                        grad.addColorStop(0.7, darken(baseColor, 30));
+                        grad.addColorStop(1, darken(baseColor, 60));
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // خطوط الكرات المخططة
+                    if (!this.isCue && this.number > 8) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                        const stripeAngle = this.rotation * 0.3;
+                        ctx.fillRect(
+                            sx - r * 1.2 * Math.cos(stripeAngle),
+                            sy - r * 0.35,
+                            r * 2.4 * Math.cos(stripeAngle),
+                            r * 0.7
+                        );
+                        ctx.restore();
+                    }
+
+                    // رقم الكرة
+                    if (!this.isCue) {
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, r * 0.32, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                        ctx.fill();
+                        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                        ctx.lineWidth = 0.5 * scale;
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#000';
+                        ctx.font = `bold ${r * 0.38}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(this.number, sx, sy + 1);
+                    }
+
+                    // بريق
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        sx - r * 0.25,
+                        sy - r * 0.3 - this.elevation * 1.5 * scale,
+                        r * 0.22,
+                        r * 0.12,
+                        -0.5, 0, Math.PI * 2
+                    );
+                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.fill();
+
+                    // حافة
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+                    ctx.lineWidth = 0.8 * scale;
+                    ctx.stroke();
+
+                    // توهج الكرة السوداء
+                    if (!this.isCue && this.number === 8) {
+                        ctx.shadowColor = 'rgba(255,215,0,0.15)';
+                        ctx.shadowBlur = 10 * scale;
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, r * 1.1, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(255,215,0,0.15)';
+                        ctx.lineWidth = 2 * scale;
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.shadowBlur = 0;
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // =====================================================================
+            // 6. كلاس الجزيئات
+            // =====================================================================
+            class Particle {
+                constructor(x, y, color, speed = 1) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const sp = (0.8 + Math.random() * 2.5) * speed;
+                    this.x = x;
+                    this.y = y;
+                    this.vx = Math.cos(angle) * sp;
+                    this.vy = Math.sin(angle) * sp;
+                    this.life = 0.5 + Math.random() * 0.6;
+                    this.maxLife = this.life;
+                    this.color = color;
+                    this.size = 0.5 + Math.random() * 2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+                    this.life -= 0.025;
+                }
+                draw(ctx, scale, offsetX, offsetY) {
+                    if (this.life <= 0) return;
+                    const alpha = Math.max(0, this.life / this.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = this.color;
+                    const s = this.size * scale * (0.4 + 0.6 * alpha);
+                    ctx.beginPath();
+                    ctx.arc(this.x * scale + offsetX, this.y * scale + offsetY, s, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // =====================================================================
+            // 7. إدارة اللاعبين والكمبيوتر
+            // =====================================================================
+            const PlayerManager = {
+                players: [
+                    { id: 1, name: 'اللاعب 1', score: 0, isHuman: true },
+                    { id: 2, name: 'اللاعب 2', score: 0, isHuman: true }
+                ],
+                currentPlayerIndex: 0,
+
+                getCurrent() {
+                    return this.players[this.currentPlayerIndex];
+                },
+
+                switchTurn() {
+                    this.currentPlayerIndex = this.currentPlayerIndex === 0 ? 1 : 0;
+                    return this.getCurrent();
+                },
+
+                reset() {
+                    this.players[0].score = 0;
+                    this.players[1].score = 0;
+                    this.currentPlayerIndex = 0;
+                },
+
+                addScore(playerId) {
+                    const p = this.players.find(p => p.id === playerId);
+                    if (p) p.score++;
+                },
+
+                setHuman(playerId, isHuman) {
+                    const p = this.players.find(p => p.id === playerId);
+                    if (p) p.isHuman = isHuman;
+                },
+
+                isCurrentHuman() {
+                    return this.getCurrent().isHuman;
+                }
+            };
+
+            const ComputerAI = {
+                isThinking: false,
+                timeoutId: null,
+
+                decide(balls, currentPlayer) {
+                    if (this.isThinking) return;
+                    this.isThinking = true;
+
+                    const cue = balls.find(b => b.isCue && b.active && !b.inPocket);
+                    if (!cue) {
+                        this.isThinking = false;
+                        return;
+                    }
+
+                    let target = null;
+                    let minDist = Infinity;
+                    for (const b of balls) {
+                        if (b.isCue || !b.active || b.inPocket) continue;
+                        const d = Math.hypot(b.x - cue.x, b.y - cue.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            target = b;
+                        }
+                    }
+
+                    if (!target) {
+                        this.isThinking = false;
+                        return;
+                    }
+
+                    const dx = target.x - cue.x;
+                    const dy = target.y - cue.y;
+                    let angle = Math.atan2(dy, dx);
+
+                    const difficulty = Math.min(1, minDist / 400);
+                    const randomFactor = 0.06 + difficulty * 0.2;
+                    const angleOffset = (Math.random() - 0.5) * randomFactor;
+                    angle += angleOffset;
+
+                    const basePower = 0.45 + (minDist / 500) * 0.4;
+                    const powerFactor = Math.min(0.85, basePower + (Math.random() - 0.5) * 0.12);
+                    const force = powerFactor * MAX_POWER;
+
+                    cue.vx = Math.cos(angle) * force;
+                    cue.vy = Math.sin(angle) * force;
+
+                    soundCueHit();
+                    const playerName = currentPlayer === 1 ? 'اللاعب 1' : 'الكمبيوتر';
+                    showStatus(`🤖 ${playerName} يضرب!`);
+
+                    // إعادة تعيين مؤشر التسجيل لهذه الجولة
+                    scoredThisTurn = false;
+
+                    setTimeout(() => {
+                        this.isThinking = false;
+                    }, 200);
+                },
+
+                scheduleTurn(balls, currentPlayer) {
+                    if (this.isThinking) return;
+                    if (this.timeoutId) clearTimeout(this.timeoutId);
+                    this.timeoutId = setTimeout(() => {
+                        if (!PlayerManager.isCurrentHuman() && !gameOver && gameStarted) {
+                            this.decide(balls, currentPlayer);
+                        }
+                        this.timeoutId = null;
+                    }, 400 + Math.random() * 300);
+                },
+
+                cancel() {
+                    if (this.timeoutId) {
+                        clearTimeout(this.timeoutId);
+                        this.timeoutId = null;
+                    }
+                    this.isThinking = false;
+                }
+            };
+
+            // =====================================================================
+            // 8. حالة اللعبة العامة
+            // =====================================================================
+            let balls = [];
+            let pockets = [];
+            let particles = [];
+            let friction = FRICTION_DEFAULT;
+            let spinFriction = SPIN_FRICTION_DEFAULT;
+            let restitution = RESTITUTION_DEFAULT;
+            let stopThreshold = STOP_THRESHOLD_DEFAULT;
+            let cueBallStyle = 'classic';
+            let cueStyle = 'classic';
+            let rackType = 'standard';
+            let gameMode = 'pvp';
+
+            let isAiming = false;
+            let aimStart = null;
+            let aimCurrent = null;
+            let ballsMoving = false;
+            let gameStarted = false;
+            let animFrame = null;
+            let gameOver = false;
+            let statusTimeout = null;
+            let cueBallInHand = false;
+
+            // متغيرات التحكم في الدور
+            let scoredThisTurn = false; // هل تم تسجيل كرة في هذه الضربة؟
+            let turnProcessed = false; // هل تم معالجة تبديل الدور بعد التوقف؟
+
+            // =====================================================================
+            // 9. دوال إعداد الطاولة والتشكيلات
+            // =====================================================================
+            function initTable() {
+                pockets = [
+                    { x: WALL_THICKNESS, y: WALL_THICKNESS },
+                    { x: TABLE_WIDTH / 2, y: WALL_THICKNESS },
+                    { x: TABLE_WIDTH - WALL_THICKNESS, y: WALL_THICKNESS },
+                    { x: WALL_THICKNESS, y: TABLE_HEIGHT - WALL_THICKNESS },
+                    { x: TABLE_WIDTH / 2, y: TABLE_HEIGHT - WALL_THICKNESS },
+                    { x: TABLE_WIDTH - WALL_THICKNESS, y: TABLE_HEIGHT - WALL_THICKNESS }
+                ];
+            }
+
+            function createRack(type) {
+                balls = balls.filter(b => b.active || b.isCue);
+                particles = [];
+                cueBallInHand = false;
+
+                const cx = TABLE_WIDTH * 0.72;
+                const cy = TABLE_HEIGHT / 2;
+                const spacing = BALL_RADIUS * 2 + 1.5;
+                const newBalls = [];
+
+                const addBall = (x, y, idx) => {
+                    newBalls.push(new Ball(x, y, BALL_COLORS[idx % BALL_COLORS.length], idx + 1));
+                };
+
+                switch (type) {
+                    case 'standard':
+                        for (let row = 0; row < 5; row++) {
+                            for (let col = 0; col <= row; col++) {
+                                const x = cx + row * spacing * 0.866;
+                                const y = cy + (col - row / 2) * spacing;
+                                addBall(x, y, newBalls.length);
+                            }
+                        }
+                        break;
+
+                    case 'diamond': {
+                        const diamondRows = [1, 2, 3, 4, 3, 2, 1];
+                        let dIdx = 0;
+                        diamondRows.forEach((count, row) => {
+                            for (let i = 0; i < count; i++) {
+                                const x = cx + row * spacing * 0.866;
+                                const y = cy + (i - (count - 1) / 2) * spacing;
+                                newBalls.push(new Ball(x, y, BALL_COLORS[dIdx % BALL_COLORS.length], dIdx + 1));
+                                dIdx++;
+                            }
+                        });
+                        break;
+                    }
+
+                    case 'circle': {
+                        const count = 14;
+                        const radius = 90;
+                        for (let i = 0; i < count; i++) {
+                            const angle = (i / count) * Math.PI * 2;
+                            newBalls.push(new Ball(
+                                cx + Math.cos(angle) * radius,
+                                cy + Math.sin(angle) * radius,
+                                BALL_COLORS[i % BALL_COLORS.length], i + 1
+                            ));
+                        }
+                        break;
+                    }
+
+                    case 'random': {
+                        for (let i = 0; i < 15; i++) {
+                            let rx, ry, ok;
+                            let attempts = 0;
+                            do {
+                                rx = cx + (Math.random() - 0.5) * 200;
+                                ry = cy + (Math.random() - 0.5) * 200;
+                                ok = true;
+                                if (rx < WALL_THICKNESS + BALL_RADIUS * 2 || rx > TABLE_WIDTH - WALL_THICKNESS - BALL_RADIUS *
+                                    2) ok = false;
+                                if (ry < WALL_THICKNESS + BALL_RADIUS * 2 || ry > TABLE_HEIGHT - WALL_THICKNESS - BALL_RADIUS *
+                                    2) ok = false;
+                                for (const b of newBalls) {
+                                    const d = Math.hypot(rx - b.x, ry - b.y);
+                                    if (d < BALL_RADIUS * 2.2) ok = false;
+                                }
+                                attempts++;
+                            } while (!ok && attempts < 100);
+                            newBalls.push(new Ball(rx, ry, BALL_COLORS[i % BALL_COLORS.length], i + 1));
+                        }
+                        break;
+                    }
+
+                    case 'triangle': {
+                        for (let i = 0; i < 15; i++) {
+                            const row = Math.floor((-1 + Math.sqrt(1 + 8 * i)) / 2);
+                            const col = i - row * (row + 1) / 2;
+                            const x = cx + row * spacing * 0.866;
+                            const y = cy + (col - row / 2) * spacing;
+                            newBalls.push(new Ball(x, y, BALL_COLORS[i % BALL_COLORS.length], i + 1));
+                        }
+                        break;
+                    }
+
+                    case 'line': {
+                        for (let i = 0; i < 15; i++) {
+                            newBalls.push(new Ball(cx + i * spacing * 0.75, cy, BALL_COLORS[i % BALL_COLORS.length], i + 1));
+                        }
+                        break;
+                    }
+                }
+
+                const cueBall = new Ball(TABLE_WIDTH * 0.25, TABLE_HEIGHT / 2, '#fff', 0, true);
+                newBalls.push(cueBall);
+
+                balls = newBalls;
+                gameOver = false;
+                winnerOverlay.classList.remove('show');
+                PlayerManager.reset();
+                scoredThisTurn = false;
+                turnProcessed = false;
+                updateScore();
+                ballsMoving = false;
+            }
+
+            // =====================================================================
+            // 10. دوال الفيزياء
+            // =====================================================================
+            function checkWallCollision(ball) {
+                if (!ball.active || ball.inPocket) return;
+                const r = ball.radius;
+                const minX = WALL_THICKNESS + r;
+                const maxX = TABLE_WIDTH - WALL_THICKNESS - r;
+                const minY = WALL_THICKNESS + r;
+                const maxY = TABLE_HEIGHT - WALL_THICKNESS - r;
+
+                let hit = false;
+                let speed = Math.hypot(ball.vx, ball.vy);
+
+                if (ball.x < minX) {
+                    ball.x = minX;
+                    ball.vx = Math.abs(ball.vx) * restitution;
+                    ball.spin += (ball.vy * 0.02);
+                    hit = true;
+                }
+                if (ball.x > maxX) {
+                    ball.x = maxX;
+                    ball.vx = -Math.abs(ball.vx) * restitution;
+                    ball.spin += (ball.vy * 0.02);
+                    hit = true;
+                }
+                if (ball.y < minY) {
+                    ball.y = minY;
+                    ball.vy = Math.abs(ball.vy) * restitution;
+                    ball.spin += (-ball.vx * 0.02);
+                    hit = true;
+                }
+                if (ball.y > maxY) {
+                    ball.y = maxY;
+                    ball.vy = -Math.abs(ball.vy) * restitution;
+                    ball.spin += (-ball.vx * 0.02);
+                    hit = true;
+                }
+
+                if (hit && ball.wallHitCooldown <= 0 && speed > 1) {
+                    ball.wallHitCooldown = 4;
+                    soundWallHit();
+                    for (let i = 0; i < 3; i++) {
+                        spawnParticles(ball.x, ball.y, '#aaa', 1);
+                    }
+                }
+            }
+
+            function checkPocketCollision(ball) {
+                if (!ball.active || ball.inPocket) return;
+                for (const pocket of pockets) {
+                    const dx = ball.x - pocket.x;
+                    const dy = ball.y - pocket.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < POCKET_RADIUS - ball.radius * 0.2) {
+                        ball.inPocket = true;
+                        ball.vx = 0;
+                        ball.vy = 0;
+                        const currentPlayer = PlayerManager.getCurrent();
+
+                        if (!ball.isCue) {
+                            // كرة ملونة – تسجيل
+                            PlayerManager.addScore(currentPlayer.id);
+                            updateScore();
+                            showStatus(`🎱 ${currentPlayer.name} يسجل!`);
+                            spawnParticles(ball.x, ball.y, ball.color, 16);
+                            soundPocket();
+                            scoredThisTurn = true; // منع تبديل الدور
+                        } else {
+                            // الكرة البيضاء
+                            showStatus('⚠️ الكرة البيضاء سقطت!');
+                            cueBallInHand = true;
+                            soundCueBallPocket();
+                            // تبديل الدور فوراً
+                            const next = PlayerManager.switchTurn();
+                            updateScore();
+                            turnProcessed = true; // منع التبديل مرة أخرى
+                            setTimeout(() => {
+                                if (gameOver) return;
+                                const cue = balls.find(b => b.isCue);
+                                if (cue) {
+                                    cue.inPocket = false;
+                                    cue.active = true;
+                                    cue.x = TABLE_WIDTH * 0.25;
+                                    cue.y = TABLE_HEIGHT / 2;
+                                    cue.vx = 0;
+                                    cue.vy = 0;
+                                    cue.pocketAnim = 0;
+                                    cue.trail = [];
+                                    cueBallInHand = false;
+                                    showStatus(`⚪ تم إعادة الكرة البيضاء - دور ${next.name}`);
+                                    // إعادة ضبط المؤشرات
+                                    scoredThisTurn = false;
+                                    turnProcessed = false;
+                                    if (gameMode === 'pvc' && !next.isHuman && !gameOver) {
+                                        ComputerAI.scheduleTurn(balls, next.id);
+                                    }
+                                }
+                            }, 1000);
+                        }
+                        spawnParticles(ball.x, ball.y, ball.color, 8);
+                        checkGameOver();
+                        return;
+                    }
+                }
+            }
+
+            function checkBallCollision(b1, b2) {
+                if (!b1.active || !b2.active || b1.inPocket || b2.inPocket) return;
+                const dx = b2.x - b1.x;
+                const dy = b2.y - b1.y;
+                const dist = Math.hypot(dx, dy);
+                const minDist = b1.radius + b2.radius;
+
+                if (dist < minDist && dist > 0.1) {
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    const tx = -ny;
+                    const ty = nx;
+
+                    const dpTan1 = b1.vx * tx + b1.vy * ty;
+                    const dpTan2 = b2.vx * tx + b2.vy * ty;
+                    const dpNorm1 = b1.vx * nx + b1.vy * ny;
+                    const dpNorm2 = b2.vx * nx + b2.vy * ny;
+
+                    const m1 = (dpNorm1 * (b1.mass - b2.mass) + 2 * b2.mass * dpNorm2) / (b1.mass + b2.mass);
+                    const m2 = (dpNorm2 * (b2.mass - b1.mass) + 2 * b1.mass * dpNorm1) / (b1.mass + b2.mass);
+
+                    b1.vx = tx * dpTan1 + nx * m1;
+                    b1.vy = ty * dpTan1 + ny * m1;
+                    b2.vx = tx * dpTan2 + nx * m2;
+                    b2.vy = ty * dpTan2 + ny * m2;
+
+                    const relSpeed = Math.hypot(b1.vx - b2.vx, b1.vy - b2.vy);
+                    b1.spin += (relSpeed * 0.008) * (Math.random() - 0.5);
+                    b2.spin += (relSpeed * 0.008) * (Math.random() - 0.5);
+
+                    const overlap = minDist - dist;
+                    b1.x -= nx * overlap * 0.5;
+                    b1.y -= ny * overlap * 0.5;
+                    b2.x += nx * overlap * 0.5;
+                    b2.y += ny * overlap * 0.5;
+
+                    const speed = Math.hypot(b1.vx - b2.vx, b1.vy - b2.vy);
+                    if (speed > 1.2 && particles.length < MAX_PARTICLES) {
+                        const count = Math.min(5, Math.floor(speed * 0.4));
+                        spawnParticles((b1.x + b2.x) / 2, (b1.y + b2.y) / 2, '#fff', count);
+                        soundBallCollision();
+                    }
+                }
+            }
+
+            function spawnParticles(x, y, color, count) {
+                for (let i = 0; i < count; i++) {
+                    if (particles.length < MAX_PARTICLES) {
+                        particles.push(new Particle(x, y, color, 0.7 + Math.random() * 0.4));
+                    }
+                }
+            }
+
+            // =====================================================================
+            // 11. دوال تحديث النقاط والشاشة
+            // =====================================================================
+            function updateScore() {
+                const p1 = PlayerManager.players[0];
+                const p2 = PlayerManager.players[1];
+                document.getElementById('p1-score').textContent = p1.score;
+                document.getElementById('p2-score').textContent = p2.score;
+                document.getElementById('current-turn').textContent = p1.id === PlayerManager.getCurrent().id ? 1 : 2;
+            }
+
+            function showStatus(msg) {
+                statusBar.textContent = msg;
+                statusBar.classList.add('show');
+                clearTimeout(statusTimeout);
+                statusTimeout = setTimeout(() => statusBar.classList.remove('show'), 2000);
+            }
+
+            function checkGameOver() {
+                const coloredBalls = balls.filter(b => !b.isCue && b.active);
+                if (coloredBalls.length === 0 && !gameOver) {
+                    gameOver = true;
+                    const p1 = PlayerManager.players[0];
+                    const p2 = PlayerManager.players[1];
+                    const winner = p1.score > p2.score ? p1 : (p2.score > p1.score ? p2 : null);
+                    if (winner) {
+                        winnerText.textContent = winner.name;
+                    } else {
+                        winnerText.textContent = 'تعادل!';
+                    }
+                    winnerOverlay.classList.add('show');
+                    soundGameOver();
+                    ComputerAI.cancel();
+                }
+            }
+
+            // =====================================================================
+            // 12. دوال إعادة التعيين والبدء
+            // =====================================================================
+            function resetGame() {
+                if (animFrame) {
+                    cancelAnimationFrame(animFrame);
+                    animFrame = null;
+                }
+                ComputerAI.cancel();
+                PlayerManager.reset();
+                particles = [];
+                gameOver = false;
+                winnerOverlay.classList.remove('show');
+                isAiming = false;
+                ballsMoving = false;
+                cueBallInHand = false;
+                scoredThisTurn = false;
+                turnProcessed = false;
+                createRack(rackType);
+                updateScore();
+                showStatus('🔄 تم إعادة اللعبة');
+                if (!animFrame) {
+                    animFrame = requestAnimationFrame(gameLoop);
+                }
+                if (gameMode === 'pvc' && !PlayerManager.getCurrent().isHuman && gameStarted) {
+                    ComputerAI.scheduleTurn(balls, PlayerManager.getCurrent().id);
+                }
+            }
+
+            function startGame() {
+                startOverlay.classList.add('hidden');
+                gameStarted = true;
+                syncOptions();
+                createRack(rackType);
+                updateScore();
+                if (!animFrame) {
+                    animFrame = requestAnimationFrame(gameLoop);
+                }
+                initAudio();
+
+                PlayerManager.setHuman(1, true);
+                PlayerManager.setHuman(2, gameMode === 'pvp');
+
+                if (gameMode === 'pvc' && !PlayerManager.getCurrent().isHuman) {
+                    ComputerAI.scheduleTurn(balls, PlayerManager.getCurrent().id);
+                }
+            }
+
+            function syncOptions() {
+                const startRack = document.querySelector('#start-rack .active');
+                const startCue = document.querySelector('#start-cueball .active');
+                const startCueStyle = document.querySelector('#start-cue .active');
+                if (startRack) rackType = startRack.dataset.rack;
+                if (startCue) cueBallStyle = startCue.dataset.cue;
+                if (startCueStyle) cueStyle = startCueStyle.dataset.cuestyle;
+
+                document.querySelectorAll('#rack-btns button').forEach(b =>
+                    b.classList.toggle('active', b.dataset.rack === rackType));
+                document.querySelectorAll('#cueball-btns button').forEach(b =>
+                    b.classList.toggle('active', b.dataset.cue === cueBallStyle));
+                document.querySelectorAll('#cue-btns button').forEach(b =>
+                    b.classList.toggle('active', b.dataset.cuestyle === cueStyle));
+            }
+
+            // =====================================================================
+            // 13. الرسم
+            // =====================================================================
+            function drawCueStick(ctx, scale, offsetX, offsetY) {
+                if (!isAiming || !aimStart || !aimCurrent || gameOver || !gameStarted) return;
+                if (gameMode === 'pvc' && !PlayerManager.isCurrentHuman()) return;
+                // لا نعرض العصا أثناء حركة الكرات
+                if (ballsMoving) return;
+
+                const cueBall = balls.find(b => b.isCue && b.active && !b.inPocket);
+                if (!cueBall) return;
+
+                const dx = aimStart.x - aimCurrent.x;
+                const dy = aimStart.y - aimCurrent.y;
+                const dist = Math.hypot(dx, dy);
+                const power = Math.min(dist, AIM_MAX_DIST) / AIM_MAX_DIST;
+                const angle = Math.atan2(dy, dx);
+
+                const sx = cueBall.x * scale + offsetX;
+                const sy = (cueBall.y + cueBall.elevation * 0.5) * scale + offsetY;
+                const stickLen = 220 * scale;
+                const offset = (25 + power * 55) * scale;
+
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(angle);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.fillRect(-stickLen - offset + 2, 4, stickLen, 7 * scale);
+
+                let stickColor, tipColor = '#3e2723';
+                let shadowColor = null;
+                switch (cueStyle) {
+                    case 'neon':
+                        shadowColor = '#ff00ff';
+                        const neonGrad = ctx.createLinearGradient(0, -5 * scale, 0, 5 * scale);
+                        neonGrad.addColorStop(0, '#ff00ff');
+                        neonGrad.addColorStop(0.5, '#00ffff');
+                        neonGrad.addColorStop(1, '#ff00ff');
+                        stickColor = neonGrad;
+                        tipColor = '#00ffff';
+                        break;
+                    case 'golden':
+                        const goldGrad = ctx.createLinearGradient(0, -5 * scale, 0, 5 * scale);
+                        goldGrad.addColorStop(0, '#ffd700');
+                        goldGrad.addColorStop(0.5, '#daa520');
+                        goldGrad.addColorStop(1, '#b8860b');
+                        stickColor = goldGrad;
+                        break;
+                    case 'carbon':
+                        stickColor = '#1a1a1a';
+                        break;
+                    case 'laser':
+                        shadowColor = '#ff3333';
+                        const laserGrad = ctx.createLinearGradient(0, -5 * scale, 0, 5 * scale);
+                        laserGrad.addColorStop(0, '#ff3333');
+                        laserGrad.addColorStop(0.5, '#ffff00');
+                        laserGrad.addColorStop(1, '#ff3333');
+                        stickColor = laserGrad;
+                        break;
+                    case 'modern':
+                        const modGrad = ctx.createLinearGradient(0, -5 * scale, 0, 5 * scale);
+                        modGrad.addColorStop(0, '#4a4a6a');
+                        modGrad.addColorStop(0.5, '#3a3a5a');
+                        modGrad.addColorStop(1, '#2a2a4a');
+                        stickColor = modGrad;
+                        break;
+                    default:
+                        const classicGrad = ctx.createLinearGradient(0, -5 * scale, 0, 5 * scale);
+                        classicGrad.addColorStop(0, '#d4a574');
+                        classicGrad.addColorStop(0.5, '#a07850');
+                        classicGrad.addColorStop(1, '#6b4c2a');
+                        stickColor = classicGrad;
+                }
+
+                if (shadowColor) {
+                    ctx.shadowColor = shadowColor;
+                    ctx.shadowBlur = 12 * scale;
+                }
+
+                ctx.fillStyle = stickColor;
+                ctx.fillRect(-stickLen - offset, -5 * scale, stickLen, 10 * scale);
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = tipColor;
+                ctx.fillRect(-offset - 6 * scale, -4 * scale, 6 * scale, 8 * scale);
+
+                ctx.restore();
+
+                // خط التصويب
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(250 * scale, 0);
+                ctx.strokeStyle = `rgba(255,255,255,${0.15 + power * 0.35})`;
+                ctx.setLineDash([6, 6]);
+                ctx.lineWidth = 1.5 * scale;
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.beginPath();
+                ctx.arc(BALL_RADIUS * 2.2 * scale, 0, BALL_RADIUS * scale, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1 * scale;
+                ctx.setLineDash([3, 3]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+
+                powerFill.style.width = (power * 100) + '%';
+            }
+
+            function drawTable() {
+                const scaleX = canvas.width / TABLE_WIDTH;
+                const scaleY = canvas.height / TABLE_HEIGHT;
+                const scale = Math.min(scaleX, scaleY);
+                const offsetX = (canvas.width - TABLE_WIDTH * scale) / 2;
+                const offsetY = (canvas.height - TABLE_HEIGHT * scale) / 2;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(offsetX, offsetY);
+
+                // إطار خشبي
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(-4, -4, TABLE_WIDTH * scale + 8, TABLE_HEIGHT * scale + 8);
+
+                const woodGrad = ctx.createLinearGradient(0, 0, TABLE_WIDTH * scale, TABLE_HEIGHT * scale);
+                woodGrad.addColorStop(0, '#5d4037');
+                woodGrad.addColorStop(0.5, '#4e342e');
+                woodGrad.addColorStop(1, '#3e2723');
+                ctx.fillStyle = woodGrad;
+                ctx.fillRect(0, 0, TABLE_WIDTH * scale, TABLE_HEIGHT * scale);
+
+                // القماش الأخضر
+                const feltX = WALL_THICKNESS * scale;
+                const feltY = WALL_THICKNESS * scale;
+                const feltW = (TABLE_WIDTH - WALL_THICKNESS * 2) * scale;
+                const feltH = (TABLE_HEIGHT - WALL_THICKNESS * 2) * scale;
+
+                const feltGrad = ctx.createRadialGradient(
+                    feltX + feltW * 0.3, feltY + feltH * 0.3, 0,
+                    feltX + feltW * 0.5, feltY + feltH * 0.5, feltW * 0.8
+                );
+                feltGrad.addColorStop(0, '#388e3c');
+                feltGrad.addColorStop(0.5, '#1b5e20');
+                feltGrad.addColorStop(1, '#0d3b0f');
+                ctx.fillStyle = feltGrad;
+                ctx.fillRect(feltX, feltY, feltW, feltH);
+
+                // نسيج القماش
+                ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctx.lineWidth = 0.5 * scale;
+                for (let i = 0; i < 16; i++) {
+                    const y = feltY + (i / 16) * feltH;
+                    ctx.beginPath();
+                    ctx.moveTo(feltX, y);
+                    ctx.lineTo(feltX + feltW, y);
+                    ctx.stroke();
+                }
+
+                // خطوط الطاولة
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 1.5 * scale;
+                ctx.setLineDash([8, 8]);
+                ctx.beginPath();
+                ctx.moveTo(feltX + feltW * 0.25, feltY);
+                ctx.lineTo(feltX + feltW * 0.25, feltY + feltH);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.lineWidth = 1 * scale;
+                ctx.beginPath();
+                ctx.arc(feltX + feltW * 0.25, feltY + feltH / 2, 30 * scale, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // الجيوب
+                for (const p of pockets) {
+                    const px = p.x * scale;
+                    const py = p.y * scale;
+
+                    const glow = ctx.createRadialGradient(px, py, 0, px, py, POCKET_RADIUS * 1.5 * scale);
+                    glow.addColorStop(0, 'rgba(255,215,0,0.2)');
+                    glow.addColorStop(0.5, 'rgba(255,215,0,0.06)');
+                    glow.addColorStop(1, 'rgba(255,215,0,0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(px, py, POCKET_RADIUS * 1.5 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(px + 2 * scale, py + 2 * scale, (POCKET_RADIUS + 2) * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                    ctx.fill();
+
+                    const pocketGrad = ctx.createRadialGradient(px - 3 * scale, py - 3 * scale, 0, px, py, POCKET_RADIUS *
+                    scale);
+                    pocketGrad.addColorStop(0, '#1a1a1a');
+                    pocketGrad.addColorStop(0.7, '#0a0a0a');
+                    pocketGrad.addColorStop(1, '#000000');
+                    ctx.beginPath();
+                    ctx.arc(px, py, POCKET_RADIUS * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = pocketGrad;
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2.5 * scale;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, (POCKET_RADIUS - 5) * scale, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255,215,0,0.2)';
+                    ctx.lineWidth = 1.5 * scale;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(px, py, 3 * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+                    ctx.fill();
+                }
+
+                // الجزيئات
+                for (const p of particles) {
+                    p.draw(ctx, scale, offsetX, offsetY);
+                }
+
+                // الكرات
+                for (const ball of balls) {
+                    if (ball.active || ball.inPocket) {
+                        ball.draw(ctx, scale, offsetX, offsetY);
+                    }
+                }
+
+                // العصا
+                drawCueStick(ctx, scale, offsetX, offsetY);
+
+                ctx.restore();
+            }
+
+            // =====================================================================
+            // 14. حلقة اللعبة الرئيسية (مع منطق تبديل الدور المحسّن)
+            // =====================================================================
+            function gameLoop() {
+                if (!gameStarted) {
+                    drawTable();
+                    animFrame = requestAnimationFrame(gameLoop);
+                    return;
+                }
+
+                // 1. تحديث الكرات
+                let anyMoving = false;
+                for (const ball of balls) {
+                    if (!ball.active && !ball.inPocket) continue;
+                    ball.update(friction, spinFriction, restitution, stopThreshold);
+                    checkWallCollision(ball);
+                    checkPocketCollision(ball);
+                    if (ball.active && !ball.inPocket) {
+                        const speed = Math.hypot(ball.vx, ball.vy);
+                        if (speed > stopThreshold) {
+                            anyMoving = true;
+                        }
+                    }
+                }
+
+                // 2. تصادم الكرات
+                for (let i = 0; i < balls.length; i++) {
+                    for (let j = i + 1; j < balls.length; j++) {
+                        checkBallCollision(balls[i], balls[j]);
+                    }
+                }
+
+                // 3. تحديث الجزيئات
+                particles = particles.filter(p => p.life > 0);
+                for (const p of particles) p.update();
+
+                // 4. كاشف الحركة – إذا كانت جميع الكرات متوقفة
+                if (!anyMoving) {
+                    // نتحقق أيضاً من أن السرعات الفعلية صفرية (لتجنب مشاكل التقريب)
+                    let allStopped = true;
+                    for (const ball of balls) {
+                        if (ball.active && !ball.inPocket) {
+                            if (Math.abs(ball.vx) > 0.001 || Math.abs(ball.vy) > 0.001) {
+                                allStopped = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (allStopped) {
+                        // الكرات متوقفة تماماً
+                        if (ballsMoving) {
+                            // كانت تتحرك وتوقفت الآن
+                            ballsMoving = false;
+                            // نتعامل مع تبديل الدور إذا لم يتم بالفعل
+                            if (!turnProcessed && !gameOver) {
+                                // إذا لم يتم تسجيل كرة في هذه الضربة، نبدل الدور
+                                if (!scoredThisTurn) {
+                                    const next = PlayerManager.switchTurn();
+                                    updateScore();
+                                    showStatus(`🎯 دور ${next.name}`);
+                                    turnProcessed = true;
+                                    // إذا كان الوضع كمبيوتر ودور الكمبيوتر
+                                    if (gameMode === 'pvc' && !next.isHuman && !gameOver) {
+                                        ComputerAI.scheduleTurn(balls, next.id);
+                                    }
+                                } else {
+                                    // تم التسجيل، نستمر مع نفس اللاعب
+                                    turnProcessed = true;
+                                    const current = PlayerManager.getCurrent();
+                                    showStatus(`🎯 ${current.name} يستمر`);
+                                    // إذا كان الكمبيوتر هو من سجل، نستمر معه
+                                    if (gameMode === 'pvc' && !current.isHuman && !gameOver) {
+                                        ComputerAI.scheduleTurn(balls, current.id);
+                                    }
+                                }
+                                // إعادة ضبط المؤشرات بعد معالجة الدور
+                                scoredThisTurn = false;
+                                turnProcessed = false;
+                            }
+                        } else {
+                            // الكرات متوقفة بالفعل، نتحقق من دور الكمبيوتر إذا لم يتم
+                            if (!turnProcessed && !gameOver) {
+                                const current = PlayerManager.getCurrent();
+                                if (gameMode === 'pvc' && !current.isHuman && !ComputerAI.isThinking) {
+                                    ComputerAI.scheduleTurn(balls, current.id);
+                                    turnProcessed = true;
+                                }
+                            }
+                        }
+                    } else {
+                        // لا تزال هناك حركة ضئيلة جداً (أقل من العتبة)
+                        // نمنع التصويب حتى تتوقف تماماً
+                        ballsMoving = true;
+                    }
+                } else {
+                    // توجد حركة ملحوظة
+                    ballsMoving = true;
+                    // إعادة ضبط مؤشر معالجة الدور لأن الحركة مستمرة
+                    turnProcessed = false;
+                }
+
+                // 5. رسم كل شيء
+                drawTable();
+
+                // 6. استمرار الحلقة
+                animFrame = requestAnimationFrame(gameLoop);
+            }
+
+            // =====================================================================
+            // 15. أحداث الإدخال
+            // =====================================================================
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = TABLE_WIDTH / rect.width;
+                const scaleY = TABLE_HEIGHT / rect.height;
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            }
+
+            function startAim(e) {
+                if (gameOver || !gameStarted) return;
+                if (!PlayerManager.isCurrentHuman()) return;
+                // نمنع التصويب إذا كانت الكرات تتحرك
+                if (ballsMoving) return;
+
+                const cueBall = balls.find(b => b.isCue && b.active && !b.inPocket);
+                if (!cueBall || cueBallInHand) return;
+                isAiming = true;
+                aimStart = getPos(e);
+                aimCurrent = aimStart;
+                initAudio();
+            }
+
+            function moveAim(e) {
+                if (isAiming) {
+                    aimCurrent = getPos(e);
+                }
+                e.preventDefault();
+            }
+
+            function fireAim(e) {
+                if (!isAiming) return;
+                isAiming = false;
+                if (gameOver || !gameStarted) return;
+                if (!PlayerManager.isCurrentHuman()) return;
+
+                const cueBall = balls.find(b => b.isCue && b.active && !b.inPocket);
+                if (!cueBall || ballsMoving || cueBallInHand) return;
+
+                const dx = aimStart.x - aimCurrent.x;
+                const dy = aimStart.y - aimCurrent.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 5) {
+                    powerFill.style.width = '0%';
+                    return;
+                }
+
+                const power = Math.min(dist, AIM_MAX_DIST) / AIM_MAX_DIST;
+                const angle = Math.atan2(dy, dx);
+                const force = power * MAX_POWER;
+
+                cueBall.vx = Math.cos(angle) * force;
+                cueBall.vy = Math.sin(angle) * force;
+
+                soundCueHit();
+                cueBall.spin = (Math.random() - 0.5) * 0.02;
+
+                const currentPlayer = PlayerManager.getCurrent();
+                showStatus(`💥 ${currentPlayer.name} يضرب! قوة: ${Math.round(power * 100)}%`);
+                powerFill.style.width = '0%';
+
+                // إعادة ضبط مؤشرات التحكم في الدور
+                scoredThisTurn = false;
+                turnProcessed = false;
+                ballsMoving = true; // سننتظر حتى تتوقف الكرات
+            }
+
+            // ربط الأحداث
+            canvas.addEventListener('mousedown', startAim);
+            canvas.addEventListener('mousemove', moveAim);
+            canvas.addEventListener('mouseup', fireAim);
+            canvas.addEventListener('mouseleave', () => {
+                if (isAiming) {
+                    isAiming = false;
+                    powerFill.style.width = '0%';
+                }
+            });
+
+            canvas.addEventListener('touchstart', startAim, { passive: false });
+            canvas.addEventListener('touchmove', moveAim, { passive: false });
+            canvas.addEventListener('touchend', fireAim, { passive: false });
+
+            // =====================================================================
+            // 16. أحداث واجهة المستخدم
+            // =====================================================================
+            document.querySelectorAll('#start-rack button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#start-rack button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            document.querySelectorAll('#start-cueball button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#start-cueball button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            document.querySelectorAll('#start-cue button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#start-cue button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            document.querySelectorAll('#mode-selector button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#mode-selector button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    gameMode = this.dataset.mode;
+                });
+            });
+
+            startBtn.addEventListener('click', startGame);
+
+            // الأزرار الجانبية
+            document.getElementById('rack-btns').addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') return;
+                if (ballsMoving) return;
+                document.querySelectorAll('#rack-btns button').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                rackType = e.target.dataset.rack;
+                if (gameStarted && !gameOver) {
+                    createRack(rackType);
+                    showStatus(`🎱 تم تغيير التشكيلة إلى: ${e.target.textContent}`);
+                }
+            });
+
+            document.getElementById('cueball-btns').addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') return;
+                document.querySelectorAll('#cueball-btns button').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                cueBallStyle = e.target.dataset.cue;
+                if (gameStarted) showStatus(`⚪ تم تغيير الكرة البيضاء إلى: ${e.target.textContent}`);
+            });
+
+            document.getElementById('cue-btns').addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') return;
+                document.querySelectorAll('#cue-btns button').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                cueStyle = e.target.dataset.cuestyle;
+                if (gameStarted) showStatus(`🎯 تم تغيير العصا إلى: ${e.target.textContent}`);
+            });
+
+            // أشرطة التمرير
+            document.getElementById('friction-slider').addEventListener('input', (e) => {
+                friction = parseFloat(e.target.value);
+                document.getElementById('fric-val').textContent = friction.toFixed(3);
+            });
+
+            document.getElementById('spin-friction-slider').addEventListener('input', (e) => {
+                spinFriction = parseFloat(e.target.value);
+                document.getElementById('spin-fric-val').textContent = spinFriction.toFixed(3);
+            });
+
+            document.getElementById('restitution-slider').addEventListener('input', (e) => {
+                restitution = parseFloat(e.target.value);
+                document.getElementById('rest-val').textContent = restitution.toFixed(2);
+            });
+
+            document.getElementById('stop-threshold-slider').addEventListener('input', (e) => {
+                stopThreshold = parseFloat(e.target.value);
+                document.getElementById('stop-threshold-val').textContent = stopThreshold.toFixed(2);
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('play-again-btn').addEventListener('click', resetGame);
+
+            // =====================================================================
+            // 17. التهيئة النهائية
+            // =====================================================================
+            initTable();
+            createRack('standard');
+            updateScore();
+            gameLoop();
+
+            document.addEventListener('touchmove', (e) => {
+                if (e.target === canvas) e.preventDefault();
+            }, { passive: false });
+
+        })();
+    </script>
+
+</body>
+</html>
+  // تم تحديث الكود بنجاح - نسخة مستقرة
