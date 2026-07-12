@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُنشئ التواقيع والشعارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@300;400;600;700;800;900&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@300;400;500;700;800;900&family=Noto+Kufi+Arabic:wght@100;200;300;400;500;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Almarai:wght@300;400;700;800&family=Lateef:wght@200;300;400;500;600;700;800&family=Scheherazade+New:wght@400;500;600;700&family=+Ruqaa:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Pacifico&family=Lobster&family=Dancing+Script:wght@400;700&family=Alex+Brush&family=Allura&family=Pinyon+Script&family=Sacramento&family=Cookie&family=Parisienne&family=Tangerine:wght@400;700&family=Mr+Dafoe&family=Yellowtail&family=Kaushan+Script&family=Satisfy&family=Courgette&family=Italianno&family=Petit+Formal+Script&family=Prata&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Josefin+Sans:wght@300;400;600;700&family=Montserrat:wght@300;400;600;700;800;900&family=Raleway:wght@300;400;600;700;800;900&family=Poppins:wght@300;400;600;700;800;900&family=Bebas+Neue&family=Oswald:wght@300;400;600;700&family=Anton&family=Abril+Fatface&family=Righteous&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Jura:wght@300;400;600;700&family=Comfortaa:wght@300;400;600;700&family=Quicksand:wght@300;400;600;700&family=Nunito:wght@300;400;600;700;800;900&family=Varela+Round&family=Fredoka:wght@300;400;600;700&family=Baloo+2:wght@400;600;700;800&family=Rubik:wght@300;400;600;700;800;900&family=Work+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f0d78c;
+            --gold-dark: #b8960c;
+            --silver: #c0c0c0;
+            --silver-light: #e8e8e8;
+            --silver-dark: #808080;
+            --dark: #1a1a2e;
+            --darker: #0f0f1a;
+            --card: #16213e;
+            --card-light: #1a1a40;
+            --accent: #e94560;
+            --accent-light: #ff6b81;
+            --text: #eaeaea;
+            --text-muted: #a0a0b0;
+            --border: rgba(212, 175, 55, 0.2);
+            --glow: rgba(212, 175, 55, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--darker);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-animation::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(233, 69, 96, 0.06) 0%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Reem Kufi', sans-serif;
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .header .divider {
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 20px auto;
+            border-radius: 2px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 8px 32px var(--glow);
+        }
+
+        .card-title {
+            font-family: 'Reem Kufi', sans-serif;
+            font-size: 1.3rem;
+            color: var(--gold-light);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* Input Section */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--card-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        .input-group input::placeholder {
+            color: #555;
+        }
+
+        /* Font Grid */
+        .font-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .font-option {
+            padding: 12px 8px;
+            background: var(--card-light);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .font-option:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .font-option.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.15);
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        .font-option .font-preview {
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            color: var(--gold-light);
+        }
+
+        .font-option .font-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Style Buttons */
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .style-btn {
+            padding: 12px;
+            background: var(--card-light);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .style-btn:hover {
+            border-color: var(--gold);
+        }
+
+        .style-btn.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.15);
+        }
+
+        .style-btn .style-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Color Picker */
+        .color-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .color-option:hover {
+            transform: scale(1.15);
+        }
+
+        .color-option.active {
+            border-color: var(--text);
+            box-shadow: 0 0 0 2px var(--gold);
+        }
+
+        .color-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* Sliders */
+        .slider-group {
+            margin-bottom: 18px;
+        }
+
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: var(--card-light);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Preview Section */
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .preview-canvas-wrapper {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 20px;
+            padding: 40px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .preview-canvas-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(233, 69, 96, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        #signaturePreview {
+            font-size: 3rem;
+            text-align: center;
+            word-break: break-word;
+            max-width: 100%;
+            position: relative;
+            z-index: 1;
+            transition: all 0.4s ease;
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: var(--darker);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--card-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+
+        /* History */
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .history-item {
+            background: var(--card-light);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .history-item:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--gold);
+            color: var(--darker);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Preset Badges */
+        .preset-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .preset-badge {
+            padding: 6px 14px;
+            background: var(--card-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .preset-badge:hover {
+            border-color: var(--gold);
+            color: var(--gold-light);
+        }
+
+        /* Decoration options */
+        .deco-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .deco-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            background: var(--card-light);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .deco-option:hover {
+            border-color: var(--gold);
+        }
+
+        .deco-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dark);
+            border-radius: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8rem; }
+            .font-grid { grid-template-columns: 1fr; }
+            .style-grid { grid-template-columns: repeat(2, 1fr); }
+            .history-grid { grid-template-columns: repeat(2, 1fr); }
+            #signaturePreview { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <header class="header">
+        <h1>✨ مُنشئ التواقيع والشعارات</h1>
+        <p>حوّل اسمك أو نصك إلى توقيع فاخر أو شعار احترافي بضغطة زر</p>
+        <div class="divider"></div>
+    </header>
+
+    <div class="container">
+        <!-- Left Panel: Controls -->
+        <div class="controls-panel">
+            <!-- Text Input -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">📝</div>
+                    النص
+                </div>
+                <div class="input-group">
+                    <label>اكتب اسمك أو النص المطلوب</label>
+                    <input type="text" id="textInput" placeholder="مثال:  محمد" value=" محمد">
+                </div>
+                <div class="preset-row">
+                    <span class="preset-badge" onclick="setPreset('اسمك هنا')">اسمك هنا</span>
+                    <span class="preset-badge" onclick="setPreset('توقيعي')">توقيعي</span>
+                    <span class="preset-badge" onclick="setPreset('شعارنا')">شعارنا</span>
+                </div>
+            </div>
+
+            <!-- Font Selection -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">🔤</div>
+                    الخط
+                </div>
+                <div class="input-group">
+                    <label>اختر نوع الخط</label>
+                    <select id="scriptType" onchange="updateFonts()">
+                        <option value="arabic">🕌 عربي</option>
+                        <option value="english">🌐 إنجليزي</option>
+                    </select>
+                </div>
+                <div class="font-grid" id="fontGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Style -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">🎨</div>
+                    الأسلوب
+                </div>
+                <div class="style-grid" id="styleGrid">
+                    <button class="style-btn active" data-style="classic" onclick="setStyle('classic')">
+                        <span class="style-icon">👑</span>
+                        <span>كلاسيكي</span>
+                    </button>
+                    <button class="style-btn" data-style="modern" onclick="setStyle('modern')">
+                        <span class="style-icon">⚡</span>
+                        <span>عصري</span>
+                    </button>
+                    <button class="style-btn" data-style="elegant" onclick="setStyle('elegant')">
+                        <span class="style-icon">💎</span>
+                        <span>فاخر</span>
+                    </button>
+                    <button class="style-btn" data-style="bold" onclick="setStyle('bold')">
+                        <span class="style-icon">🔥</span>
+                        <span>قوي</span>
+                    </button>
+                    <button class="style-btn" data-style="minimal" onclick="setStyle('minimal')">
+                        <span class="style-icon">◯</span>
+                        <span>بسيط</span>
+                    </button>
+                    <button class="style-btn" data-style="neon" onclick="setStyle('neon')">
+                        <span class="style-icon">✨</span>
+                        <span>نيون</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">🎨</div>
+                    الألوان
+                </div>
+                <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; display: block;">لون النص</label>
+                <div class="color-row" id="textColors">
+                    <div class="color-option active" style="background: linear-gradient(135deg, #d4af37, #b8960c);" data-color="#d4af37" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #ffffff, #e0e0e0);" data-color="#ffffff" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #e94560, #c73e54);" data-color="#e94560" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #0f3460, #16213e);" data-color="#0f3460" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #1a1a2e, #0f0f1a);" data-color="#1a1a2e" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #c0c0c0, #808080);" data-color="#c0c0c0" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #ff6b6b, #ee5a5a);" data-color="#ff6b6b" onclick="setTextColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);" data-color="#4ecdc4" onclick="setTextColor(this)"></div>
+                </div>
+                <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; display: block;">لون الخلفية</label>
+                <div class="color-row" id="bgColors">
+                    <div class="color-option active" style="background: linear-gradient(135deg, #1a1a2e, #16213e);" data-color="transparent" onclick="setBgColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #ffffff, #f5f5f5);" data-color="#ffffff" onclick="setBgColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #0f0f1a, #1a1a2e);" data-color="#0f0f1a" onclick="setBgColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #d4af37, #b8960c);" data-color="#d4af37" onclick="setBgColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #e94560, #c73e54);" data-color="#e94560" onclick="setBgColor(this)"></div>
+                    <div class="color-option" style="background: linear-gradient(135deg, #16213e, #0f3460);" data-color="#16213e" onclick="setBgColor(this)"></div>
+                </div>
+            </div>
+
+            <!-- Decorations & Sliders -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">⚙️</div>
+                    الإعدادات
+                </div>
+                <div class="deco-options">
+                    <label class="deco-option">
+                        <input type="checkbox" id="shadowCheck" checked onchange="updatePreview()">
+                        <span>ظل</span>
+                    </label>
+                    <label class="deco-option">
+                        <input type="checkbox" id="glowCheck" onchange="updatePreview()">
+                        <span>توهج</span>
+                    </label>
+                    <label class="deco-option">
+                        <input type="checkbox" id="underlineCheck" onchange="updatePreview()">
+                        <span>خط سفلي</span>
+                    </label>
+                    <label class="deco-option">
+                        <input type="checkbox" id="borderCheck" onchange="updatePreview()">
+                        <span>إطار</span>
+                    </label>
+                    <label class="deco-option">
+                        <input type="checkbox" id="italicCheck" onchange="updatePreview()">
+                        <span>مائل</span>
+                    </label>
+                    <label class="deco-option">
+                        <input type="checkbox" id="uppercaseCheck" onchange="updatePreview()">
+                        <span>كبير</span>
+                    </label>
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>حجم الخط</span>
+                        <span id="sizeValue">48px</span>
+                    </label>
+                    <input type="range" id="fontSize" min="20" max="120" value="48" oninput="updatePreview()">
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>التباعد بين الحروف</span>
+                        <span id="spacingValue">0px</span>
+                    </label>
+                    <input type="range" id="letterSpacing" min="-5" max="20" value="0" oninput="updatePreview()">
+                </div>
+                <div class="slider-group">
+                    <label>
+                        <span>دوران النص</span>
+                        <span id="rotateValue">0°</span>
+                    </label>
+                    <input type="range" id="rotate" min="-15" max="15" value="0" oninput="updatePreview()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Preview -->
+        <div class="preview-area">
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card-title">
+                    <div class="icon">👁️</div>
+                    المعاينة
+                </div>
+                <div class="preview-canvas-wrapper" id="previewWrapper">
+                    <span class="preview-label">معاينة مباشرة</span>
+                    <div id="signaturePreview"> محمد</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">💾</div>
+                    التصدير
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="downloadPNG()">
+                        📥 تحميل PNG
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadSVG()">
+                        📥 تحميل SVG
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyCSS()">
+                        📋 نسخ CSS
+                    </button>
+                    <button class="btn btn-secondary" onclick="randomize()">
+                        🎲 عشوائي
+                    </button>
+                    <button class="btn btn-primary btn-full" onclick="saveToHistory()">
+                        ⭐ حفظ في المفضلة
+                    </button>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card history-section">
+                <div class="card-title">
+                    <div class="icon">📚</div>
+                    المحفوظات
+                </div>
+                <div class="history-grid" id="historyGrid">
+                    <div class="history-item" style="color: var(--text-muted); font-size: 0.8rem;">
+                        لا توجد محفوظات بعد
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">تم بنجاح!</div>
+
+    <script>
+        // ===================== DATA =====================
+        const arabicFonts = [
+            { name: 'Amiri', display: 'أميري', family: "'Amiri', serif" },
+            { name: 'Cairo', display: 'القاهرة', family: "'Cairo', sans-serif" },
+            { name: '2 Kufi', display: '2 كوفي', family: "'Reem Kufi', sans-serif" },
+            { name: 'Tajawal', display: 'Tajwal', family: "'Tajawal', sans-serif" },
+            { name: 'Noto Kufi', display: 'كوفي', family: "'Noto Kufi Arabic', sans-serif" },
+            { name: 'Noto Naskh', display: 'نسخ', family: "'Noto Naskh Arabic', serif" },
+            { name: 'Almarai', display: 'Almarai', family: "'Almarai', sans-serif" },
+            { name: 'Lateef', display: 'لطيف', family: "'Lateef', cursive" },
+            { name: 'Scheherazade', display: 'شهرزاد', family: "'Scheherazade New', serif" },
+            { name: ' Ruqaa', display: ' رقعة', family: "' Ruqaa', serif" },
+        ];
+
+        const englishFonts = [
+            { name: 'Great Vibes', display: 'Aa', family: "'Great Vibes', cursive" },
+            { name: 'Pacifico', display: 'Aa', family: "'Pacifico', cursive" },
+            { name: 'Lobster', display: 'Aa', family: "'Lobster', cursive" },
+            { name: 'Dancing Script', display: 'Aa', family: "'Dancing Script', cursive" },
+            { name: 'Alex Brush', display: 'Aa', family: "'Alex Brush', cursive" },
+            { name: 'Allura', display: 'Aa', family: "'Allura', cursive" },
+            { name: 'Pinyon Script', display: 'Aa', family: "'Pinyon Script', cursive" },
+            { name: 'Sacramento', display: 'Aa', family: "'Sacramento', cursive" },
+            { name: 'Cookie', display: 'Aa', family: "'Cookie', cursive" },
+            { name: 'Parisienne', display: 'Aa', family: "'Parisienne', cursive" },
+            { name: 'Tangerine', display: 'Aa', family: "'Tangerine', cursive" },
+            { name: 'Mr Dafoe', display: 'Aa', family: "'Mr Dafoe', cursive" },
+            { name: 'Yellowtail', display: 'Aa', family: "'Yellowtail', cursive" },
+            { name: 'Kaushan Script', display: 'Aa', family: "'Kaushan Script', cursive" },
+            { name: 'Satisfy', display: 'Aa', family: "'Satisfy', cursive" },
+            { name: 'Courgette', display: 'Aa', family: "'Courgette', cursive" },
+            { name: 'Italianno', display: 'Aa', family: "'Italianno', cursive" },
+            { name: 'Petit Formal', display: 'Aa', family: "'Petit Formal Script', cursive" },
+            { name: 'Playfair Display', display: 'Aa', family: "'Playfair Display', serif" },
+            { name: 'Cinzel', display: 'Aa', family: "'Cinzel', serif" },
+            { name: 'Prata', display: 'Aa', family: "'Prata', serif" },
+            { name: 'Cormorant', display: 'Aa', family: "'Cormorant Garamond', serif" },
+            { name: 'EB Garamond', display: 'Aa', family: "'EB Garamond', serif" },
+            { name: 'Libre Baskerville', display: 'Aa', family: "'Libre Baskerville', serif" },
+            { name: 'Merriweather', display: 'Aa', family: "'Merriweather', serif" },
+            { name: 'Lora', display: 'Aa', family: "'Lora', serif" },
+            { name: 'Josefin Sans', display: 'Aa', family: "'Josefin Sans', sans-serif" },
+            { name: 'Montserrat', display: 'Aa', family: "'Montserrat', sans-serif" },
+            { name: 'Raleway', display: 'Aa', family: "'Raleway', sans-serif" },
+            { name: 'Poppins', display: 'Aa', family: "'Poppins', sans-serif" },
+            { name: 'Bebas Neue', display: 'Aa', family: "'Bebas Neue', sans-serif" },
+            { name: 'Oswald', display: 'Aa', family: "'Oswald', sans-serif" },
+            { name: 'Anton', display: 'Aa', family: "'Anton', sans-serif" },
+            { name: 'Abril Fatface', display: 'Aa', family: "'Abril Fatface', serif" },
+            { name: 'Righteous', display: 'Aa', family: "'Righteous', sans-serif" },
+            { name: 'Orbitron', display: 'Aa', family: "'Orbitron', sans-serif" },
+            { name: 'Rajdhani', display: 'Aa', family: "'Rajdhani', sans-serif" },
+            { name: 'Jura', display: 'Aa', family: "'Jura', sans-serif" },
+            { name: 'Comfortaa', display: 'Aa', family: "'Comfortaa', sans-serif" },
+            { name: 'Quicksand', display: 'Aa', family: "'Quicksand', sans-serif" },
+            { name: 'Nunito', display: 'Aa', family: "'Nunito', sans-serif" },
+            { name: 'Varela Round', display: 'Aa', family: "'Varela Round', sans-serif" },
+            { name: 'Fredoka', display: 'Aa', family: "'Fredoka', sans-serif" },
+            { name: 'Baloo 2', display: 'Aa', family: "'Baloo 2', sans-serif" },
+            { name: 'Rubik', display: 'Aa', family: "'Rubik', sans-serif" },
+            { name: 'Work Sans', display: 'Aa', family: "'Work Sans', sans-serif" },
+        ];
+
+        // ===================== STATE =====================
+        let state = {
+            text: 'أحمد محمد',
+            scriptType: 'arabic',
+            fontIndex: 0,
+            style: 'classic',
+            textColor: '#d4af37',
+            bgColor: 'transparent',
+            fontSize: 48,
+            letterSpacing: 0,
+            rotate: 0,
+            shadow: true,
+            glow: false,
+            underline: false,
+            border: false,
+            italic: false,
+            uppercase: false,
+        };
+
+        let history = [];
+
+        // ===================== INIT =====================
+        function init() {
+            updateFonts();
+            updatePreview();
+            loadHistory();
+        }
+
+        // ===================== FONT GRID =====================
+        function updateFonts() {
+            const scriptType = document.getElementById('scriptType').value;
+            state.scriptType = scriptType;
+            const fonts = scriptType === 'arabic' ? arabicFonts : englishFonts;
+            const grid = document.getElementById('fontGrid');
+
+            grid.innerHTML = fonts.map((f, i) => `
+                <div class="font-option ${i === 0 ? 'active' : ''}" data-index="${i}" onclick="selectFont(${i})">
+                    <div class="font-preview" style="font-family: ${f.family}">${f.display}</div>
+                    <div class="font-name">${f.name}</div>
+                </div>
+            `).join('');
+
+            state.fontIndex = 0;
+            updatePreview();
+        }
+
+        function selectFont(index) {
+            state.fontIndex = index;
+            document.querySelectorAll('.font-option').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+            updatePreview();
+        }
+
+        // ===================== STYLE =====================
+        function setStyle(style) {
+            state.style = style;
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.style === style);
+            });
+            updatePreview();
+        }
+
+        // ===================== COLORS =====================
+        function setTextColor(el) {
+            state.textColor = el.dataset.color;
+            document.querySelectorAll('#textColors .color-option').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            updatePreview();
+        }
+
+        function setBgColor(el) {
+            state.bgColor = el.dataset.color;
+            document.querySelectorAll('#bgColors .color-option').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            updatePreview();
+        }
+
+        // ===================== PREVIEW =====================
+        function updatePreview() {
+            const fonts = state.scriptType === 'arabic' ? arabicFonts : englishFonts;
+            const font = fonts[state.fontIndex];
+            const preview = document.getElementById('signaturePreview');
+            const wrapper = document.getElementById('previewWrapper');
+
+            state.text = document.getElementById('textInput').value || 'أحمد محمد';
+            state.fontSize = parseInt(document.getElementById('fontSize').value);
+            state.letterSpacing = parseInt(document.getElementById('letterSpacing').value);
+            state.rotate = parseInt(document.getElementById('rotate').value);
+            state.shadow = document.getElementById('shadowCheck').checked;
+            state.glow = document.getElementById('glowCheck').checked;
+            state.underline = document.getElementById('underlineCheck').checked;
+            state.border = document.getElementById('borderCheck').checked;
+            state.italic = document.getElementById('italicCheck').checked;
+            state.uppercase = document.getElementById('uppercaseCheck').checked;
+
+            document.getElementById('sizeValue').textContent = state.fontSize + 'px';
+            document.getElementById('spacingValue').textContent = state.letterSpacing + 'px';
+            document.getElementById('rotateValue').textContent = state.rotate + '°';
+
+            let text = state.uppercase ? state.text.toUpperCase() : state.text;
+
+            preview.textContent = text;
+            preview.style.fontFamily = font.family;
+            preview.style.fontSize = state.fontSize + 'px';
+            preview.style.letterSpacing = state.letterSpacing + 'px';
+            preview.style.transform = `rotate(${state.rotate}deg)`;
+            preview.style.color = state.textColor;
+            preview.style.textDecoration = state.underline ? 'underline' : 'none';
+            preview.style.fontStyle = state.italic ? 'italic' : 'normal';
+            preview.style.textTransform = state.uppercase ? 'uppercase' : 'none';
+
+            // Background
+            if (state.bgColor === 'transparent') {
+                wrapper.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+            } else {
+                wrapper.style.background = state.bgColor;
+            }
+
+            // Style effects
+            let textShadow = '';
+            let boxShadow = '';
+            let border = '';
+
+            if (state.style === 'classic') {
+                textShadow = state.shadow ? '2px 2px 4px rgba(0,0,0,0.5)' : '';
+                border = state.border ? `2px solid ${state.textColor}` : 'none';
+            } else if (state.style === 'modern') {
+                textShadow = state.shadow ? '4px 4px 0px rgba(0,0,0,0.3)' : '';
+                border = state.border ? `3px solid ${state.textColor}` : 'none';
+                preview.style.fontWeight = '700';
+            } else if (state.style === 'elegant') {
+                textShadow = state.shadow ? '0 2px 10px rgba(212,175,55,0.3)' : '';
+                border = state.border ? `1px solid ${state.textColor}` : 'none';
+                preview.style.fontWeight = '400';
+            } else if (state.style === 'bold') {
+                textShadow = state.shadow ? '0 4px 15px rgba(0,0,0,0.5)' : '';
+                border = state.border ? `4px solid ${state.textColor}` : 'none';
+                preview.style.fontWeight = '900';
+            } else if (state.style === 'minimal') {
+                textShadow = 'none';
+                border = state.border ? `1px solid ${state.textColor}` : 'none';
+                preview.style.fontWeight = '300';
+            } else if (state.style === 'neon') {
+                textShadow = state.glow 
+                    ? `0 0 5px ${state.textColor}, 0 0 10px ${state.textColor}, 0 0 20px ${state.textColor}, 0 0 40px ${state.textColor}`
+                    : (state.shadow ? `0 0 10px ${state.textColor}` : '');
+                border = state.border ? `2px solid ${state.textColor}` : 'none';
+            }
+
+            if (state.glow && state.style !== 'neon') {
+                textShadow += (textShadow ? ', ' : '') + `0 0 20px ${state.textColor}80, 0 0 40px ${state.textColor}40`;
+            }
+
+            preview.style.textShadow = textShadow;
+            preview.style.border = border;
+            preview.style.borderRadius = state.border ? '8px' : '0';
+            preview.style.padding = state.border ? '15px 25px' : '20px';
+        }
+
+        // ===================== PRESETS =====================
+        function setPreset(text) {
+            document.getElementById('textInput').value = text;
+            updatePreview();
+        }
+
+        // ===================== DOWNLOAD PNG =====================
+        function downloadPNG() {
+            const preview = document.getElementById('signaturePreview');
+            const wrapper = document.getElementById('previewWrapper');
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Get computed styles
+            const computed = window.getComputedStyle(preview);
+            const fontSize = parseInt(computed.fontSize);
+            const fontFamily = computed.fontFamily;
+            const color = computed.color;
+
+            // Measure text
+            ctx.font = `${computed.fontStyle} ${computed.fontWeight} ${fontSize}px ${fontFamily}`;
+            const metrics = ctx.measureText(preview.textContent);
+            const textWidth = metrics.width;
+            const textHeight = fontSize * 1.5;
+
+            const padding = 60;
+            canvas.width = textWidth + padding * 2;
+            canvas.height = textHeight + padding * 2;
+
+            // Background
+            if (state.bgColor !== 'transparent') {
+                ctx.fillStyle = state.bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Text
+            ctx.font = `${computed.fontStyle} ${computed.fontWeight} ${fontSize}px ${fontFamily}`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Shadow
+            if (state.shadow || state.glow) {
+                ctx.shadowColor = state.textColor;
+                ctx.shadowBlur = state.glow ? 20 : 4;
+                ctx.shadowOffsetX = state.style === 'modern' ? 4 : 2;
+                ctx.shadowOffsetY = state.style === 'modern' ? 4 : 2;
+            }
+
+            ctx.fillText(preview.textContent, canvas.width / 2, canvas.height / 2);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `signature_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            showToast('✅ تم التحميل كـ PNG');
+        }
+
+        // ===================== DOWNLOAD SVG =====================
+        function downloadSVG() {
+            const preview = document.getElementById('signaturePreview');
+            const computed = window.getComputedStyle(preview);
+
+            const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+    <rect width="100%" height="100%" fill="${state.bgColor === 'transparent' ? 'none' : state.bgColor}"/>
+    <text x="400" y="200" 
+          font-family="${computed.fontFamily.replace(/"/g, "'")}" 
+          font-size="${computed.fontSize}" 
+          font-weight="${computed.fontWeight}" 
+          font-style="${computed.fontStyle}"
+          fill="${state.textColor}" 
+          text-anchor="middle" 
+          dominant-baseline="middle"
+          letter-spacing="${state.letterSpacing}px"
+          transform="rotate(${state.rotate}, 400, 200)"
+          style="text-shadow: ${computed.textShadow};">
+        ${preview.textContent}
+    </text>
+</svg>`;
+
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `signature_${Date.now()}.svg`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showToast('✅ تم التحميل كـ SVG');
+        }
+
+        // ===================== COPY CSS =====================
+        function copyCSS() {
+            const preview = document.getElementById('signaturePreview');
+            const computed = window.getComputedStyle(preview);
+
+            const css = `.signature {
+    font-family: ${computed.fontFamily};
+    font-size: ${computed.fontSize};
+    font-weight: ${computed.fontWeight};
+    font-style: ${computed.fontStyle};
+    color: ${state.textColor};
+    letter-spacing: ${state.letterSpacing}px;
+    text-shadow: ${computed.textShadow};
+    text-decoration: ${computed.textDecoration};
+    transform: rotate(${state.rotate}deg);
+    text-align: center;
+}`;
+
+            navigator.clipboard.writeText(css).then(() => {
+                showToast('✅ تم نسخ CSS');
+            });
+        }
+
+        // ===================== RANDOMIZE =====================
+        function randomize() {
+            const fonts = state.scriptType === 'arabic' ? arabicFonts : englishFonts;
+            state.fontIndex = Math.floor(Math.random() * fonts.length);
+
+            const styles = ['classic', 'modern', 'elegant', 'bold', 'minimal', 'neon'];
+            state.style = styles[Math.floor(Math.random() * styles.length)];
+
+            state.fontSize = Math.floor(Math.random() * 60) + 30;
+            state.letterSpacing = Math.floor(Math.random() * 10) - 2;
+            state.rotate = Math.floor(Math.random() * 10) - 5;
+
+            const colors = ['#d4af37', '#ffffff', '#e94560', '#0f3460', '#c0c0c0', '#ff6b6b', '#4ecdc4'];
+            state.textColor = colors[Math.floor(Math.random() * colors.length)];
+
+            // Update UI
+            document.getElementById('fontSize').value = state.fontSize;
+            document.getElementById('letterSpacing').value = state.letterSpacing;
+            document.getElementById('rotate').value = state.rotate;
+
+            document.querySelectorAll('.font-option').forEach((el, i) => {
+                el.classList.toggle('active', i === state.fontIndex);
+            });
+
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.style === state.style);
+            });
+
+            document.querySelectorAll('#textColors .color-option').forEach(c => {
+                c.classList.toggle('active', c.dataset.color === state.textColor);
+            });
+
+            updatePreview();
+            showToast('🎲 تم التوليد العشوائي');
+        }
+
+        // ===================== HISTORY =====================
+        function saveToHistory() {
+            const fonts = state.scriptType === 'arabic' ? arabicFonts : englishFonts;
+            const item = {
+                ...state,
+                fontName: fonts[state.fontIndex].name,
+                timestamp: Date.now()
+            };
+
+            history.unshift(item);
+            if (history.length > 6) history = history.slice(0, 6);
+
+            localStorage.setItem('signatureHistory', JSON.stringify(history));
+            renderHistory();
+            showToast('⭐ تم الحفظ في المفضلة');
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('signatureHistory');
+            if (saved) {
+                history = JSON.parse(saved);
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const grid = document.getElementById('historyGrid');
+            if (history.length === 0) {
+                grid.innerHTML = '<div class="history-item" style="color: var(--text-muted); font-size: 0.8rem;">لا توجد محفوظات بعد</div>';
+                return;
+            }
+
+            grid.innerHTML = history.map((item, i) => {
+                const fonts = item.scriptType === 'arabic' ? arabicFonts : englishFonts;
+                const font = fonts.find(f => f.name === item.fontName) || fonts[0];
+                return `
+                    <div class="history-item" onclick="loadHistoryItem(${i})" 
+                         style="font-family: ${font ? font.family : 'inherit'}; color: ${item.textColor}; font-size: 0.85rem;">
+                        ${item.text.substring(0, 15)}${item.text.length > 15 ? '...' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadHistoryItem(index) {
+            const item = history[index];
+            state = { ...item };
+
+            document.getElementById('textInput').value = state.text;
+            document.getElementById('scriptType').value = state.scriptType;
+            document.getElementById('fontSize').value = state.fontSize;
+            document.getElementById('letterSpacing').value = state.letterSpacing;
+            document.getElementById('rotate').value = state.rotate;
+            document.getElementById('shadowCheck').checked = state.shadow;
+            document.getElementById('glowCheck').checked = state.glow;
+            document.getElementById('underlineCheck').checked = state.underline;
+            document.getElementById('borderCheck').checked = state.border;
+            document.getElementById('italicCheck').checked = state.italic;
+            document.getElementById('uppercaseCheck').checked = state.uppercase;
+
+            updateFonts();
+
+            // Restore font selection
+            const fonts = state.scriptType === 'arabic' ? arabicFonts : englishFonts;
+            const fontIdx = fonts.findIndex(f => f.name === item.fontName);
+            if (fontIdx >= 0) {
+                state.fontIndex = fontIdx;
+                document.querySelectorAll('.font-option').forEach((el, i) => {
+                    el.classList.toggle('active', i === fontIdx);
+                });
+            }
+
+            // Restore style
+            document.querySelectorAll('.style-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.style === state.style);
+            });
+
+            // Restore colors
+            document.querySelectorAll('#textColors .color-option').forEach(c => {
+                c.classList.toggle('active', c.dataset.color === state.textColor);
+            });
+            document.querySelectorAll('#bgColors .color-option').forEach(c => {
+                c.classList.toggle('active', c.dataset.color === state.bgColor);
+            });
+
+            updatePreview();
+            showToast('📂 تم تحميل المحفوظة');
+        }
+
+        // ===================== TOAST =====================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ===================== EVENT LISTENERS =====================
+        document.getElementById('textInput').addEventListener('input', updatePreview);
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
