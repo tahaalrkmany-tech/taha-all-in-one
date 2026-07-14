@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🍉 Fruit Ninja - تقطيع الفواكه</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 800px;
+            max-height: 600px;
+            background: radial-gradient(ellipse at center, #1a2a4a 0%, #0b0f1e 100%);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), inset 0 0 100px rgba(80, 140, 255, 0.1);
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: none;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 16px 22px;
+            pointer-events: none;
+            font-weight: 700;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        #hud span {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        #scoreDisplay { color: #ffd966; }
+        #timeDisplay { color: #7fc9ff; }
+        #livesDisplay { 
+            color: #ff6b8a; 
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+        #comboDisplay {
+            color: #ff7eb3;
+            font-size: 1.8rem;
+            min-width: 80px;
+            text-align: center;
+            transition: transform 0.1s;
+        }
+        #comboDisplay.pop {
+            transform: scale(1.5);
+            color: #ffaa00;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .screen h1 {
+            font-size: 4.2rem;
+            color: #fff;
+            text-shadow: 0 0 30px #ff7eb3, 0 0 60px #ff4d6d;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+        .screen h1 .emoji {
+            font-size: 4.8rem;
+        }
+        .screen p {
+            color: #b0c7ff;
+            font-size: 1.3rem;
+            margin: 8px 0 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            padding: 0 20px;
+        }
+        .screen .high-score {
+            color: #ffd966;
+            font-size: 1.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 24px;
+            border-radius: 40px;
+            border: 1px solid #ffd96655;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            padding: 16px 48px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(145deg, #ff6b8a, #ee2d5a);
+            border: none;
+            border-radius: 60px;
+            box-shadow: 0 8px 30px rgba(238, 45, 90, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            touch-action: manipulation;
+            letter-spacing: 1px;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(238, 45, 90, 0.7);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-secondary {
+            background: linear-gradient(145deg, #4a6cf7, #2a4cdb);
+            box-shadow: 0 8px 30px rgba(42, 76, 219, 0.5);
+            margin-top: 12px;
+            padding: 12px 36px;
+            font-size: 1.2rem;
+        }
+
+        #footer {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 20;
+            font-weight: 300;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+        #footer span {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(2px);
+        }
+
+        @media (max-width: 600px) {
+            #game-wrapper {
+                max-width: 100vw;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            .screen h1 { font-size: 2.8rem; }
+            .screen h1 .emoji { font-size: 3.2rem; }
+            .btn { padding: 14px 32px; font-size: 1.2rem; }
+            #hud { font-size: 0.9rem; padding: 10px 14px; }
+            #hud span { padding: 4px 12px; }
+            #comboDisplay { font-size: 1.4rem; min-width: 60px; }
+            #livesDisplay { font-size: 1.2rem; }
+            #footer { font-size: 0.6rem; bottom: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud" class="ui-overlay">
+        <span id="scoreDisplay">🍎 0</span>
+        <span id="livesDisplay">❤️❤️❤️</span>
+        <span id="comboDisplay">🔥 0</span>
+        <span id="timeDisplay">⏱️ 60</span>
+    </div>
+
+    <div id="startScreen" class="screen active">
+        <h1><span class="emoji">🗡️</span> Fruit Ninja</h1>
+        <p>اقطع الفواكه، تجنّب القنابل!<br>لديك 3 حيوات فقط ⚔️</p>
+        <div class="high-score" id="startHighScore">🏆 أعلى نقاط: 0</div>
+        <button class="btn" id="startBtn">ابدأ القطع</button>
+    </div>
+
+    <div id="endScreen" class="screen">
+        <h1><span class="emoji">💥</span> انتهى!</h1>
+        <p id="finalScoreText">نقاطك: 0</p>
+        <div class="high-score" id="endHighScore">🏆 أعلى نقاط: 0</div>
+        <button class="btn" id="restartBtn">🔁 العب مرة أخرى</button>
+        <button class="btn btn-secondary" id="menuBtn">🏠 القائمة</button>
+    </div>
+
+    <div id="footer"><span>صمم بواسطة TahatechPro2026</span></div>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('game-wrapper');
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const comboDisplay = document.getElementById('comboDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const startScreen = document.getElementById('startScreen');
+        const endScreen = document.getElementById('endScreen');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const menuBtn = document.getElementById('menuBtn');
+        const startHighScore = document.getElementById('startHighScore');
+        const endHighScore = document.getElementById('endHighScore');
+        const finalScoreText = document.getElementById('finalScoreText');
+
+        let W, H;
+        let gameRunning = false;
+        let score = 0;
+        let timeLeft = 60;
+        let combo = 0;
+        let maxCombo = 0;
+        let lives = 3;
+        let highScore = parseInt(localStorage.getItem('fruitNinjaHighScore')) || 0;
+
+        let fruits = [];
+        let bombs = [];
+        let particles = [];
+        let sliceTrail = [];
+
+        let gameLoopId = null;
+        let spawnInterval = null;
+        let timerInterval = null;
+
+        const GRAVITY = 0.25;
+        const FRUIT_TYPES = [
+            { name: 'apple', color: '#e53935', inner: '#ff8a80', seed: '#4e342e', size: 30, emoji: '🍎', weight: 1.2 },
+            { name: 'orange', color: '#fb8c00', inner: '#ffcc80', seed: '#e65100', size: 32, emoji: '🍊', weight: 1.0 },
+            { name: 'watermelon', color: '#2e7d32', inner: '#66bb6a', seed: '#1b5e20', size: 44, emoji: '🍉', weight: 2.0 },
+            { name: 'strawberry', color: '#c62828', inner: '#ef5350', seed: '#b71c1c', size: 26, emoji: '🍓', weight: 0.7 },
+            { name: 'grape', color: '#6a1b9a', inner: '#ab47bc', seed: '#4a148c', size: 24, emoji: '🍇', weight: 0.6 },
+            { name: 'banana', color: '#f9a825', inner: '#fff176', seed: '#f57f17', size: 38, emoji: '🍌', weight: 1.1 },
+            { name: 'peach', color: '#ff8a65', inner: '#ffccbc', seed: '#bf6a4a', size: 30, emoji: '🍑', weight: 1.0 },
+            { name: 'mango', color: '#ef6c00', inner: '#ffcc80', seed: '#e65100', size: 34, emoji: '🥭', weight: 1.3 },
+        ];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+        function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+        function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
+
+        function resizeCanvas() {
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            W = canvas.width;
+            H = canvas.height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Fruit {
+            constructor(x, y, vx, vy, type, isBomb = false) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.type = type;
+                this.isBomb = isBomb;
+                this.radius = isBomb ? 34 : type.size * (0.9 + Math.random() * 0.2);
+                this.rotation = rand(0, Math.PI * 2);
+                this.rotSpeed = rand(-0.03, 0.03);
+                this.sliced = false;
+                this.alive = true;
+                this.gravity = GRAVITY * (type.weight || 1.0);
+                this.drag = 0.99;
+                this.halves = [];
+                this.breathe = rand(0, Math.PI * 2);
+                this.breatheSpeed = rand(0.015, 0.035);
+                this.scale = 1;
+                this.fuseTimer = 0;
+                this.fuseLength = 14 + rand(0, 8);
+                this.shadowOffset = rand(2, 5);
+            }
+
+            update() {
+                if (this.sliced) {
+                    for (let h of this.halves) {
+                        h.x += h.vx;
+                        h.y += h.vy;
+                        h.vy += 0.2;
+                        h.rotation += h.rotSpeed;
+                        h.life -= 0.007;
+                    }
+                    this.halves = this.halves.filter(h => h.life > 0 && h.y < H + 50);
+                    if (this.halves.length === 0) this.alive = false;
+                    return;
+                }
+
+                this.vx *= this.drag;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.rotSpeed;
+                this.breathe += this.breatheSpeed;
+                this.scale = 1 + Math.sin(this.breathe) * 0.015;
+
+                if (this.isBomb) {
+                    this.fuseTimer += 0.02;
+                }
+
+                if (this.y > H + 60 || this.x < -80 || this.x > W + 80) {
+                    this.alive = false;
+                }
+            }
+
+            draw(ctx) {
+                if (this.sliced) {
+                    for (let h of this.halves) {
+                        ctx.save();
+                        ctx.translate(h.x, h.y);
+                        ctx.rotate(h.rotation);
+                        ctx.globalAlpha = Math.max(0, h.life);
+                        this.drawHalf(ctx, h.side);
+                        ctx.restore();
+                    }
+                    return;
+                }
+
+                const s = this.scale;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(s, s);
+                ctx.rotate(this.rotation);
+
+                if (this.isBomb) {
+                    this.drawBomb(ctx);
+                } else {
+                    this.drawFruit(ctx);
+                }
+
+                ctx.restore();
+            }
+
+            drawFruit(ctx) {
+                const r = this.radius;
+                const type = this.type;
+
+                // ظل
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetX = this.shadowOffset * 0.3;
+                ctx.shadowOffsetY = this.shadowOffset;
+
+                // جسم الفاكهة بتدرج ثلاثي الأبعاد
+                const grd = ctx.createRadialGradient(
+                    -r * 0.35, -r * 0.35, r * 0.1,
+                    0, 0, r
+                );
+                grd.addColorStop(0, this.lighten(type.inner, 0.4));
+                grd.addColorStop(0.4, type.inner);
+                grd.addColorStop(0.8, type.color);
+                grd.addColorStop(1, this.darken(type.color, 0.4));
+                ctx.fillStyle = grd;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // حافة لامعة
+                ctx.strokeStyle = `rgba(255,255,255,0.1)`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 2, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // بقعة ضوء رئيسية
+                const lightGrad = ctx.createRadialGradient(
+                    -r * 0.3, -r * 0.4, 2,
+                    -r * 0.3, -r * 0.4, r * 0.5
+                );
+                lightGrad.addColorStop(0, `rgba(255,255,255,0.25)`);
+                lightGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = lightGrad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // رسم التفاصيل حسب النوع
+                this.drawDetails(ctx);
+            }
+
+            drawDetails(ctx) {
+                const r = this.radius;
+                const type = this.type.name;
+
+                switch(type) {
+                    case 'apple':
+                        // ساق
+                        ctx.strokeStyle = '#4e342e';
+                        ctx.lineWidth = 3;
+                        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                        ctx.shadowBlur = 4;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -r + 3);
+                        ctx.quadraticCurveTo(4, -r - 12, 8, -r - 6);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                        // ورقة
+                        ctx.fillStyle = '#43a047';
+                        ctx.shadowColor = 'rgba(67,160,71,0.3)';
+                        ctx.shadowBlur = 5;
+                        ctx.beginPath();
+                        ctx.ellipse(7, -r - 5, 7, 4, 0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        // بذور
+                        ctx.fillStyle = '#4e342e';
+                        for (let i = 0; i < 3; i++) {
+                            const a = (i / 3) * Math.PI * 2 + 0.7;
+                            const d = r * 0.2;
+                            ctx.beginPath();
+                            ctx.ellipse(Math.cos(a) * d, Math.sin(a) * d, 2.5, 1.5, a, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        break;
+
+                    case 'orange':
+                        // نسيج البرتقال
+                        ctx.fillStyle = 'rgba(255,200,100,0.12)';
+                        for (let i = 0; i < 8; i++) {
+                            const a = (i / 8) * Math.PI * 2 + 0.1;
+                            const d = r * 0.4;
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(a) * d, Math.sin(a) * d, 3 + Math.sin(this.breathe + i) * 1, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        // ساق
+                        ctx.strokeStyle = '#4a7a3a';
+                        ctx.lineWidth = 2.5;
+                        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -r + 2);
+                        ctx.quadraticCurveTo(3, -r - 6, 6, -r - 4);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                        break;
+
+                    case 'watermelon':
+                        // خطوط البطيخ
+                        ctx.strokeStyle = 'rgba(27,94,32,0.5)';
+                        ctx.lineWidth = 2.5;
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (i / 6) * Math.PI * 2 + 0.15;
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            const len = r * (0.45 + Math.sin(this.breathe + i * 1.2) * 0.08);
+                            ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+                            ctx.stroke();
+                        }
+                        // بذور
+                        ctx.fillStyle = '#1a1a1a';
+                        for (let i = 0; i < 10; i++) {
+                            const a = (i / 10) * Math.PI * 2 + 0.3;
+                            const d = r * (0.35 + Math.sin(this.breathe * 0.5 + i * 0.7) * 0.1);
+                            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+                            ctx.shadowBlur = 3;
+                            ctx.beginPath();
+                            ctx.ellipse(Math.cos(a) * d, Math.sin(a) * d, 3.5, 2, a, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                        break;
+
+                    case 'strawberry':
+                        // بذور الفراولة
+                        for (let i = 0; i < 12; i++) {
+                            const ang = (i / 12) * Math.PI * 2 + 0.2;
+                            const r2 = r * (0.25 + Math.sin(this.breathe * 0.6 + i * 0.8) * 0.08 + 0.25);
+                            ctx.fillStyle = '#ffcc00';
+                            ctx.shadowColor = 'rgba(255,200,0,0.2)';
+                            ctx.shadowBlur = 3;
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(ang) * r2, Math.sin(ang) * r2, 2.5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                        // أوراق
+                        ctx.fillStyle = '#2e7d32';
+                        for (let i = 0; i < 5; i++) {
+                            const a = (i / 5) * Math.PI * 2 - 0.2;
+                            const leafR = 5 + Math.sin(this.breathe + i * 1.1) * 1.5;
+                            ctx.shadowColor = 'rgba(46,125,50,0.25)';
+                            ctx.shadowBlur = 4;
+                            ctx.beginPath();
+                            ctx.ellipse(
+                                Math.cos(a) * (r * 0.2),
+                                Math.sin(a) * (r * 0.2) - r * 0.3,
+                                leafR, 3.5, a, 0, Math.PI * 2
+                            );
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                        break;
+
+                    case 'grape':
+                        // عنقود عنب
+                        ctx.fillStyle = 'rgba(200,180,100,0.15)';
+                        for (let i = 0; i < 8; i++) {
+                            const a = (i / 8) * Math.PI * 2 + 0.2;
+                            const d = r * 0.3;
+                            ctx.shadowColor = 'rgba(200,180,100,0.15)';
+                            ctx.shadowBlur = 4;
+                            ctx.beginPath();
+                            ctx.arc(Math.cos(a) * d, Math.sin(a) * d, 4 + Math.sin(this.breathe * 0.6 + i) * 1.5, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                        // ساق
+                        ctx.strokeStyle = '#5d4037';
+                        ctx.lineWidth = 2.5;
+                        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -r + 2);
+                        ctx.quadraticCurveTo(3, -r - 10, 7, -r - 7);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                        break;
+
+                    case 'banana':
+                        // خطوط الموز
+                        ctx.strokeStyle = 'rgba(180,120,20,0.15)';
+                        ctx.lineWidth = 2.5;
+                        for (let i = -2; i <= 2; i++) {
+                            ctx.beginPath();
+                            const yOff = i * 7;
+                            ctx.moveTo(-r * 0.6, yOff);
+                            ctx.quadraticCurveTo(0, yOff + 5 + Math.sin(this.breathe + i * 0.8) * 2, r * 0.6, yOff);
+                            ctx.stroke();
+                        }
+                        // طرف الموز
+                        ctx.fillStyle = '#8d6e63';
+                        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.arc(r * 0.7, -r * 0.05, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        break;
+
+                    case 'peach':
+                        // خط الخوخ
+                        ctx.strokeStyle = 'rgba(200,100,80,0.2)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(-r * 0.3, -r * 0.15);
+                        ctx.quadraticCurveTo(0, r * 0.3 + Math.sin(this.breathe * 0.7) * 3, r * 0.3, -r * 0.15);
+                        ctx.stroke();
+                        // ورقة
+                        ctx.fillStyle = '#66bb6a';
+                        ctx.shadowColor = 'rgba(102,187,106,0.3)';
+                        ctx.shadowBlur = 4;
+                        ctx.beginPath();
+                        ctx.ellipse(r * 0.2, -r * 0.7, 6, 3, 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        break;
+
+                    case 'mango':
+                        // خطوط المانجو
+                        ctx.strokeStyle = 'rgba(200,100,20,0.12)';
+                        ctx.lineWidth = 3;
+                        for (let i = -2; i <= 2; i++) {
+                            ctx.beginPath();
+                            const xOff = i * 6;
+                            ctx.moveTo(xOff, -r * 0.7);
+                            ctx.quadraticCurveTo(xOff + 3 + Math.sin(this.breathe + i * 0.7) * 2, 0, xOff, r * 0.7);
+                            ctx.stroke();
+                        }
+                        break;
+                }
+            }
+
+            drawBomb(ctx) {
+                const r = this.radius;
+                
+                // وهج النار
+                const glowSize = r * (2.5 + Math.sin(this.fuseTimer * 3) * 0.3);
+                const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, glowSize);
+                grad.addColorStop(0, `rgba(255,100,20,${0.3 + Math.sin(this.fuseTimer * 4) * 0.1})`);
+                grad.addColorStop(0.5, `rgba(255,50,0,${0.15 + Math.sin(this.fuseTimer * 3 + 1) * 0.05})`);
+                grad.addColorStop(1, 'rgba(255,50,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // جسم القنبلة
+                ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = 15;
+                const grd = ctx.createRadialGradient(
+                    -r * 0.3, -r * 0.35, r * 0.05,
+                    0, 0, r
+                );
+                grd.addColorStop(0, '#5a5a5a');
+                grd.addColorStop(0.4, '#3a3a3a');
+                grd.addColorStop(0.8, '#1a1a1a');
+                grd.addColorStop(1, '#0a0a0a');
+                ctx.fillStyle = grd;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // حافة معدنية
+                ctx.strokeStyle = 'rgba(100,100,100,0.2)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 2, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // بقعة ضوء
+                ctx.fillStyle = 'rgba(255,255,255,0.04)';
+                ctx.beginPath();
+                ctx.arc(-r * 0.25, -r * 0.3, r * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // فتيل مشتعل
+                const fuseX = 0;
+                const fuseY = -r;
+                const fuseLen = this.fuseLength + Math.sin(this.fuseTimer * 2) * 2;
+                
+                ctx.strokeStyle = '#6d4c41';
+                ctx.lineWidth = 3.5;
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.moveTo(fuseX, fuseY);
+                ctx.quadraticCurveTo(
+                    fuseX + Math.sin(this.fuseTimer * 1.5) * 5,
+                    fuseY - fuseLen * 0.5,
+                    fuseX + Math.sin(this.fuseTimer * 2.3) * 8,
+                    fuseY - fuseLen
+                );
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                const flameX = fuseX + Math.sin(this.fuseTimer * 2.3) * 8;
+                const flameY = fuseY - fuseLen;
+                const flameSize = 6 + Math.sin(this.fuseTimer * 5) * 3;
+                
+                // وهج اللهب
+                const flameGrad = ctx.createRadialGradient(
+                    flameX, flameY, 1,
+                    flameX, flameY, flameSize * 2.5
+                );
+                flameGrad.addColorStop(0, `rgba(255,200,50,${0.8 + Math.sin(this.fuseTimer * 5) * 0.2})`);
+                flameGrad.addColorStop(0.3, `rgba(255,150,30,${0.6 + Math.sin(this.fuseTimer * 4 + 0.5) * 0.15})`);
+                flameGrad.addColorStop(0.7, `rgba(255,80,0,${0.3 + Math.sin(this.fuseTimer * 3 + 1) * 0.1})`);
+                flameGrad.addColorStop(1, 'rgba(255,50,0,0)');
+                ctx.fillStyle = flameGrad;
+                ctx.shadowColor = 'rgba(255,100,0,0.5)';
+                ctx.shadowBlur = 25;
+                ctx.beginPath();
+                ctx.arc(flameX, flameY, flameSize * 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = `rgba(255,200,50,${0.7 + Math.sin(this.fuseTimer * 6) * 0.2})`;
+                ctx.shadowColor = 'rgba(255,150,0,0.7)';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // شرر
+                for (let i = 0; i < 4; i++) {
+                    const sparkAngle = this.fuseTimer * 8 + i * 1.5;
+                    const sparkDist = flameSize + 4 + Math.sin(this.fuseTimer * 3 + i) * 3;
+                    ctx.fillStyle = `rgba(255,200,100,${0.3 + Math.sin(this.fuseTimer * 5 + i * 2) * 0.15})`;
+                    ctx.shadowColor = 'rgba(255,200,100,0.4)';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(
+                        flameX + Math.cos(sparkAngle) * sparkDist,
+                        flameY + Math.sin(sparkAngle) * sparkDist,
+                        1.5 + Math.sin(this.fuseTimer * 4 + i) * 0.8,
+                        0, Math.PI * 2
+                    );
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            drawHalf(ctx, side) {
+                const r = this.radius;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+                if (side === 1) {
+                    ctx.arc(0, 0, r, Math.PI / 2, -Math.PI / 2, true);
+                } else {
+                    ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+                }
+                ctx.closePath();
+                const grd = ctx.createRadialGradient(-4, -4, 2, 0, 0, r);
+                grd.addColorStop(0, this.lighten(this.type.inner, 0.4));
+                grd.addColorStop(0.5, this.type.inner);
+                grd.addColorStop(1, this.type.color);
+                ctx.fillStyle = grd;
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,240,200,0.1)';
+                ctx.beginPath();
+                ctx.arc(2, 2, r * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            lighten(color, amount) {
+                const c = color.replace('#', '');
+                let r = parseInt(c.substring(0, 2), 16);
+                let g = parseInt(c.substring(2, 4), 16);
+                let b = parseInt(c.substring(4, 6), 16);
+                r = Math.min(255, r + (255 - r) * amount);
+                g = Math.min(255, g + (255 - g) * amount);
+                b = Math.min(255, b + (255 - b) * amount);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            darken(color, amount) {
+                const c = color.replace('#', '');
+                let r = parseInt(c.substring(0, 2), 16);
+                let g = parseInt(c.substring(2, 4), 16);
+                let b = parseInt(c.substring(4, 6), 16);
+                r = Math.max(0, r * (1 - amount));
+                g = Math.max(0, g * (1 - amount));
+                b = Math.max(0, b * (1 - amount));
+                return `rgb(${r},${g},${b})`;
+            }
+
+            slice() {
+                if (this.sliced || !this.alive) return;
+                this.sliced = true;
+                const side1 = { 
+                    x: this.x, y: this.y, 
+                    vx: this.vx - 2 + rand(-1.5, 1.5), 
+                    vy: this.vy - 2 + rand(-1.5, 1.5),
+                    rotation: this.rotation, 
+                    rotSpeed: rand(0.02, 0.06), 
+                    life: 1.0, 
+                    side: -1 
+                };
+                const side2 = { 
+                    x: this.x, y: this.y, 
+                    vx: this.vx + 2 + rand(-1.5, 1.5), 
+                    vy: this.vy + 2 + rand(-1.5, 1.5),
+                    rotation: this.rotation, 
+                    rotSpeed: rand(-0.06, -0.02), 
+                    life: 1.0, 
+                    side: 1 
+                };
+                this.halves = [side1, side2];
+                
+                const juiceColors = [this.type.inner, this.type.color, '#ffffff'];
+                for (let i = 0; i < 20; i++) {
+                    const angle = rand(0, Math.PI * 2);
+                    const speed = rand(2, 8);
+                    const size = rand(3, 9);
+                    particles.push({
+                        x: this.x + rand(-8, 8),
+                        y: this.y + rand(-8, 8),
+                        vx: Math.cos(angle) * speed + this.vx * 0.4,
+                        vy: Math.sin(angle) * speed + this.vy * 0.4,
+                        radius: size,
+                        life: 1.0,
+                        color: juiceColors[randInt(0, juiceColors.length - 1)],
+                        decay: rand(0.012, 0.028),
+                        type: 'juice'
+                    });
+                }
+                for (let i = 0; i < 12; i++) {
+                    const angle = rand(0, Math.PI * 2);
+                    const speed = rand(1, 4);
+                    particles.push({
+                        x: this.x + rand(-6, 6),
+                        y: this.y + rand(-6, 6),
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 1,
+                        radius: rand(1, 3),
+                        life: 0.9,
+                        color: '#ffffff',
+                        decay: rand(0.03, 0.06),
+                        type: 'sparkle'
+                    });
+                }
+            }
+        }
+
+        function createFruit() {
+            const type = FRUIT_TYPES[randInt(0, FRUIT_TYPES.length - 1)];
+            const x = rand(W * 0.1, W * 0.9);
+            const y = H + 20;
+            const vx = rand(-3.5, 3.5);
+            const vy = -rand(10, 16);
+            return new Fruit(x, y, vx, vy, type, false);
+        }
+
+        function createBomb() {
+            const x = rand(W * 0.1, W * 0.9);
+            const y = H + 20;
+            const vx = rand(-2.5, 2.5);
+            const vy = -rand(9, 15);
+            const bombType = { 
+                name: 'bomb', 
+                color: '#1a1a1a', 
+                inner: '#3a3a3a', 
+                seed: '#000', 
+                size: 34,
+                emoji: '💣',
+                weight: 1.5
+            };
+            return new Fruit(x, y, vx, vy, bombType, true);
+        }
+
+        let spawnCounter = 0;
+
+        function spawnWave() {
+            if (!gameRunning) return;
+            spawnCounter++;
+            const baseCount = randInt(2, 4);
+            const count = Math.max(1, Math.floor(baseCount * 0.8));
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    if (!gameRunning) return;
+                    if (Math.random() < 0.18 && fruits.length > 0) {
+                        bombs.push(createBomb());
+                    } else {
+                        fruits.push(createFruit());
+                    }
+                }, i * rand(100, 250));
+            }
+        }
+
+        let isDragging = false;
+        let lastX = 0, lastY = 0;
+        const trailPoints = [];
+        const MAX_TRAIL = 25;
+
+        function handleStart(x, y) {
+            isDragging = true;
+            lastX = x;
+            lastY = y;
+            trailPoints.length = 0;
+            trailPoints.push({ x, y });
+        }
+
+        function handleMove(x, y) {
+            if (!isDragging) return;
+            const dx = x - lastX;
+            const dy = y - lastY;
+            if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+            trailPoints.push({ x, y });
+            if (trailPoints.length > MAX_TRAIL) trailPoints.shift();
+            lastX = x;
+            lastY = y;
+            checkSlice(x, y, dx, dy);
+        }
+
+        function handleEnd() {
+            isDragging = false;
+            trailPoints.length = 0;
+        }
+
+        function checkSlice(x, y, dx, dy) {
+            const threshold = 22;
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                const f = fruits[i];
+                if (f.sliced || !f.alive) continue;
+                const d = dist(x, y, f.x, f.y);
+                if (d < f.radius + threshold) {
+                    const angle = Math.atan2(dy, dx);
+                    const toFruit = Math.atan2(f.y - y, f.x - x);
+                    const diff = Math.abs(angle - toFruit);
+                    if (diff < 1.3 || diff > Math.PI * 2 - 1.3) {
+                        f.slice();
+                        score++;
+                        combo++;
+                        if (combo > maxCombo) maxCombo = combo;
+                        updateHUD();
+                        playSliceSound();
+                        if (combo >= 3) {
+                            showComboPop(combo);
+                        }
+                    }
+                }
+            }
+            for (let i = bombs.length - 1; i >= 0; i--) {
+                const b = bombs[i];
+                if (!b.alive) continue;
+                const d = dist(x, y, b.x, b.y);
+                if (d < b.radius + threshold) {
+                    b.alive = false;
+                    lives--;
+                    combo = 0;
+                    updateHUD();
+                    playBoomSound();
+                    for (let j = 0; j < 45; j++) {
+                        const ang = rand(0, Math.PI * 2);
+                        const spd = rand(2, 13);
+                        const colors = ['#ff4444', '#ff8800', '#ffcc00', '#ffffff', '#ff6600'];
+                        particles.push({
+                            x: b.x + rand(-12, 12),
+                            y: b.y + rand(-12, 12),
+                            vx: Math.cos(ang) * spd,
+                            vy: Math.sin(ang) * spd - 1,
+                            radius: rand(4, 15),
+                            life: 1.0,
+                            color: colors[randInt(0, colors.length - 1)],
+                            decay: rand(0.015, 0.04),
+                            type: 'explosion'
+                        });
+                    }
+                    wrapper.style.transform = 'translate(8px, -8px)';
+                    setTimeout(() => wrapper.style.transform = '', 120);
+                    
+                    if (lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                }
+            }
+        }
+
+        let comboPopTimeout = null;
+
+        function showComboPop(c) {
+            comboDisplay.textContent = `🔥 ${c}x`;
+            comboDisplay.classList.add('pop');
+            clearTimeout(comboPopTimeout);
+            comboPopTimeout = setTimeout(() => {
+                comboDisplay.classList.remove('pop');
+            }, 400);
+        }
+
+        function updateHUD() {
+            scoreDisplay.textContent = `🍎 ${score}`;
+            timeDisplay.textContent = `⏱️ ${Math.ceil(timeLeft)}`;
+            let hearts = '';
+            for (let i = 0; i < lives; i++) hearts += '❤️';
+            for (let i = lives; i < 3; i++) hearts += '🖤';
+            livesDisplay.textContent = hearts;
+            
+            if (combo < 2) {
+                comboDisplay.textContent = `🔥 0`;
+            } else {
+                comboDisplay.textContent = `🔥 ${combo}x`;
+            }
+        }
+
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSliceSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800 + rand(0, 400), audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.1);
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'square';
+                osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc2.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.06);
+                gain2.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+                osc2.start(audioCtx.currentTime + 0.02);
+                osc2.stop(audioCtx.currentTime + 0.1);
+            } catch (e) { /* تجاهل */ }
+        }
+
+        function playBoomSound() {
+            try {
+                initAudio();
+                const bufferSize = audioCtx.sampleRate * 0.4;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 4);
+                }
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                const gain = audioCtx.createGain();
+                source.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                source.start(audioCtx.currentTime);
+            } catch (e) { /* تجاهل */ }
+        }
+
+        function playGameOverSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.6);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.6);
+            } catch (e) { /* تجاهل */ }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, W, H);
+            if (!draw._stars) {
+                draw._stars = [];
+                for (let i = 0; i < 100; i++) {
+                    draw._stars.push({
+                        x: rand(0, W),
+                        y: rand(0, H),
+                        r: rand(0.5, 2.5),
+                        a: rand(0.2, 0.9),
+                        speed: rand(0.002, 0.018),
+                        phase: rand(0, Math.PI * 2)
+                    });
+                }
+            }
+            for (let s of draw._stars) {
+                s.y += s.speed;
+                if (s.y > H) { s.y = 0; s.x = rand(0, W); }
+                s.phase += 0.02;
+                const twinkle = 0.5 + Math.sin(s.phase) * 0.5;
+                ctx.globalAlpha = s.a * twinkle;
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(255,255,255,0.15)';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            ctx.globalAlpha = 1;
+
+            for (let f of fruits) f.draw(ctx);
+            for (let b of bombs) b.draw(ctx);
+
+            for (let p of particles) {
+                ctx.globalAlpha = p.life;
+                if (p.type === 'sparkle') {
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 20;
+                } else if (p.type === 'explosion') {
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 25;
+                } else {
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 12;
+                }
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            ctx.globalAlpha = 1;
+
+            if (isDragging && trailPoints.length > 1) {
+                ctx.save();
+                for (let i = 0; i < trailPoints.length - 1; i++) {
+                    const p1 = trailPoints[i];
+                    const p2 = trailPoints[i + 1];
+                    const alpha = i / trailPoints.length;
+                    const width = 2 + (1 - alpha) * 10;
+                    ctx.globalAlpha = alpha * 0.6;
+                    ctx.shadowColor = `rgba(255,255,255,${alpha * 0.5})`;
+                    ctx.shadowBlur = 25;
+                    ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.4})`;
+                    ctx.lineWidth = width;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                    ctx.shadowBlur = 15;
+                    ctx.strokeStyle = `rgba(255,200,150,${alpha * 0.15})`;
+                    ctx.lineWidth = width * 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                fruits[i].update();
+                if (!fruits[i].alive) fruits.splice(i, 1);
+            }
+            for (let i = bombs.length - 1; i >= 0; i--) {
+                bombs[i].update();
+                if (!bombs[i].alive) bombs.splice(i, 1);
+            }
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.05;
+                p.life -= p.decay || 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!gameRunning) return;
+                timeLeft -= 0.1;
+                updateHUD();
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    endGame();
+                }
+            }, 100);
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            gameRunning = true;
+            score = 0;
+            timeLeft = 60;
+            combo = 0;
+            maxCombo = 0;
+            lives = 3;
+            fruits = [];
+            bombs = [];
+            particles = [];
+            trailPoints.length = 0;
+            isDragging = false;
+            spawnCounter = 0;
+
+            startScreen.classList.remove('active');
+            endScreen.classList.remove('active');
+            updateHUD();
+
+            spawnWave();
+            spawnInterval = setInterval(spawnWave, 1400);
+            startTimer();
+            gameLoop();
+            initAudio();
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            cancelAnimationFrame(gameLoopId);
+            playGameOverSound();
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('fruitNinjaHighScore', String(highScore));
+            }
+            finalScoreText.textContent = `🍉 نقاطك: ${score}  |  أطول كومبو: ${maxCombo}x`;
+            endHighScore.textContent = `🏆 أعلى نقاط: ${highScore}`;
+            endScreen.classList.add('active');
+        }
+
+        function goToMenu() {
+            gameRunning = false;
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            cancelAnimationFrame(gameLoopId);
+            fruits = [];
+            bombs = [];
+            particles = [];
+            trailPoints.length = 0;
+            endScreen.classList.remove('active');
+            startHighScore.textContent = `🏆 أعلى نقاط: ${highScore}`;
+            startScreen.classList.add('active');
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!gameRunning) return;
+            const p = getPos(e);
+            handleStart(p.x, p.y);
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+            const p = getPos(e);
+            handleMove(p.x, p.y);
+        });
+        canvas.addEventListener('mouseup', () => {
+            handleEnd();
+        });
+        canvas.addEventListener('mouseleave', () => {
+            handleEnd();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            const p = getPos(e);
+            handleStart(p.x, p.y);
+        }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            const p = getPos(e);
+            handleMove(p.x, p.y);
+        }, { passive: false });
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleEnd();
+        }, { passive: false });
+
+        startBtn.addEventListener('click', startGame);
+        startBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            startGame();
+        });
+
+        restartBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            startGame();
+        });
+
+        menuBtn.addEventListener('click', goToMenu);
+        menuBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            goToMenu();
+        });
+
+        startHighScore.textContent = `🏆 أعلى نقاط: ${highScore}`;
+        updateHUD();
+        (function idle() {
+            if (!gameRunning) {
+                draw();
+                requestAnimationFrame(idle);
+            }
+        })();
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            draw._stars = null;
+        });
+
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        console.log('🍉 Fruit Ninja - رسم محسن بشكل احترافي');
+        console.log('🎨 تفاصيل دقيقة لكل فاكهة مع أحجام متفاوتة');
+        console.log('💣 فتيل مشتعل للقنابل مع تأثيرات نارية');
+        console.log('صمم بواسطة TahatechPro2026');
+    })();
+</script>
+
+</body>
+</html>
