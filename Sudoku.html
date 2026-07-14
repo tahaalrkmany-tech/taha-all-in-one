@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سودوكو </title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #eef2f7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+        }
+        .container {
+            background: #ffffff;
+            padding: 24px 18px 20px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.05);
+            max-width: 640px;
+            width: 100%;
+            margin: 20px;
+            transition: all 0.2s;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            font-size: 2rem;
+            color: #1a202c;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        /* الإعدادات */
+        .settings {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            background: #f7fafc;
+            padding: 8px 16px;
+            border-radius: 40px;
+            margin-bottom: 16px;
+            gap: 8px 12px;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+        .setting-item select {
+            font-family: 'Tajawal', sans-serif;
+            padding: 4px 8px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            font-weight: 700;
+            color: #2d3748;
+            outline: none;
+            cursor: pointer;
+        }
+        .toggle-btn {
+            font-family: 'Tajawal', sans-serif;
+            padding: 4px 14px;
+            border: none;
+            border-radius: 30px;
+            background: #e2e8f0;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            min-width: 60px;
+        }
+        .toggle-btn.active {
+            background: #3182ce;
+            color: white;
+        }
+        .toggle-btn:active {
+            transform: scale(0.95);
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f7fafc;
+            padding: 8px 16px;
+            border-radius: 40px;
+            margin-bottom: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #errors { color: #e53e3e; }
+        #timer { font-feature-settings: "tnum"; }
+        #sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            aspect-ratio: 1/1;
+            gap: 1px;
+            background: #2d3748;
+            border: 4px solid #2d3748;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 18px;
+            user-select: none;
+        }
+        .cell {
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a202c;
+            cursor: pointer;
+            transition: background 0.1s, color 0.1s;
+            position: relative;
+        }
+        /* حدود المربعات 3x3 */
+        .cell:nth-child(3n) { border-left: 3px solid #2d3748; }
+        .cell:nth-child(9n) { border-left: none; }
+        .cell:nth-child(n+19):nth-child(-n+27) { border-bottom: 3px solid #2d3748; }
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid #2d3748; }
+
+        .cell.given { background: #e2e8f0; color: #1a202c; }
+        .cell.user { background: #ffffff; color: #2b6cb0; }
+        .cell.selected { background: #bee3f8 !important; box-shadow: inset 0 0 0 2px #3182ce; }
+        .cell.highlighted { background: #edf2f7; }
+        .cell.error { color: #e53e3e !important; background: #fff5f5 !important; }
+        .cell.hint-given { background: #f6e05e !important; color: #2d3748 !important; }
+        .cell.completed { background: #c6f6d5; color: #22543d; }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .numpad button {
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 10px 0;
+            border: none;
+            border-radius: 14px;
+            background: #edf2f7;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .numpad button:hover { background: #e2e8f0; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .numpad button:active { transform: translateY(0); box-shadow: none; }
+        .numpad .clear-btn { background: #fed7d7; color: #9b2c2c; }
+        .numpad .clear-btn:hover { background: #feb2b2; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+        .controls button {
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 40px;
+            background: #edf2f7;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex: 1 0 auto;
+            min-width: 70px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .controls button:hover { background: #e2e8f0; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .controls button:active { transform: translateY(0); }
+        .controls .primary { background: #3182ce; color: white; }
+        .controls .primary:hover { background: #2b6cb0; }
+        .controls .success { background: #38a169; color: white; }
+        .controls .success:hover { background: #2f855a; }
+        .controls .danger { background: #e53e3e; color: white; }
+        .controls .danger:hover { background: #c53030; }
+
+        .status {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4a5568;
+            min-height: 2.4rem;
+            padding: 6px;
+            border-radius: 20px;
+            background: #f7fafc;
+        }
+        .status.win { color: #22543d; background: #c6f6d5; }
+        .status.error-msg { color: #9b2c2c; background: #fed7d7; }
+
+        @media (max-width: 500px) {
+            .container { padding: 14px 10px; }
+            .cell { font-size: 1.2rem; }
+            .numpad button { font-size: 1.2rem; padding: 8px 0; }
+            .controls button { font-size: 0.85rem; padding: 10px 12px; min-width: 55px; }
+            .settings { font-size: 0.85rem; padding: 6px 12px; }
+            .toggle-btn { font-size: 0.8rem; padding: 3px 10px; min-width: 50px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧩 سودوكو</h1>
+
+    <!-- الإعدادات -->
+    <div class="settings">
+        <div class="setting-item">
+            <label for="difficulty">🎯 الصعوبة:</label>
+            <select id="difficulty">
+                <option value="easy">سهل</option>
+                <option value="medium" selected>متوسط</option>
+                <option value="hard">صعب</option>
+                <option value="expert">خبير</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <span>⏱️</span>
+            <button id="timer-toggle" class="toggle-btn active">تشغيل</button>
+        </div>
+        <div class="setting-item">
+            <span>🔊</span>
+            <button id="mute-toggle" class="toggle-btn active">مفعل</button>
+        </div>
+    </div>
+
+    <div class="info">
+        <span>⏱️ <span id="timer">00:00</span></span>
+        <span>❌ <span id="errors">0</span></span>
+        <span>💡 <span id="hints-left">3</span></span>
+    </div>
+
+    <div id="sudoku-grid"></div>
+
+    <div class="numpad" id="numpad">
+        <button data-num="1">1</button>
+        <button data-num="2">2</button>
+        <button data-num="3">3</button>
+        <button data-num="4">4</button>
+        <button data-num="5">5</button>
+        <button data-num="6">6</button>
+        <button data-num="7">7</button>
+        <button data-num="8">8</button>
+        <button data-num="9">9</button>
+        <button class="clear-btn" data-num="0">✕ مسح</button>
+    </div>
+
+    <div class="controls">
+        <button class="primary" id="check-btn">✅ تحقق</button>
+        <button class="success" id="hint-btn">💡 تلميح</button>
+        <button class="danger" id="reset-btn">🔄 إعادة</button>
+        <button class="primary" id="new-btn">🎲 جديدة</button>
+    </div>
+    <div class="status" id="status">مرحباً! اختر خلية وأدخل رقماً.</div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // --- عناصر DOM ---
+        const gridEl = document.getElementById('sudoku-grid');
+        const timerEl = document.getElementById('timer');
+        const errorsEl = document.getElementById('errors');
+        const hintsLeftEl = document.getElementById('hints-left');
+        const statusEl = document.getElementById('status');
+        const difficultySelect = document.getElementById('difficulty');
+        const timerToggleBtn = document.getElementById('timer-toggle');
+        const muteToggleBtn = document.getElementById('mute-toggle');
+
+        // --- حالة اللعبة ---
+        let puzzle = [];
+        let solution = [];
+        let userBoard = [];
+        let givenCells = [];
+
+        let selectedRow = -1;
+        let selectedCol = -1;
+        let errorCount = 0;
+        let hintsLeft = 3;
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let gameWon = false;
+
+        // --- إعدادات المستخدم ---
+        let isTimerOn = true;
+        let isMuted = false;
+
+        // --- الصوت (Web Audio) ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { /* ignor */ }
+            }
+        }
+
+        function playTone(freq, duration, type = 'sine', volume = 0.15) {
+            if (isMuted) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { /* ignor */ }
+        }
+
+        function playCorrect() { playTone(880, 0.12, 'sine', 0.12); }
+        function playWrong() { playTone(200, 0.3, 'sawtooth', 0.10); }
+        function playWarning() { playTone(300, 0.15, 'square', 0.08); }
+        function playWin() {
+            if (isMuted) return;
+            const notes = [523, 587, 659, 784, 880];
+            notes.forEach((freq, i) => {
+                setTimeout(() => playTone(freq, 0.15, 'sine', 0.10), i * 120);
+            });
+        }
+
+        // --- دوال مساعدة ---
+        function cloneBoard(board) { return board.map(row => [...row]); }
+
+        function isValidPlacement(board, row, col, num) {
+            for (let c = 0; c < 9; c++) {
+                if (c === col) continue;
+                if (board[row][c] === num) return false;
+            }
+            for (let r = 0; r < 9; r++) {
+                if (r === row) continue;
+                if (board[r][col] === num) return false;
+            }
+            const startRow = Math.floor(row / 3) * 3;
+            const startCol = Math.floor(col / 3) * 3;
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    if (r === row && c === col) continue;
+                    if (board[r][c] === num) return false;
+                }
+            }
+            return true;
+        }
+
+        function solveSudoku(board) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (board[r][c] === 0) {
+                        for (let num = 1; num <= 9; num++) {
+                            if (isValidPlacement(board, r, c, num)) {
+                                board[r][c] = num;
+                                if (solveSudoku(board)) return true;
+                                board[r][c] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // توليد لغز مع عدد محدد من الخلايا المحذوفة
+        function generatePuzzle(cellsToRemove) {
+            const base = [
+                [5,3,4,6,7,8,9,1,2],
+                [6,7,2,1,9,5,3,4,8],
+                [1,9,8,3,4,2,5,6,7],
+                [8,5,9,7,6,1,4,2,3],
+                [4,2,6,8,5,3,7,9,1],
+                [7,1,3,9,2,4,8,5,6],
+                [9,6,1,5,3,7,2,8,4],
+                [2,8,7,4,1,9,6,3,5],
+                [3,4,5,2,8,6,1,7,9]
+            ];
+            let board = cloneBoard(base);
+
+            // تبديل الأرقام
+            const nums = [1,2,3,4,5,6,7,8,9];
+            shuffleArray(nums);
+            const map = {};
+            for (let i = 0; i < 9; i++) map[i+1] = nums[i];
+            for (let r = 0; r < 9; r++)
+                for (let c = 0; c < 9; c++)
+                    board[r][c] = map[board[r][c]];
+
+            // تبديل الصفوف داخل الكتل
+            for (let block = 0; block < 3; block++) {
+                const rows = [block*3, block*3+1, block*3+2];
+                shuffleArray(rows);
+                const newRows = rows.map(i => board[i]);
+                for (let i = 0; i < 3; i++) board[block*3+i] = newRows[i];
+            }
+            // تبديل الأعمدة داخل الكتل
+            for (let block = 0; block < 3; block++) {
+                const cols = [block*3, block*3+1, block*3+2];
+                shuffleArray(cols);
+                const newCols = cols.map(i => board.map(row => row[i]));
+                for (let i = 0; i < 3; i++)
+                    for (let r = 0; r < 9; r++)
+                        board[r][block*3+i] = newCols[i][r];
+            }
+            // تبديل الكتل (صفوف)
+            const blockRows = [0,1,2];
+            shuffleArray(blockRows);
+            const newBlockRows = blockRows.map(b => board.slice(b*3, b*3+3));
+            for (let i = 0; i < 3; i++)
+                for (let r = 0; r < 3; r++)
+                    board[i*3+r] = newBlockRows[i][r];
+
+            // تبديل الكتل (أعمدة)
+            const blockCols = [0,1,2];
+            shuffleArray(blockCols);
+            const newBlockCols = blockCols.map(b => board.map(row => row.slice(b*3, b*3+3)));
+            for (let i = 0; i < 3; i++)
+                for (let r = 0; r < 9; r++)
+                    for (let c = 0; c < 3; c++)
+                        board[r][i*3+c] = newBlockCols[i][r][c];
+
+            const fullSolution = cloneBoard(board);
+
+            // حذف الخلايا
+            const cells = [];
+            for (let r = 0; r < 9; r++)
+                for (let c = 0; c < 9; c++)
+                    cells.push([r, c]);
+            shuffleArray(cells);
+            const removeCount = Math.min(cellsToRemove, 81);
+            for (let i = 0; i < removeCount; i++) {
+                const [r, c] = cells[i];
+                board[r][c] = 0;
+            }
+            return { puzzle: board, solution: fullSolution };
+        }
+
+        function getCellsToRemove(difficulty) {
+            switch(difficulty) {
+                case 'easy': return 30;
+                case 'medium': return 36;
+                case 'hard': return 42;
+                case 'expert': return 48;
+                default: return 36;
+            }
+        }
+
+        // --- العرض ---
+        function renderGrid() {
+            gridEl.innerHTML = '';
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    const val = userBoard[r][c];
+                    if (val !== 0) {
+                        cell.textContent = val;
+                        if (givenCells[r][c]) cell.classList.add('given');
+                        else cell.classList.add('user');
+                    }
+                    if (!givenCells[r][c] && val !== 0 && !isValidPlacement(userBoard, r, c, val)) {
+                        cell.classList.add('error');
+                    }
+                    if (r === selectedRow && c === selectedCol) cell.classList.add('selected');
+                    if (selectedRow !== -1 && selectedCol !== -1) {
+                        if (r === selectedRow || c === selectedCol ||
+                            (Math.floor(r/3) === Math.floor(selectedRow/3) &&
+                             Math.floor(c/3) === Math.floor(selectedCol/3))) {
+                            if (!(r === selectedRow && c === selectedCol))
+                                cell.classList.add('highlighted');
+                        }
+                    }
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function updateGrid() {
+            const cells = gridEl.children;
+            for (let i = 0; i < cells.length; i++) {
+                const cell = cells[i];
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                const val = userBoard[r][c];
+                cell.textContent = val !== 0 ? val : '';
+                cell.className = 'cell';
+                if (givenCells[r][c]) {
+                    cell.classList.add('given');
+                } else if (val !== 0) {
+                    cell.classList.add('user');
+                }
+                if (!givenCells[r][c] && val !== 0 && !isValidPlacement(userBoard, r, c, val)) {
+                    cell.classList.add('error');
+                }
+                if (r === selectedRow && c === selectedCol) {
+                    cell.classList.add('selected');
+                }
+                if (selectedRow !== -1 && selectedCol !== -1) {
+                    if (r === selectedRow || c === selectedCol ||
+                        (Math.floor(r/3) === Math.floor(selectedRow/3) &&
+                         Math.floor(c/3) === Math.floor(selectedCol/3))) {
+                        if (!(r === selectedRow && c === selectedCol))
+                            cell.classList.add('highlighted');
+                    }
+                }
+            }
+        }
+
+        // --- اختيار الخلية ---
+        function selectCell(row, col) {
+            if (gameWon) return;
+            if (row < 0 || row > 8 || col < 0 || col > 8) return;
+            selectedRow = row;
+            selectedCol = col;
+            updateGrid();
+            updateStatus('');
+        }
+
+        // --- إدخال رقم ---
+        function inputNumber(num) {
+            if (gameWon) {
+                updateStatus('🎉 لقد فزت بالفعل! ابدأ لعبة جديدة.', 'win');
+                return;
+            }
+            if (selectedRow === -1 || selectedCol === -1) {
+                updateStatus('⚠️ اختر خلية أولاً.', 'error-msg');
+                playWarning();
+                return;
+            }
+            const r = selectedRow, c = selectedCol;
+            if (givenCells[r][c]) {
+                updateStatus('❌ هذه الخلية معطاة ولا يمكن تعديلها.', 'error-msg');
+                playWarning();
+                return;
+            }
+
+            if (num === 0) {
+                userBoard[r][c] = 0;
+                updateGrid();
+                updateStatus('');
+                checkWinCondition();
+                return;
+            }
+
+            const oldVal = userBoard[r][c];
+            userBoard[r][c] = num;
+            const valid = isValidPlacement(userBoard, r, c, num);
+            if (!valid) {
+                userBoard[r][c] = oldVal;
+                errorCount++;
+                errorsEl.textContent = errorCount;
+                updateStatus(`❌ الرقم ${num} غير صحيح في هذا المكان.`, 'error-msg');
+                playWrong();
+                const cell = gridEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (cell) {
+                    cell.classList.add('error');
+                    setTimeout(() => cell.classList.remove('error'), 600);
+                }
+                return;
+            }
+
+            // صحيح
+            userBoard[r][c] = num;
+            updateGrid();
+            updateStatus(`✅ تم إدخال ${num}.`);
+            playCorrect();
+            checkWinCondition();
+        }
+
+        // --- الفوز ---
+        function checkWinCondition() {
+            if (gameWon) return;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (userBoard[r][c] === 0) return;
+                    if (!isValidPlacement(userBoard, r, c, userBoard[r][c])) return;
+                }
+            }
+            gameWon = true;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            updateStatus('🎉 تهانينا! لقد أكملت اللغز بنجاح! 🎉', 'win');
+            playWin();
+        }
+
+        // --- التلميح ---
+        function giveHint() {
+            if (gameWon) {
+                updateStatus('🎉 لقد فزت بالفعل!', 'win');
+                return;
+            }
+            if (hintsLeft <= 0) {
+                updateStatus('💡 لا توجد تلميحات متبقية.', 'error-msg');
+                playWarning();
+                return;
+            }
+            let found = false;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (givenCells[r][c]) continue;
+                    const val = userBoard[r][c];
+                    if (val === 0 || !isValidPlacement(userBoard, r, c, val)) {
+                        userBoard[r][c] = solution[r][c];
+                        hintsLeft--;
+                        hintsLeftEl.textContent = hintsLeft;
+                        found = true;
+                        selectedRow = r;
+                        selectedCol = c;
+                        updateGrid();
+                        updateStatus(`💡 تم تلميح الخلية (${r+1}, ${c+1})`);
+                        playCorrect();
+                        checkWinCondition();
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            if (!found) {
+                updateStatus('✅ جميع الخلايا صحيحة!', 'win');
+                checkWinCondition();
+            }
+        }
+
+        // --- إعادة تعيين ---
+        function resetGame() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            timerSeconds = 0;
+            timerEl.textContent = isTimerOn ? '00:00' : '--:--';
+            errorCount = 0;
+            errorsEl.textContent = '0';
+            hintsLeft = 3;
+            hintsLeftEl.textContent = '3';
+            gameWon = false;
+            selectedRow = -1;
+            selectedCol = -1;
+
+            userBoard = cloneBoard(puzzle);
+            givenCells = puzzle.map(row => row.map(val => val !== 0));
+            renderGrid();
+            updateStatus('🔄 تم إعادة تعيين اللغز.');
+            if (isTimerOn) startTimer();
+            else { timerEl.textContent = '--:--'; }
+        }
+
+        // --- لعبة جديدة ---
+        function newGame() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            timerSeconds = 0;
+            timerEl.textContent = isTimerOn ? '00:00' : '--:--';
+            errorCount = 0;
+            errorsEl.textContent = '0';
+            hintsLeft = 3;
+            hintsLeftEl.textContent = '3';
+            gameWon = false;
+            selectedRow = -1;
+            selectedCol = -1;
+
+            const difficulty = difficultySelect.value;
+            const cellsToRemove = getCellsToRemove(difficulty);
+            const generated = generatePuzzle(cellsToRemove);
+            puzzle = generated.puzzle;
+            solution = generated.solution;
+            userBoard = cloneBoard(puzzle);
+            givenCells = puzzle.map(row => row.map(val => val !== 0));
+            renderGrid();
+            updateStatus('🎲 لغز جديد! حظاً موفقاً.');
+            if (isTimerOn) startTimer();
+            else { timerEl.textContent = '--:--'; }
+        }
+
+        // --- المؤقت ---
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (!isTimerOn) {
+                timerEl.textContent = '--:--';
+                return;
+            }
+            timerSeconds = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+                const secs = String(timerSeconds % 60).padStart(2, '0');
+                timerEl.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // --- التحقق من الحل ---
+        function checkSolution() {
+            if (gameWon) {
+                updateStatus('🎉 الحل صحيح بالفعل!', 'win');
+                return;
+            }
+            let allCorrect = true;
+            let hasEmpty = false;
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const val = userBoard[r][c];
+                    if (val === 0) { hasEmpty = true; continue; }
+                    if (!isValidPlacement(userBoard, r, c, val)) {
+                        allCorrect = false;
+                        const cell = gridEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (cell) {
+                            cell.classList.add('error');
+                            setTimeout(() => cell.classList.remove('error'), 800);
+                        }
+                    }
+                }
+            }
+            if (allCorrect && !hasEmpty) {
+                gameWon = true;
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                updateStatus('🎉 تهانينا! جميع الإدخالات صحيحة! 🎉', 'win');
+                playWin();
+            } else if (allCorrect && hasEmpty) {
+                updateStatus('✅ جميع الإدخالات صحيحة حتى الآن، لكن تبقى خلايا فارغة.', '');
+                playCorrect();
+            } else {
+                updateStatus('❌ هناك بعض الأخطاء في الإدخالات (تم تمييزها باللون الأحمر).', 'error-msg');
+                playWrong();
+            }
+        }
+
+        // --- تحديث حالة الأزرار ---
+        function updateTimerUI() {
+            if (isTimerOn) {
+                timerToggleBtn.textContent = 'تشغيل';
+                timerToggleBtn.classList.add('active');
+                if (!gameWon) startTimer();
+            } else {
+                timerToggleBtn.textContent = 'إيقاف';
+                timerToggleBtn.classList.remove('active');
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                timerEl.textContent = '--:--';
+            }
+        }
+
+        function updateMuteUI() {
+            if (isMuted) {
+                muteToggleBtn.textContent = 'كتم';
+                muteToggleBtn.classList.remove('active');
+            } else {
+                muteToggleBtn.textContent = 'مفعل';
+                muteToggleBtn.classList.add('active');
+            }
+        }
+
+        function updateStatus(msg, type = '') {
+            statusEl.textContent = msg;
+            statusEl.className = 'status' + (type ? ' ' + type : '');
+        }
+
+        // --- تهيئة الأحداث ---
+        function init() {
+            // إنشاء لغز أولي
+            const initialDifficulty = difficultySelect.value;
+            const cellsToRemove = getCellsToRemove(initialDifficulty);
+            const generated = generatePuzzle(cellsToRemove);
+            puzzle = generated.puzzle;
+            solution = generated.solution;
+            userBoard = cloneBoard(puzzle);
+            givenCells = puzzle.map(row => row.map(val => val !== 0));
+            renderGrid();
+            if (isTimerOn) startTimer();
+            else timerEl.textContent = '--:--';
+
+            // أحداث الخلايا
+            gridEl.addEventListener('click', (e) => {
+                const cell = e.target.closest('.cell');
+                if (!cell) return;
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                selectCell(row, col);
+            });
+
+            // لوحة الأرقام
+            document.getElementById('numpad').addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const num = parseInt(btn.dataset.num);
+                if (!isNaN(num)) inputNumber(num);
+            });
+
+            // أزرار التحكم
+            document.getElementById('check-btn').addEventListener('click', checkSolution);
+            document.getElementById('hint-btn').addEventListener('click', giveHint);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('new-btn').addEventListener('click', newGame);
+
+            // تبديل المؤقت
+            timerToggleBtn.addEventListener('click', function() {
+                isTimerOn = !isTimerOn;
+                updateTimerUI();
+                if (isTimerOn && !gameWon) startTimer();
+            });
+
+            // كتم الصوت
+            muteToggleBtn.addEventListener('click', function() {
+                isMuted = !isMuted;
+                updateMuteUI();
+            });
+
+            // تغيير الصعوبة - لا يؤثر حتى ضغط "جديدة"
+            difficultySelect.addEventListener('change', function() {
+                // مجرد تحديث النص
+                updateStatus(`تم اختيار الصعوبة: ${this.options[this.selectedIndex].text}`);
+            });
+
+            // دعم لوحة المفاتيح
+            document.addEventListener('keydown', (e) => {
+                if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key));
+                else if (e.key === 'Backspace' || e.key === 'Delete') inputNumber(0);
+                else if (e.key === 'h' || e.key === 'H') giveHint();
+                else if (e.key === 'r' || e.key === 'R') resetGame();
+                else if (e.key === 'n' || e.key === 'N') newGame();
+            });
+
+            updateStatus('مرحباً! اختر خلية وأدخل رقماً.');
+            updateTimerUI();
+            updateMuteUI();
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
