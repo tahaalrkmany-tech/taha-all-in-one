@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>حارة الشام - لعبة المنصات الشامية</title>
+<style>
+  /* نفس الستايل السابق مع إضافة زر التخصيص */
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: 'Noto Naskh Arabic', 'Segoe UI', Tahoma, sans-serif;
+    background: #0d1117;
+    color: #e6e6e6;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background: #1a0f0a;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  #ui-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    gap: 8px;
+  }
+
+  .ui-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+    white-space: nowrap;
+  }
+
+  .ui-stat .icon { font-size: 16px; }
+  .gold { color: #ffd700; }
+  .health { color: #e74c3c; }
+  .score { color: #3498db; }
+  .distance { color: #2ecc71; }
+
+  #shop-btn {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #8B4513, #A0522D);
+    border: 2px solid #DAA520;
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: all;
+    transition: all 0.2s;
+    z-index: 11;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  #shop-btn:hover, #shop-btn:active { 
+    background: linear-gradient(135deg, #A0522D, #CD853F); 
+    transform: translateX(-50%) scale(1.05);
+  }
+
+  /* ===== زر التخصيص ===== */
+  #customize-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: linear-gradient(135deg, #2c3e6b, #2980b9);
+    border: 2px solid #5dade2;
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: all;
+    transition: all 0.2s;
+    z-index: 11;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  #customize-btn:hover, #customize-btn:active {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    transform: scale(1.05);
+  }
+
+  #message-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.82);
+    z-index: 20;
+    text-align: center;
+    padding: 20px;
+  }
+
+  #message-overlay h1 {
+    font-size: clamp(24px, 6vw, 42px);
+    color: #DAA520;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(218,165,32,0.5);
+  }
+
+  #message-overlay p {
+    font-size: clamp(14px, 3.5vw, 18px);
+    color: #ccc;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .big-btn {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    border: none;
+    color: #fff;
+    padding: 12px 32px;
+    border-radius: 28px;
+    font-family: inherit;
+    font-size: clamp(14px, 4vw, 18px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 4px;
+    box-shadow: 0 4px 15px rgba(192,57,43,0.4);
+    pointer-events: all;
+  }
+  .big-btn:hover, .big-btn:active { transform: scale(1.05); box-shadow: 0 6px 20px rgba(192,57,43,0.6); }
+  .big-btn.green { background: linear-gradient(135deg, #27ae60, #2ecc71); box-shadow: 0 4px 15px rgba(39,174,96,0.4); }
+  .big-btn.gold { background: linear-gradient(135deg, #B8860B, #DAA520); box-shadow: 0 4px 15px rgba(218,165,32,0.4); }
+
+  /* Touch Controls */
+  #touch-controls {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 12px 16px 20px;
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  .touch-group {
+    display: flex;
+    gap: 10px;
+    pointer-events: all;
+  }
+
+  .touch-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    backdrop-filter: blur(4px);
+    transition: background 0.1s, transform 0.1s;
+  }
+  .touch-btn:active {
+    background: rgba(255,255,255,0.3);
+    transform: scale(0.92);
+  }
+  .touch-btn.attack-btn {
+    width: 72px; height: 72px;
+    background: rgba(192,57,43,0.25);
+    border-color: rgba(231,76,60,0.5);
+    font-size: 28px;
+  }
+  .touch-btn.attack-btn:active {
+    background: rgba(192,57,43,0.5);
+  }
+
+  /* Shop Modal */
+  #shop-modal {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 6, 4, 0.94);
+    z-index: 30;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+    overflow-y: auto;
+    pointer-events: all;
+  }
+
+  #shop-modal.active { display: flex; }
+
+  #shop-modal h2 {
+    font-size: clamp(20px, 5vw, 28px);
+    color: #DAA520;
+    margin-bottom: 6px;
+    text-shadow: 0 0 15px rgba(218,165,32,0.4);
+  }
+
+  #shop-modal .gold-display {
+    font-size: clamp(14px, 3.5vw, 18px);
+    color: #ffd700;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  @media (min-width: 600px) {
+    .shop-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .shop-item {
+    background: linear-gradient(135deg, #1e1410, #2a1a10);
+    border: 2px solid #5c3d2e;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    pointer-events: all;
+  }
+  .shop-item:hover, .shop-item:active { border-color: #DAA520; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(218,165,32,0.2); }
+  .shop-item.purchased { border-color: #27ae60; opacity: 0.7; }
+  .shop-item.purchased:hover { transform: none; }
+
+  .shop-item .item-icon { font-size: 28px; margin-bottom: 4px; }
+  .shop-item .item-name { font-size: 13px; font-weight: 700; color: #e6e6e6; margin-bottom: 2px; }
+  .shop-item .item-desc { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .shop-item .item-price { font-size: 13px; color: #ffd700; font-weight: 700; }
+  .shop-item .item-price.owned { color: #27ae60; }
+
+  .close-shop {
+    margin-top: 16px;
+    background: #c0392b;
+    border: none;
+    color: #fff;
+    padding: 10px 28px;
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: all;
+  }
+
+  /* ===== نافذة تخصيص المظهر ===== */
+  #customize-modal {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 6, 4, 0.95);
+    z-index: 35;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+    overflow-y: auto;
+    pointer-events: all;
+  }
+  #customize-modal.active { display: flex; }
+  #customize-modal h2 {
+    font-size: clamp(20px, 5vw, 28px);
+    color: #DAA520;
+    margin-bottom: 6px;
+    text-shadow: 0 0 15px rgba(218,165,32,0.4);
+  }
+  #customize-modal .customize-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
+  }
+  #customize-modal .preview-area {
+    background: rgba(0,0,0,0.4);
+    border-radius: 16px;
+    padding: 10px;
+    width: 200px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #5c3d2e;
+    flex-shrink: 0;
+  }
+  #customize-modal .preview-area canvas {
+    width: 180px;
+    height: 220px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  #customize-modal .options-area {
+    flex: 1;
+    min-width: 250px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #5c3d2e;
+  }
+  #customize-modal .option-group {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #3d2b1f;
+    padding-bottom: 10px;
+  }
+  #customize-modal .option-group:last-child { border-bottom: none; margin-bottom: 0; }
+  #customize-modal .option-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #DAA520;
+    margin-bottom: 4px;
+  }
+  #customize-modal .option-group .options-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #customize-modal .option-btn {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid #5c3d2e;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    pointer-events: all;
+  }
+  #customize-modal .option-btn:hover { border-color: #DAA520; background: rgba(255,215,0,0.1); }
+  #customize-modal .option-btn.selected { border-color: #DAA520; background: rgba(255,215,0,0.2); color: #ffd700; }
+  #customize-modal .option-btn.purchased { border-color: #27ae60; opacity: 0.7; }
+  #customize-modal .option-btn.purchased:hover { border-color: #27ae60; background: rgba(39,174,96,0.1); }
+  #customize-modal .option-btn .price-tag { font-size: 10px; color: #ffd700; margin-right: 4px; }
+  #customize-modal .close-shop { margin-top: 16px; }
+
+  .powerup-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 50%;
+  }
+  .powerup-badge {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid #DAA520;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #DAA520;
+    font-weight: 700;
+    backdrop-filter: blur(2px);
+  }
+
+  #footer {
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    z-index: 5;
+    pointer-events: none;
+    font-family: 'Noto Naskh Arabic', sans-serif;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  #footer span {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 10px;
+    border-radius: 10px;
+    backdrop-filter: blur(2px);
+  }
+
+  #desktop-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    z-index: 10;
+    pointer-events: none;
+    text-align: center;
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) { #desktop-hint { display: block; } }
+  @media (max-width: 768px) {
+    #touch-controls { display: flex; }
+    #desktop-hint { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="ui-overlay">
+    <div class="ui-stat health"><span class="icon">❤️</span> <span id="lives-display">3</span></div>
+    <div class="ui-stat gold"><span class="icon">🪙</span> <span id="gold-display">0</span></div>
+    <div class="ui-stat score"><span class="icon">⭐</span> <span id="score-display">0</span></div>
+    <div class="ui-stat distance"><span class="icon">📍</span> <span id="dist-display">0</span>م</div>
+  </div>
+
+  <button id="shop-btn">🛒 المتجر</button>
+  <button id="customize-btn">🪞 تخصيص</button>
+
+  <div class="powerup-indicator" id="powerups"></div>
+
+  <div id="message-overlay">
+    <h1>🕌 حارة الشام</h1>
+    <p>انطلق في رحلة لا نهائية عبر الحارات الدمشقية القديمة!<br>اجمع الليرات الذهبية واهزم الأعداء</p>
+    <button class="big-btn" id="start-btn">▶️ ابدأ المغامرة</button>
+  </div>
+
+  <div id="shop-modal">
+    <h2>🛒 سوق الحارة</h2>
+    <div class="gold-display">🪙 لديك: <span id="shop-gold">0</span> ليرة</div>
+    <div class="shop-grid" id="shop-items"></div>
+    <button class="close-shop" id="close-shop">❌ إغلاق</button>
+  </div>
+
+  <!-- ===== نافذة تخصيص المظهر ===== -->
+  <div id="customize-modal">
+    <h2>🪞 تخصيص المظهر</h2>
+    <div class="customize-container">
+      <div class="preview-area">
+        <canvas id="previewCanvas" width="180" height="220"></canvas>
+      </div>
+      <div class="options-area" id="customize-options"></div>
+    </div>
+    <button class="close-shop" id="close-customize">❌ إغلاق</button>
+  </div>
+
+  <!-- ===== أزرار التحكم اللمسية (ترتيب نهائي) ===== -->
+  <div id="touch-controls">
+    <div class="touch-group">
+      <div class="touch-btn" id="t-jump">⬆️</div>
+      <div class="touch-btn attack-btn" id="t-attack">⚔️</div>
+    </div>
+    <div class="touch-group">
+      <div class="touch-btn" id="t-right">➡️</div>
+      <div class="touch-btn" id="t-left">⬅️</div>
+    </div>
+  </div>
+
+  <div id="desktop-hint">A/D أو الأسهم للحركة | W/مسافة للقفز | X/K للهجوم</div>
+  <div id="footer"><span>🛠 صنع بواسطة Tahatech2026</span></div>
+
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ==================== تهيئة الـ Canvas ====================
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+  let GROUND_Y = Math.floor(H * 0.68);
+
+  function resizeCanvas() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+    GROUND_Y = Math.floor(H * 0.68);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // ==================== نظام الصوت ====================
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playTone(freq, duration, type = 'sine', volume = 0.3) {
+    try {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) { /* silent */ }
+  }
+  function playJumpSound() { playTone(300,0.15,'sine',0.2); setTimeout(()=>playTone(500,0.1,'sine',0.15),80); }
+  function playCoinSound() { playTone(800,0.08,'sine',0.2); setTimeout(()=>playTone(1000,0.08,'sine',0.2),100); }
+  function playAttackSound() { playTone(200,0.1,'square',0.15); setTimeout(()=>playTone(150,0.1,'square',0.1),50); }
+  function playHitSound() { playTone(120,0.15,'sawtooth',0.25); }
+  function playShieldSound() { playTone(600,0.2,'sine',0.2); setTimeout(()=>playTone(900,0.15,'sine',0.15),100); }
+  function playGameOverSound() { playTone(400,0.3,'sine',0.3); setTimeout(()=>playTone(300,0.3,'sine',0.25),250); setTimeout(()=>playTone(200,0.5,'sine',0.2),500); }
+
+  // ==================== نظام الحفظ ====================
+  function saveGame() {
+    try {
+      const data = {
+        gold, score, lives, distance,
+        powerups,
+        shopItems: shopItems.map(item => ({ id: item.id, purchased: item.purchased })),
+        customization: customization
+      };
+      localStorage.setItem('haratAlShamSave', JSON.stringify(data));
+    } catch(e) { /* ignore */ }
+  }
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem('haratAlShamSave');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data.gold !== undefined) gold = data.gold;
+      if (data.score !== undefined) score = data.score;
+      if (data.lives !== undefined) lives = data.lives;
+      if (data.distance !== undefined) distance = data.distance;
+      if (data.powerups) {
+        for (let key in data.powerups) if (powerups.hasOwnProperty(key)) powerups[key] = data.powerups[key];
+      }
+      if (data.shopItems) {
+        data.shopItems.forEach(saved => {
+          const item = shopItems.find(i => i.id === saved.id);
+          if (item) item.purchased = saved.purchased;
+        });
+      }
+      if (data.customization) {
+        for (let key in data.customization) {
+          if (customization.hasOwnProperty(key)) {
+            const savedCat = data.customization[key];
+            if (savedCat) {
+              customization[key].options.forEach(opt => {
+                const savedOpt = savedCat.options.find(o => o.id === opt.id);
+                if (savedOpt) opt.purchased = savedOpt.purchased;
+              });
+              if (savedCat.selected) {
+                customization[key].selected = savedCat.selected;
+              }
+            }
+          }
+        }
+      }
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // ==================== نظام الوقت ====================
+  let timeOfDay = 0, timeTransition = 0;
+  function updateTimeOfDay() {
+    const cycleLength = 500;
+    const phase = (distance % (cycleLength * 2)) / cycleLength;
+    if (phase < 1) { timeOfDay = 0; timeTransition = phase; }
+    else { timeOfDay = 1; timeTransition = phase - 1; }
+  }
+
+  // ==================== غيمة الكلام والعبارات ====================
+  let speechBubble = { text: '', timer: 0, active: false, expression: 'neutral', cooldown: 0 };
+  function showSpeech(text, expression, duration = 1500) {
+    if (speechBubble.cooldown > 0) return;
+    speechBubble.text = text;
+    speechBubble.expression = expression;
+    speechBubble.timer = duration;
+    speechBubble.active = true;
+    speechBubble.cooldown = duration + 500;
+  }
+  function updateSpeech() {
+    if (speechBubble.timer > 0) speechBubble.timer -= 16;
+    else { speechBubble.active = false; speechBubble.expression = 'neutral'; }
+    if (speechBubble.cooldown > 0) speechBubble.cooldown -= 16;
+  }
+
+  // ==================== تعبيرات الوجه ====================
+  function drawFacialExpression(headX, headY, lookDir, expression) {
+    const eyeSpread = 5, eyeY = headY - 1;
+    switch(expression) {
+      case 'happy':
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread, eyeY, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread, eyeY, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#2c1810';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread+lookDir*2, eyeY, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread+lookDir*2, eyeY, 2, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#3d2818'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(headX-eyeSpread-4, eyeY-5); ctx.lineTo(headX-eyeSpread+2, eyeY-7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(headX+eyeSpread+4, eyeY-5); ctx.lineTo(headX+eyeSpread-2, eyeY-7); ctx.stroke();
+        ctx.strokeStyle = '#8b5a4a'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(headX, eyeY+9, 4, 0.1, Math.PI-0.1); ctx.stroke();
+        break;
+      case 'angry':
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread, eyeY, 5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread, eyeY, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#2c1810';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread+lookDir, eyeY, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread+lookDir, eyeY, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#3d2818'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(headX-eyeSpread-3, eyeY-2); ctx.lineTo(headX-eyeSpread+2, eyeY-5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(headX+eyeSpread+3, eyeY-2); ctx.lineTo(headX+eyeSpread-2, eyeY-5); ctx.stroke();
+        ctx.fillStyle = '#8b5a4a';
+        ctx.beginPath(); ctx.arc(headX, eyeY+10, 4, 0, Math.PI); ctx.fill();
+        break;
+      case 'sarcastic':
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread, eyeY, 3.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#d4a373';
+        ctx.beginPath(); ctx.arc(headX+eyeSpread, eyeY, 3.5, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = '#2c1810';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread+lookDir*2, eyeY, 2, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#8b5a4a'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(headX+3, eyeY+8, 3, 0.3, Math.PI-0.3); ctx.stroke();
+        ctx.strokeStyle = '#3d2818'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(headX-eyeSpread-3, eyeY-6); ctx.lineTo(headX-eyeSpread+2, eyeY-8); ctx.stroke();
+        break;
+      default:
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread, eyeY, 3.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread, eyeY, 3.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#2c1810';
+        ctx.beginPath(); ctx.arc(headX-eyeSpread+lookDir*2, eyeY, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX+eyeSpread+lookDir*2, eyeY, 2, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#3d2818'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(headX-eyeSpread-3, eyeY-4); ctx.lineTo(headX-eyeSpread+2, eyeY-6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(headX+eyeSpread+3, eyeY-4); ctx.lineTo(headX+eyeSpread-2, eyeY-6); ctx.stroke();
+        ctx.strokeStyle = '#8b5a4a'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(headX, eyeY+8, 3, 0.1, Math.PI-0.1); ctx.stroke();
+    }
+  }
+
+  // ==================== رسم غيمة الكلام ====================
+  function drawSpeechBubble() {
+    if (!speechBubble.active) return;
+    const sx = player.x - cameraX + player.w/2;
+    const sy = player.y - 40;
+    const textWidth = speechBubble.text.length * 8 + 20;
+    const textHeight = 28;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath();
+    // استخدام roundRect مع fallback
+    const rx = sx - textWidth/2, ry = sy - textHeight/2, rw = textWidth, rh = textHeight, radius = 10;
+    ctx.moveTo(rx + radius, ry);
+    ctx.lineTo(rx + rw - radius, ry);
+    ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + radius);
+    ctx.lineTo(rx + rw, ry + rh - radius);
+    ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - radius, ry + rh);
+    ctx.lineTo(rx + radius, ry + rh);
+    ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - radius);
+    ctx.lineTo(rx, ry + radius);
+    ctx.quadraticCurveTo(rx, ry, rx + radius, ry);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath();
+    ctx.moveTo(sx-6, sy+textHeight/2-2);
+    ctx.lineTo(sx+6, sy+textHeight/2-2);
+    ctx.lineTo(sx, sy+textHeight/2+6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#2c1810';
+    ctx.font = 'bold 13px "Noto Naskh Arabic", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(speechBubble.text, sx, sy+1);
+    ctx.restore();
+  }
+
+  // ==================== نظام التخصيص ====================
+  let customization = {
+    tarboosh: {
+      options: [
+        { id: 'red', label: 'أحمر', price: 30, purchased: true, color: '#e74c3c' },
+        { id: 'green', label: 'أخضر', price: 30, purchased: false, color: '#27ae60' },
+        { id: 'blue', label: 'أزرق', price: 30, purchased: false, color: '#2980b9' },
+        { id: 'black', label: 'أسود', price: 30, purchased: false, color: '#2c3e50' }
+      ],
+      selected: 'red'
+    },
+    robe: {
+      options: [
+        { id: 'beige', label: 'بيج', price: 40, purchased: true, color: '#e8d5b5' },
+        { id: 'white', label: 'أبيض', price: 40, purchased: false, color: '#f5f0e8' },
+        { id: 'gray', label: 'رمادي', price: 40, purchased: false, color: '#95a5a6' },
+        { id: 'navy', label: 'كحلي', price: 40, purchased: false, color: '#2c3e6b' }
+      ],
+      selected: 'beige'
+    },
+    belt: {
+      options: [
+        { id: 'brown', label: 'بني', price: 20, purchased: true, color: '#8B4513' },
+        { id: 'black', label: 'أسود', price: 20, purchased: false, color: '#1a1a1a' },
+        { id: 'red', label: 'أحمر', price: 20, purchased: false, color: '#c0392b' },
+        { id: 'gold', label: 'ذهبي', price: 20, purchased: false, color: '#DAA520' }
+      ],
+      selected: 'brown'
+    },
+    mustache: {
+      options: [
+        { id: 'light', label: 'خفيف', price: 15, purchased: true },
+        { id: 'thick', label: 'كثيف', price: 15, purchased: false },
+        { id: 'curved', label: 'مقوس', price: 15, purchased: false },
+        { id: 'none', label: 'بدون', price: 15, purchased: false }
+      ],
+      selected: 'light'
+    },
+    sword: {
+      options: [
+        { id: 'damascus', label: 'دمشقي', price: 50, purchased: true },
+        { id: 'ottoman', label: 'عثماني', price: 50, purchased: false },
+        { id: 'persian', label: 'فارسي', price: 50, purchased: false },
+        { id: 'none', label: 'بدون', price: 0, purchased: false }
+      ],
+      selected: 'damascus'
+    },
+    turban: {
+      options: [
+        { id: 'none', label: 'بدون', price: 0, purchased: true },
+        { id: 'white', label: 'أبيض', price: 30, purchased: false },
+        { id: 'red', label: 'أحمر', price: 30, purchased: false },
+        { id: 'striped', label: 'مخطط', price: 35, purchased: false }
+      ],
+      selected: 'none'
+    }
+  };
+
+  function getSelectedOption(category) {
+    const cat = customization[category];
+    return cat.options.find(o => o.id === cat.selected);
+  }
+
+  function purchaseOption(category, optionId) {
+    const cat = customization[category];
+    const opt = cat.options.find(o => o.id === optionId);
+    if (!opt || opt.purchased) return false;
+    const price = opt.price;
+    if (gold < price) return false;
+    gold -= price;
+    opt.purchased = true;
+    cat.selected = optionId;
+    updateUI();
+    saveGame();
+    renderPreview();
+    return true;
+  }
+
+  function selectOption(category, optionId) {
+    const cat = customization[category];
+    if (!cat.options.find(o => o.id === optionId)) return;
+    cat.selected = optionId;
+    renderPreview();
+  }
+
+  // ==================== رسم الشخصية مع التخصيص ====================
+  function drawPlayerWithCustomization(sx, sy, facing, previewMode = false) {
+    const w = 32, h = 48;
+    ctx.save();
+
+    if (!previewMode && player.invincible > 0 && Math.floor(frame / 4) % 2 === 0) {
+      ctx.globalAlpha = 0.4;
+    }
+
+    if (!previewMode && powerups.shield) {
+      ctx.strokeStyle = 'rgba(52,152,219,0.5)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(sx + w/2, sy + h/2, h * 0.8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.arc(sx + w/2, sy + h/2, h * 0.75, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    const tarbooshOpt = getSelectedOption('tarboosh');
+    const robeOpt = getSelectedOption('robe');
+    const beltOpt = getSelectedOption('belt');
+    const mustacheOpt = getSelectedOption('mustache');
+    const swordOpt = getSelectedOption('sword');
+    const turbanOpt = getSelectedOption('turban');
+
+    // الجسم
+    const bodyX = sx + 4, bodyY = sy + 16, bodyW = w - 8, bodyH = h - 24;
+    ctx.fillStyle = robeOpt.color;
+    ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
+    ctx.fillStyle = '#c9b393';
+    ctx.fillRect(bodyX, bodyY + bodyH - 4, bodyW, 4);
+    ctx.fillStyle = beltOpt.color;
+    ctx.fillRect(bodyX, bodyY + 10, bodyW, 4);
+
+    // الرأس
+    const headX = sx + w/2, headY = sy + 10, headR = 11;
+    ctx.fillStyle = '#d4a373';
+    ctx.beginPath();
+    ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // تعبير الوجه
+    if (!previewMode) {
+      const expression = speechBubble.active ? speechBubble.expression : 'neutral';
+      drawFacialExpression(headX, headY, facing, expression);
+    } else {
+      drawFacialExpression(headX, headY, 1, 'neutral');
+    }
+
+    // العمامة
+    if (turbanOpt.id !== 'none') {
+      ctx.fillStyle = turbanOpt.id === 'white' ? '#f0f0f0' : 
+                      turbanOpt.id === 'red' ? '#c0392b' : '#d4a373';
+      ctx.beginPath();
+      ctx.ellipse(headX, headY - headR + 3, 12, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(headX - 14, headY - headR + 1, 28, 6);
+      if (turbanOpt.id === 'striped') {
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 1;
+        for (let i = -12; i <= 12; i += 6) {
+          ctx.beginPath();
+          ctx.moveTo(headX + i, headY - headR + 1);
+          ctx.lineTo(headX + i + 4, headY - headR + 7);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // الطربوش
+    ctx.fillStyle = '#c0392b';
+    const tarbooshColor = tarbooshOpt.color || '#e74c3c';
+    ctx.beginPath();
+    ctx.ellipse(headX, headY - headR + 2, 9, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = tarbooshColor;
+    ctx.beginPath();
+    ctx.moveTo(headX - 6, headY - headR + 2);
+    ctx.lineTo(headX - 9, headY - headR - 8);
+    ctx.lineTo(headX + 9, headY - headR - 8);
+    ctx.lineTo(headX + 6, headY - headR + 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(headX - 7, headY - headR - 3);
+    ctx.lineTo(headX + 7, headY - headR - 3);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.moveTo(headX - 1, headY - headR - 8);
+    ctx.lineTo(headX + 1, headY - headR - 8);
+    ctx.lineTo(headX, headY - headR - 14);
+    ctx.closePath();
+    ctx.fill();
+
+    // الشارب
+    if (mustacheOpt.id !== 'none') {
+      ctx.strokeStyle = '#3d2818';
+      ctx.lineWidth = 1.8;
+      const mStyle = mustacheOpt.id;
+      if (mStyle === 'light') {
+        ctx.beginPath();
+        ctx.moveTo(headX - 5, headY + 6);
+        ctx.quadraticCurveTo(headX - 2, headY + 9, headX - 0.5, headY + 7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(headX + 5, headY + 6);
+        ctx.quadraticCurveTo(headX + 2, headY + 9, headX + 0.5, headY + 7);
+        ctx.stroke();
+        ctx.fillStyle = '#3d2818';
+        ctx.fillRect(headX - 4, headY + 6, 8, 1.2);
+      } else if (mStyle === 'thick') {
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(headX - 7, headY + 5);
+        ctx.quadraticCurveTo(headX - 2, headY + 10, headX - 0.5, headY + 7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(headX + 7, headY + 5);
+        ctx.quadraticCurveTo(headX + 2, headY + 10, headX + 0.5, headY + 7);
+        ctx.stroke();
+        ctx.fillStyle = '#3d2818';
+        ctx.fillRect(headX - 6, headY + 5, 12, 2);
+      } else if (mStyle === 'curved') {
+        ctx.beginPath();
+        ctx.moveTo(headX - 6, headY + 5);
+        ctx.quadraticCurveTo(headX - 8, headY + 9, headX - 3, headY + 9);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(headX + 6, headY + 5);
+        ctx.quadraticCurveTo(headX + 8, headY + 9, headX + 3, headY + 9);
+        ctx.stroke();
+      }
+    }
+
+    // السيف
+    const swordId = swordOpt.id;
+    if (swordId !== 'none') {
+      ctx.save();
+      const swordX = sx + w/2 + facing * 14;
+      const swordY = sy + 24;
+      ctx.translate(swordX, swordY);
+      ctx.rotate(facing * 0.2);
+      if (swordId === 'damascus') {
+        ctx.fillStyle = '#C0C0C0';
+        ctx.fillRect(-2, -18, 4, 28);
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-6, 8, 12, 3);
+        ctx.fillStyle = '#4a3020';
+        ctx.fillRect(-2, 11, 4, 10);
+      } else if (swordId === 'ottoman') {
+        ctx.fillStyle = '#B8A88A';
+        ctx.fillRect(-3, -20, 6, 30);
+        ctx.fillStyle = '#5a3d2b';
+        ctx.fillRect(-8, 6, 16, 4);
+        ctx.fillRect(-3, 10, 6, 12);
+      } else if (swordId === 'persian') {
+        ctx.fillStyle = '#8A9BA8';
+        ctx.fillRect(-2, -22, 4, 32);
+        ctx.fillStyle = '#DAA520';
+        ctx.fillRect(-5, 4, 10, 3);
+        ctx.fillStyle = '#5a3d2b';
+        ctx.fillRect(-2, 7, 4, 14);
+      }
+      ctx.restore();
+    }
+
+    // الأرجل
+    if (!previewMode) {
+      const legAnim = player.onGround ? Math.sin(player.animFrame * 0.3) * 4 : 0;
+      ctx.fillStyle = '#c0392b';
+      ctx.fillRect(sx + 6, sy + h - 12, 6, 10 + legAnim);
+      ctx.fillRect(sx + w - 12, sy + h - 12, 6, 10 - legAnim);
+    } else {
+      ctx.fillStyle = '#c0392b';
+      ctx.fillRect(sx + 6, sy + h - 12, 6, 10);
+      ctx.fillRect(sx + w - 12, sy + h - 12, 6, 10);
+    }
+
+    // تأثير الهجوم
+    if (!previewMode && player.attackActive) {
+      ctx.save();
+      ctx.translate(sx + w/2, sy + h/2);
+      ctx.rotate(player.facing * (player.attackFrame * 0.4 - 0.6));
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 35, -0.8, 0.8);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // ==================== رسم المعاينة ====================
+  function renderPreview() {
+    const previewCanvas = document.getElementById('previewCanvas');
+    if (!previewCanvas) return;
+    const pCtx = previewCanvas.getContext('2d');
+    const pw = previewCanvas.width, ph = previewCanvas.height;
+    pCtx.clearRect(0, 0, pw, ph);
+    pCtx.fillStyle = 'rgba(30,20,15,0.6)';
+    pCtx.fillRect(0, 0, pw, ph);
+    pCtx.fillStyle = '#3a2a1a';
+    pCtx.fillRect(0, ph - 40, pw, 40);
+    pCtx.fillStyle = '#4a3a2a';
+    pCtx.fillRect(0, ph - 40, pw, 4);
+    const cx = (pw - 32) / 2;
+    const cy = ph - 40 - 48;
+    drawPlayerWithCustomization(cx, cy, 1, true);
+  }
+
+  // ==================== المتجر والقوى ====================
+  let powerups = { doubleJump: false, speedBoost: false, shield: false, sword: false, magnet: false };
+
+  const shopItems = [
+    { id: 'doubleJump', name: 'قفزة مزدوجة', desc: 'قف مرتين في الهواء!', icon: '🦘', price: 50, purchased: false, type: 'temporary', resetOnDeath: true },
+    { id: 'speedBoost', name: 'حذاء السرعة', desc: 'سرعة +50%', icon: '👟', price: 40, purchased: false, type: 'temporary', resetOnDeath: true },
+    { id: 'shield', name: 'درع الحارة', desc: 'حماية من ضربة واحدة', icon: '🛡️', price: 60, purchased: false, type: 'temporary', resetOnDeath: true },
+    { id: 'sword', name: 'سيف دمشقي', desc: 'هاجم الأعداء من بعيد!', icon: '⚔️', price: 80, purchased: false, type: 'permanent', resetOnDeath: false },
+    { id: 'magnet', name: 'مغناطيس الذهب', desc: 'يجذب الليرات القريبة', icon: '🧲', price: 70, purchased: false, type: 'permanent', resetOnDeath: false },
+    { id: 'extraLife', name: 'حياة إضافية', desc: '+1 قلب', icon: '❤️', price: 30, purchased: false, consumable: true, type: 'temporary', resetOnDeath: true },
+  ];
+
+  // ==================== حالة اللعبة ====================
+  let gameState = 'menu';
+  let frame = 0;
+  let cameraX = 0;
+  let score = 0;
+  let gold = 0;
+  let lives = 3;
+  let distance = 0;
+  let worldEnd = 0;
+  const CHUNK_SIZE = 2000;
+  let lastChunkX = 0;
+
+  let player = {
+    x: 100, y: 200, w: 32, h: 48,
+    vx: 0, vy: 0,
+    onGround: false,
+    facing: 1,
+    animFrame: 0,
+    jumpsLeft: 1,
+    attackCooldown: 0,
+    attackActive: false,
+    attackFrame: 0,
+    invincible: 0,
+    shieldHits: 0,
+    maxHP: 3,
+    hp: 3,
+    jumpHeld: false
+  };
+
+  const keys = {};
+  const touchState = { left: false, right: false, jump: false, attack: false };
+
+  let platforms = [], coins = [], enemies = [], decorations = [], houses = [];
+  let particles = [], projectiles = [];
+  let generatedChunks = new Set();
+
+  const GRAVITY = 0.55;
+  const JUMP_FORCE = -11.5;
+  const BASE_SPEED = 4;
+  let MOVE_SPEED = BASE_SPEED;
+
+  // ==================== توليد العالم ====================
+  function getChunkIndex(x) { return Math.floor(x / CHUNK_SIZE); }
+
+  function generateChunk(chunkIndex) {
+    if (generatedChunks.has(chunkIndex)) return;
+    generatedChunks.add(chunkIndex);
+    const startX = chunkIndex * CHUNK_SIZE;
+    const endX = startX + CHUNK_SIZE;
+    for (let x = startX; x < endX; x += 60) {
+      platforms.push({ x, y: GROUND_Y, w: 60, h: H - GROUND_Y, type: 'ground' });
+    }
+    const houseColors = ['#7a6a5a','#6b5b4b','#8a7a6a','#5c4d3e','#9a8a7a'];
+    const doorColors = ['#4a3020','#5c3d2e','#3d2818','#6b4228'];
+    let hx = startX + 100;
+    while (hx < endX - 200) {
+      const width = 90 + Math.random() * 90;
+      const height = 120 + Math.random() * 100;
+      const color = houseColors[Math.floor(Math.random() * houseColors.length)];
+      const houseY = GROUND_Y - height;
+      houses.push({
+        x: hx, y: houseY, w: width, h: height, color,
+        doorColor: doorColors[Math.floor(Math.random() * doorColors.length)],
+        windows: Math.floor(1 + Math.random() * 3),
+        hasBalcony: Math.random() > 0.5,
+        hasArch: Math.random() > 0.3,
+        roofType: Math.floor(Math.random() * 3)
+      });
+      hx += width + 80 + Math.random() * 120;
+    }
+    let px = startX + 250;
+    while (px < endX - 150) {
+      const pw = 80 + Math.random() * 60;
+      const py = GROUND_Y - 80 - Math.random() * 100;
+      platforms.push({ x: px, y: py, w: pw, h: 18, type: 'platform' });
+      const coinCount = 1 + Math.floor(Math.random() * 3);
+      for (let c = 0; c < coinCount; c++) {
+        coins.push({
+          x: px + 15 + c * 25,
+          y: py - 25 - Math.random() * 15,
+          r: 9, taken: false,
+          type: Math.floor(Math.random() * 4),
+          floatOffset: Math.random() * Math.PI * 2
+        });
+      }
+      px += pw + 180 + Math.random() * 250;
+    }
+    let cx = startX + 80;
+    while (cx < endX - 50) {
+      if (Math.random() > 0.4) {
+        coins.push({
+          x: cx, y: GROUND_Y - 35 - Math.random() * 30,
+          r: 9, taken: false,
+          type: Math.floor(Math.random() * 4),
+          floatOffset: Math.random() * Math.PI * 2
+        });
+      }
+      cx += 40 + Math.random() * 80;
+    }
+    let ex = startX + 300;
+    while (ex < endX - 200) {
+      const speed = 0.6 + Math.random() * 1.0;
+      const range = 120 + Math.random() * 150;
+      const enemyW = 34, enemyH = 38;
+      const enemyY = GROUND_Y - enemyH;
+      enemies.push({
+        x: ex, y: enemyY, w: enemyW, h: enemyH,
+        vx: speed, vy: 0,
+        range: [ex - range * 0.3, ex + range * 0.7],
+        type: Math.random() > 0.7 ? 'jumper' : 'walker',
+        alive: true, hp: 2, maxHP: 2,
+        animFrame: 0, hitFlash: 0, jumpTimer: 0, onGround: true
+      });
+      ex += 250 + Math.random() * 350;
+    }
+    for (let i = 0; i < 3; i++) {
+      decorations.push({
+        type: 'lantern',
+        x: startX + 150 + i * 600 + Math.random() * 200,
+        y: GROUND_Y - 140 - Math.random() * 80,
+        swingPhase: Math.random() * Math.PI * 2
+      });
+    }
+    for (let i = 0; i < 2; i++) {
+      decorations.push({
+        type: 'pot',
+        x: startX + 80 + i * 500 + Math.random() * 200,
+        y: GROUND_Y - 12
+      });
+    }
+    worldEnd = Math.max(worldEnd, endX);
+  }
+
+  function cleanupFarChunks() {
+    const playerChunk = getChunkIndex(player.x);
+    const minChunk = playerChunk - 3, maxChunk = playerChunk + 3;
+    platforms = platforms.filter(p => { const c = getChunkIndex(p.x); return c >= minChunk && c <= maxChunk; });
+    houses = houses.filter(h => { const c = getChunkIndex(h.x); return c >= minChunk && c <= maxChunk; });
+    coins = coins.filter(c => { const ch = getChunkIndex(c.x); return ch >= minChunk && ch <= maxChunk; });
+    enemies = enemies.filter(e => { const c = getChunkIndex(e.x); return c >= minChunk && c <= maxChunk; });
+    decorations = decorations.filter(d => { const c = getChunkIndex(d.x); return c >= minChunk && c <= maxChunk; });
+    for (let c of Array.from(generatedChunks)) if (c < minChunk || c > maxChunk) generatedChunks.delete(c);
+  }
+
+  function resetTemporaryPowerups() {
+    shopItems.forEach(item => {
+      if (item.type === 'temporary' && item.purchased) {
+        item.purchased = false;
+        powerups[item.id] = false;
+      }
+    });
+    player.shieldHits = 0;
+    player.jumpsLeft = powerups.doubleJump ? 1 : 0;
+    saveGame();
+  }
+
+  function initLevel() {
+    platforms = []; coins = []; enemies = []; decorations = []; houses = [];
+    particles = []; projectiles = []; generatedChunks = new Set();
+    worldEnd = 0; lastChunkX = 0;
+    for (let i = -1; i <= 2; i++) generateChunk(i);
+    player = {
+      x: 100, y: GROUND_Y - 100, w: 32, h: 48,
+      vx: 0, vy: 0, onGround: false, facing: 1, animFrame: 0,
+      jumpsLeft: 1, attackCooldown: 0, attackActive: false, attackFrame: 0,
+      invincible: 0, shieldHits: 0, maxHP: 3, hp: 3, jumpHeld: false
+    };
+    cameraX = 0;
+    loadGame();
+    resetTemporaryPowerups();
+    if (distance === 0 && lives === 0) { lives = 3; gold = 0; score = 0; distance = 0; }
+    updateUI();
+    saveGame();
+    setTimeout(() => showSpeech('يا هلا والله!', 'happy', 1500), 500);
+  }
+
+  // ==================== دوال الرسم ====================
+  function drawSky() {
+    updateTimeOfDay();
+    let skyColors;
+    if (timeOfDay === 0) {
+      const t = timeTransition;
+      const r = Math.floor(30 + t * 100);
+      const g = Math.floor(80 + t * 60);
+      const b = Math.floor(180 - t * 80);
+      skyColors = [
+        `rgb(${r}, ${g}, ${b})`,
+        `rgb(${r+20}, ${g+30}, ${b-30})`,
+        `rgb(${r+40}, ${g+50}, ${b-60})`,
+        `rgb(${r+10}, ${g+20}, ${b-20})`
+      ];
+    } else {
+      const t = timeTransition;
+      const r = Math.floor(180 - t * 120);
+      const g = Math.floor(80 - t * 60);
+      const b = Math.floor(40 - t * 30);
+      skyColors = [
+        `rgb(${r}, ${g}, ${b})`,
+        `rgb(${r-30}, ${g-20}, ${b-10})`,
+        `rgb(${r-60}, ${g-40}, ${b-20})`,
+        `rgb(${r-20}, ${g-10}, ${b-5})`
+      ];
+    }
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, skyColors[0]);
+    grad.addColorStop(0.35, skyColors[1]);
+    grad.addColorStop(0.65, skyColors[2]);
+    grad.addColorStop(1, skyColors[3]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    if (timeOfDay === 1) {
+      const starAlpha = Math.min(1, timeTransition * 1.5);
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < 80; i++) {
+        const sx = ((i * 173 + frame * 0.01) % W);
+        const sy = ((i * 67) % (H * 0.5));
+        ctx.globalAlpha = (0.15 + Math.sin(frame * 0.02 + i * 0.5) * 0.1) * starAlpha;
+        const sz = 1 + (i % 3) * 0.5;
+        ctx.fillRect(sx, sy, sz, sz);
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < 30; i++) {
+        const sx = ((i * 173 + frame * 0.01) % W);
+        const sy = ((i * 67) % (H * 0.5));
+        ctx.globalAlpha = 0.05 + Math.sin(frame * 0.02 + i * 0.5) * 0.03;
+        ctx.fillRect(sx, sy, 1, 1);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (timeOfDay === 0) {
+      const sunX = W * 0.15 - timeTransition * 50;
+      const sunY = H * 0.15 + timeTransition * 30;
+      const sunR = Math.min(W, H) * 0.05;
+      ctx.save();
+      ctx.shadowColor = '#ffaa44';
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = '#ffdd44';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,220,80,0.3)';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      const moonX = W * 0.85;
+      const moonY = H * 0.12;
+      const moonR = Math.min(W, H) * 0.045;
+      ctx.save();
+      ctx.shadowColor = '#cceeff';
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = '#f5e6c8';
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = skyColors[0];
+      ctx.beginPath();
+      ctx.arc(moonX - moonR * 0.2, moonY - moonR * 0.1, moonR * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }
+
+  function drawHouse(h) {
+    const sx = h.x - cameraX;
+    if (sx + h.w < -100 || sx > W + 100) return;
+    let brightness = timeOfDay === 0 ? 1 : (0.6 + 0.4 * (1 - timeTransition));
+    ctx.save();
+    ctx.globalAlpha = brightness;
+    ctx.fillStyle = h.color;
+    ctx.fillRect(sx, h.y, h.w, h.h);
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1;
+    for (let row = 0; row < h.h; row += 12) {
+      ctx.beginPath();
+      ctx.moveTo(sx, h.y + row);
+      ctx.lineTo(sx + h.w, h.y + row);
+      ctx.stroke();
+    }
+    for (let col = 0; col < h.w; col += 20) {
+      const offset = (Math.floor(col / 20) % 2) * 6;
+      ctx.beginPath();
+      ctx.moveTo(sx + col, h.y + offset);
+      ctx.lineTo(sx + col, h.y + h.h);
+      ctx.stroke();
+    }
+    const doorW = Math.min(24, h.w * 0.3);
+    const doorH = 38;
+    const doorX = sx + h.w / 2 - doorW / 2;
+    const doorY = h.y + h.h - doorH;
+    ctx.fillStyle = h.doorColor;
+    ctx.fillRect(doorX, doorY, doorW, doorH);
+    ctx.fillStyle = h.doorColor;
+    ctx.beginPath();
+    ctx.arc(doorX + doorW / 2, doorY, doorW / 2, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(doorX + 3, doorY + 4, doorW - 6, doorH - 4);
+    ctx.fillStyle = '#DAA520';
+    ctx.fillRect(doorX + doorW - 5, doorY + 16, 3, 3);
+    const winSize = Math.min(14, h.w * 0.18);
+    for (let w = 0; w < h.windows; w++) {
+      const winX = sx + 12 + w * ((h.w - 24) / Math.max(h.windows, 1));
+      const winY = h.y + 22 + (w % 2) * 18;
+      if (winX + winSize > sx + h.w - 5) continue;
+      ctx.fillStyle = '#3d2818';
+      ctx.fillRect(winX - 2, winY - 2, winSize + 4, winSize + 4);
+      let windowBrightness = timeOfDay === 0 ? 0.5 : (0.7 + 0.3 * timeTransition);
+      ctx.fillStyle = `rgba(245, 215, 110, ${windowBrightness})`;
+      ctx.fillRect(winX, winY, winSize, winSize);
+      ctx.strokeStyle = '#2a1a10';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(winX + winSize / 2, winY);
+      ctx.lineTo(winX + winSize / 2, winY + winSize);
+      ctx.moveTo(winX, winY + winSize / 2);
+      ctx.lineTo(winX + winSize, winY + winSize / 2);
+      ctx.stroke();
+    }
+    if (h.hasBalcony && h.w > 60) {
+      const balY = h.y + h.h * 0.45;
+      ctx.fillStyle = '#5c4d3e';
+      ctx.fillRect(sx + 5, balY, h.w - 10, 5);
+      ctx.strokeStyle = '#3d2b1f';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sx + 5, balY);
+      ctx.lineTo(sx + 5, balY - 10);
+      ctx.lineTo(sx + h.w - 5, balY - 10);
+      ctx.lineTo(sx + h.w - 5, balY);
+      ctx.stroke();
+      for (let i = 10; i < h.w - 10; i += 8) {
+        ctx.beginPath();
+        ctx.moveTo(sx + i, balY);
+        ctx.lineTo(sx + i, balY - 10);
+        ctx.stroke();
+      }
+    }
+    if (h.roofType === 0) {
+      ctx.fillStyle = '#4a3d30';
+      ctx.fillRect(sx - 3, h.y - 6, h.w + 6, 6);
+    } else if (h.roofType === 1) {
+      ctx.fillStyle = '#6b5b4b';
+      ctx.beginPath();
+      ctx.arc(sx + h.w / 2, h.y, h.w / 2, Math.PI, 0);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#5c4d3e';
+      ctx.beginPath();
+      ctx.moveTo(sx - 5, h.y);
+      ctx.lineTo(sx + h.w / 2, h.y - 20);
+      ctx.lineTo(sx + h.w + 5, h.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawPlatform(p) {
+    const sx = p.x - cameraX;
+    if (sx + p.w < -50 || sx > W + 50) return;
+    let brightness = timeOfDay === 0 ? 1 : (0.7 + 0.3 * (1 - timeTransition));
+    ctx.save();
+    ctx.globalAlpha = brightness;
+    if (p.type === 'ground') {
+      ctx.fillStyle = '#3a2a1a';
+      ctx.fillRect(sx, p.y, p.w, p.h);
+      ctx.fillStyle = '#4a3a2a';
+      ctx.fillRect(sx, p.y, p.w, 6);
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 1;
+      for (let row = 0; row < 40; row += 10) {
+        const offset = (row / 10 % 2) * 15;
+        for (let col = offset; col < p.w; col += 30) {
+          ctx.strokeRect(sx + col, p.y + 8 + row, 28, 8);
+        }
+      }
+    } else {
+      ctx.fillStyle = '#5c4d3e';
+      ctx.fillRect(sx, p.y, p.w, p.h);
+      ctx.fillStyle = '#6b5b4b';
+      ctx.fillRect(sx, p.y, p.w, 4);
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(sx, p.y + p.h - 3, p.w, 3);
+    }
+    ctx.restore();
+  }
+
+  function drawCoin(c) {
+    if (c.taken) return;
+    const sx = c.x - cameraX;
+    if (sx + c.r < -20 || sx - c.r > W + 20) return;
+    const floatY = c.y + Math.sin(frame * 0.06 + c.floatOffset) * 5;
+    const coinColors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#a29bfe'];
+    ctx.save();
+    ctx.shadowColor = coinColors[c.type];
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = coinColors[c.type];
+    ctx.beginPath();
+    ctx.arc(sx, floatY, c.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(sx - 2, floatY - 2, c.r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(sx - 1, floatY - 1, c.r * 0.45, -0.3, 0.9);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = `${c.r * 0.9}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★', sx + 1, floatY + 1);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.arc(sx, floatY, c.r - 1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawEnemy(e) {
+    if (!e.alive) return;
+    const sx = e.x - cameraX;
+    if (sx + e.w < -50 || sx > W + 50) return;
+    const bobY = Math.sin(frame * 0.08 + e.x * 0.01) * 2;
+    const ey = e.y + bobY;
+    ctx.save();
+    if (e.hitFlash > 0) {
+      ctx.globalAlpha = 0.6 + Math.sin(frame * 0.5) * 0.4;
+      e.hitFlash--;
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(sx + e.w / 2, GROUND_Y - 2, e.w * 0.5, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = e.type === 'jumper' ? '#8B0000' : '#4a1a1a';
+    ctx.fillRect(sx + 4, ey + 8, e.w - 8, e.h - 16);
+    ctx.fillStyle = e.type === 'jumper' ? '#a52a2a' : '#5c2a2a';
+    ctx.beginPath();
+    ctx.arc(sx + e.w / 2, ey + 10, 10, 0, Math.PI * 2);
+    ctx.fill();
+    const lookDir = e.vx > 0 ? 1 : -1;
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath();
+    ctx.arc(sx + e.w / 2 + lookDir * 4, ey + 9, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(sx + e.w / 2 + lookDir * 4.5, ey + 9, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3a1a1a';
+    ctx.beginPath();
+    ctx.moveTo(sx + e.w / 2 - 8, ey + 4);
+    ctx.lineTo(sx + e.w / 2 - 12, ey - 4);
+    ctx.lineTo(sx + e.w / 2 - 4, ey + 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(sx + e.w / 2 + 8, ey + 4);
+    ctx.lineTo(sx + e.w / 2 + 12, ey - 4);
+    ctx.lineTo(sx + e.w / 2 + 4, ey + 2);
+    ctx.fill();
+    const legOffset = Math.sin(frame * 0.15) * 4;
+    ctx.fillStyle = '#3a1a1a';
+    ctx.fillRect(sx + 6, ey + e.h - 10, 6, 10 + legOffset);
+    ctx.fillRect(sx + e.w - 12, ey + e.h - 10, 6, 10 - legOffset);
+    const hpRatio = e.hp / e.maxHP;
+    const barW = e.w, barH = 4, barY = ey - 8;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(sx, barY, barW, barH);
+    ctx.fillStyle = hpRatio > 0.5 ? '#2ecc71' : '#e74c3c';
+    ctx.fillRect(sx + 1, barY + 1, (barW - 2) * hpRatio, barH - 2);
+    ctx.restore();
+  }
+
+  function drawDecoration(d) {
+    const sx = d.x - cameraX;
+    if (sx < -50 || sx > W + 50) return;
+    if (d.type === 'lantern') {
+      const swing = Math.sin(frame * 0.03 + d.swingPhase) * 0.15;
+      ctx.save();
+      ctx.translate(sx, d.y);
+      ctx.rotate(swing);
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, -20);
+      ctx.lineTo(0, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#2a1a10';
+      ctx.fillRect(-8, 0, 16, 20);
+      ctx.fillStyle = 'rgba(255,200,80,0.6)';
+      ctx.globalAlpha = 0.5 + Math.sin(frame * 0.05 + d.swingPhase) * 0.2;
+      ctx.fillRect(-5, 3, 10, 14);
+      ctx.globalAlpha = 1;
+      ctx.shadowColor = '#ffaa00';
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = '#ffcc44';
+      ctx.fillRect(-3, 5, 6, 10);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    } else if (d.type === 'pot') {
+      ctx.fillStyle = '#8B4513';
+      ctx.beginPath();
+      ctx.moveTo(sx, d.y);
+      ctx.lineTo(sx + 5, d.y - 12);
+      ctx.lineTo(sx + 15, d.y - 12);
+      ctx.lineTo(sx + 20, d.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#228B22';
+      ctx.fillRect(sx + 6, d.y - 18, 3, 8);
+      ctx.fillRect(sx + 11, d.y - 16, 3, 6);
+    }
+  }
+
+  function drawProjectile(p) {
+    const sx = p.x - cameraX;
+    ctx.save();
+    ctx.fillStyle = '#ffdd44';
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(sx, p.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawParticle(p) {
+    ctx.save();
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
+    ctx.restore();
+  }
+
+  // ==================== دوال التحديث ====================
+  function updatePlayer() {
+    let speed = MOVE_SPEED;
+    if (powerups.speedBoost) speed *= 1.5;
+    if (keys['ArrowLeft'] || keys['KeyA'] || touchState.left) {
+      player.vx = -speed; player.facing = -1;
+    } else if (keys['ArrowRight'] || keys['KeyD'] || touchState.right) {
+      player.vx = speed; player.facing = 1;
+    } else {
+      player.vx *= 0.82;
+    }
+    if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space'] || touchState.jump) && !player.jumpHeld) {
+      if (player.onGround) {
+        player.vy = JUMP_FORCE; player.onGround = false;
+        player.jumpsLeft = powerups.doubleJump ? 1 : 0;
+        player.jumpHeld = true;
+        spawnParticles(player.x + player.w / 2, player.y + player.h, '#8B7355', 6);
+        playJumpSound();
+      } else if (player.jumpsLeft > 0) {
+        player.vy = JUMP_FORCE * 0.85; player.jumpsLeft--;
+        player.jumpHeld = true;
+        spawnParticles(player.x + player.w / 2, player.y + player.h, '#8B7355', 4);
+        playJumpSound();
+      }
+    }
+    if (!(keys['ArrowUp'] || keys['KeyW'] || keys['Space'] || touchState.jump)) {
+      player.jumpHeld = false;
+    }
+    if ((keys['KeyX'] || keys['KeyK'] || touchState.attack) && player.attackCooldown <= 0) {
+      player.attackActive = true; player.attackFrame = 0; player.attackCooldown = 25;
+      playAttackSound();
+      if (powerups.sword) {
+        projectiles.push({
+          x: player.x + player.w / 2 + player.facing * 20,
+          y: player.y + player.h / 2,
+          vx: player.facing * 8, vy: 0, life: 40, damage: 2
+        });
+      }
+      const attackRange = powerups.sword ? 60 : 35;
+      enemies.forEach(e => {
+        if (!e.alive) return;
+        const dx = (e.x + e.w / 2) - (player.x + player.w / 2);
+        const dy = (e.y + e.h / 2) - (player.y + player.h / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < attackRange && Math.sign(dx) === player.facing) {
+          damageEnemy(e, powerups.sword ? 2 : 1);
+        }
+      });
+    }
+    if (player.attackCooldown > 0) player.attackCooldown--;
+    if (player.attackActive) {
+      player.attackFrame++;
+      if (player.attackFrame > 8) player.attackActive = false;
+    }
+    player.vy += GRAVITY;
+    player.x += player.vx;
+    player.y += player.vy;
+    player.onGround = false;
+    for (let p of platforms) {
+      if (player.x + player.w > p.x && player.x < p.x + p.w &&
+          player.y + player.h > p.y && player.y + player.h < p.y + p.h + 15 &&
+          player.vy >= 0) {
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+        player.jumpsLeft = powerups.doubleJump ? 1 : 0;
+      }
+    }
+    if (player.y > H + 100) {
+      takeDamage(1);
+      player.y = GROUND_Y - 200;
+      player.vy = 0;
+      player.x = Math.max(50, player.x - 200);
+    }
+    if (Math.abs(player.vx) > 0.5) player.animFrame++;
+    if (player.invincible > 0) player.invincible--;
+    if (powerups.magnet) {
+      coins.forEach(c => {
+        if (c.taken) return;
+        const dx = c.x - (player.x + player.w / 2);
+        const dy = c.y - (player.y + player.h / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          c.x -= dx * 0.06;
+          c.y -= dy * 0.06;
+        }
+      });
+    }
+  }
+
+  function damageEnemy(e, dmg) {
+    e.hp -= dmg;
+    e.hitFlash = 10;
+    spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 5);
+    playHitSound();
+    if (e.hp <= 0) {
+      e.alive = false;
+      score += 50;
+      gold += 5;
+      spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff8800', 10);
+      updateUI();
+      saveGame();
+      if (Math.random() < 0.2 && speechBubble.cooldown <= 0) {
+        showSpeech('خلصت حكايتو!', 'sarcastic', 1500);
+        speechBubble.cooldown = 5000;
+      }
+    }
+  }
+
+  function updateEnemies() {
+    enemies.forEach(e => {
+      if (!e.alive) return;
+      const dx = (e.x + e.w / 2) - (player.x + player.w / 2);
+      const dy = (e.y + e.h / 2) - (player.y + player.h / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 100 && player.invincible <= 0 && e.alive) {
+        if (Math.random() < 0.4 && speechBubble.cooldown <= 0) {
+          showSpeech('يا باطل!', 'angry', 1500);
+          speechBubble.cooldown = 3000;
+        }
+      }
+      if (e.type === 'walker') {
+        e.x += e.vx;
+        if (e.x < e.range[0] || e.x > e.range[1]) { e.vx *= -1; }
+      } else if (e.type === 'jumper') {
+        e.x += e.vx;
+        e.jumpTimer++;
+        if (e.jumpTimer > 90 && e.onGround) {
+          e.vy = -9; e.onGround = false; e.jumpTimer = 0;
+        }
+        e.vy += GRAVITY;
+        e.y += e.vy;
+        if (e.y >= GROUND_Y - e.h) {
+          e.y = GROUND_Y - e.h; e.vy = 0; e.onGround = true;
+        }
+        if (e.x < e.range[0] || e.x > e.range[1]) { e.vx *= -1; }
+      }
+      e.animFrame++;
+      if (player.invincible <= 0 &&
+          player.x < e.x + e.w && player.x + player.w > e.x &&
+          player.y < e.y + e.h && player.y + player.h > e.y) {
+        if (player.vy > 0 && player.y + player.h < e.y + e.h * 0.6) {
+          damageEnemy(e, 2);
+          player.vy = -7;
+          score += 30;
+        } else {
+          takeDamage(1);
+        }
+        updateUI();
+      }
+    });
+  }
+
+  function updateProjectiles() {
+    projectiles = projectiles.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.life--;
+      enemies.forEach(e => {
+        if (!e.alive) return;
+        if (p.x > e.x && p.x < e.x + e.w && p.y > e.y && p.y < e.y + e.h) {
+          damageEnemy(e, p.damage);
+          p.life = 0;
+        }
+      });
+      return p.life > 0;
+    });
+  }
+
+  function updateCoins() {
+    coins.forEach(c => {
+      if (c.taken) return;
+      const dx = (player.x + player.w / 2) - c.x;
+      const dy = (player.y + player.h / 2) - c.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < c.r + 16) {
+        c.taken = true;
+        const values = [1, 3, 5, 10];
+        gold += values[c.type];
+        score += values[c.type] * 5;
+        spawnParticles(c.x, c.y, '#ffd700', 4);
+        playCoinSound();
+        updateUI();
+        saveGame();
+      }
+    });
+  }
+
+  function takeDamage(amount) {
+    if (player.invincible > 0) return;
+    if (Math.random() < 0.4 && speechBubble.cooldown <= 0) {
+      showSpeech('يا باطل!', 'angry', 1500);
+      speechBubble.cooldown = 3000;
+    }
+    if (powerups.shield && player.shieldHits < 1) {
+      player.shieldHits++;
+      player.invincible = 60;
+      spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#3498db', 8);
+      playShieldSound();
+      return;
+    }
+    lives -= amount;
+    player.invincible = 90;
+    player.vy = -5;
+    player.vx = -player.facing * 4;
+    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#e74c3c', 10);
+    playHitSound();
+    if (lives <= 0) {
+      gameState = 'gameover';
+      playGameOverSound();
+      resetTemporaryPowerups();
+      showMessage('💀 انتهت المغامرة', `المسافة: ${Math.floor(distance)}م | الليرات: ${gold} | النقاط: ${score}`, true);
+    }
+    updateUI();
+    saveGame();
+  }
+
+  function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 5,
+        vy: (Math.random() - 0.5) * 5 - 2,
+        life: 25 + Math.random() * 15,
+        maxLife: 40, color,
+        size: 2 + Math.random() * 3
+      });
+    }
+  }
+
+  function updateParticles() {
+    particles = particles.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life--;
+      return p.life > 0;
+    });
+  }
+
+  function updateCamera() {
+    const targetX = player.x - W * 0.35;
+    cameraX += (targetX - cameraX) * 0.08;
+    if (cameraX < 0) cameraX = 0;
+    distance = Math.max(distance, Math.floor(player.x / 10));
+    const playerChunk = getChunkIndex(player.x);
+    for (let i = playerChunk - 1; i <= playerChunk + 2; i++) generateChunk(i);
+    if (frame % 120 === 0) cleanupFarChunks();
+  }
+
+  // ==================== RENDER ====================
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    drawSky();
+    houses.forEach(h => {
+      if (h.x - cameraX * 0.3 > -200 && h.x - cameraX * 0.3 < W + 200) {
+        const parallaxX = h.x - cameraX * 0.3;
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = h.color;
+        ctx.fillRect(parallaxX, h.y + 30, h.w, h.h);
+        ctx.restore();
+      }
+    });
+    houses.forEach(drawHouse);
+    platforms.forEach(drawPlatform);
+    decorations.forEach(drawDecoration);
+    coins.forEach(drawCoin);
+    enemies.forEach(drawEnemy);
+    projectiles.forEach(drawProjectile);
+    particles.forEach(drawParticle);
+    // رسم الشخصية مع التخصيص
+    drawPlayerWithCustomization(player.x - cameraX, player.y, player.facing, false);
+    drawSpeechBubble();
+  }
+
+  // ==================== UI ====================
+  function updateUI() {
+    document.getElementById('lives-display').textContent = lives;
+    document.getElementById('gold-display').textContent = gold;
+    document.getElementById('score-display').textContent = score;
+    document.getElementById('dist-display').textContent = distance;
+    const puContainer = document.getElementById('powerups');
+    puContainer.innerHTML = '';
+    const puNames = {
+      doubleJump: '🦘 قفز مزدوج',
+      speedBoost: '👟 سرعة',
+      shield: '🛡️ درع',
+      sword: '⚔️ سيف',
+      magnet: '🧲 مغناطيس'
+    };
+    for (let [key, active] of Object.entries(powerups)) {
+      if (active) {
+        const badge = document.createElement('div');
+        badge.className = 'powerup-badge';
+        badge.textContent = puNames[key];
+        puContainer.appendChild(badge);
+      }
+    }
+  }
+
+  function showMessage(title, subtitle, showRestart) {
+    const overlay = document.getElementById('message-overlay');
+    overlay.innerHTML = `
+      <h1>${title}</h1>
+      <p>${subtitle}</p>
+      ${showRestart ? '<button class="big-btn" id="restart-btn">🔄 أعد المحاولة</button>' : '<button class="big-btn" id="start-btn">▶️ ابدأ المغامرة</button>'}
+    `;
+    overlay.style.display = 'flex';
+    const btn = showRestart ? document.getElementById('restart-btn') : document.getElementById('start-btn');
+    btn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      initLevel();
+      gameState = 'playing';
+    });
+  }
+
+  // ==================== SHOP ====================
+  function openShop() {
+    if (gameState !== 'playing' && gameState !== 'paused') return;
+    gameState = 'shop';
+    document.getElementById('shop-modal').classList.add('active');
+    document.getElementById('shop-gold').textContent = gold;
+    const grid = document.getElementById('shop-items');
+    grid.innerHTML = '';
+    shopItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'shop-item' + (item.purchased && !item.consumable ? ' purchased' : '');
+      const typeLabel = item.type === 'permanent' ? '🔒 دائم' : '⏳ مؤقت';
+      div.innerHTML = `
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div style="font-size:10px;color:#aaa;margin-bottom:4px;">${typeLabel}</div>
+        <div class="item-price ${item.purchased && !item.consumable ? 'owned' : ''}">
+          ${item.purchased && !item.consumable ? '✅ تم الشراء' : '🪙 ' + item.price}
+        </div>
+      `;
+      div.addEventListener('click', () => {
+        if (item.purchased && !item.consumable) return;
+        if (gold >= item.price) {
+          gold -= item.price;
+          if (item.consumable) { if (item.id === 'extraLife') lives++; }
+          else { item.purchased = true; powerups[item.id] = true; }
+          document.getElementById('shop-gold').textContent = gold;
+          updateUI(); saveGame(); openShop();
+        }
+      });
+      grid.appendChild(div);
+    });
+  }
+
+  function closeShop() {
+    document.getElementById('shop-modal').classList.remove('active');
+    gameState = 'playing';
+  }
+
+  // ==================== متجر التخصيص ====================
+  function openCustomizeShop() {
+    if (gameState !== 'playing' && gameState !== 'paused') return;
+    gameState = 'customize';
+    document.getElementById('customize-modal').classList.add('active');
+    renderCustomizeOptions();
+    renderPreview();
+  }
+
+  function closeCustomizeShop() {
+    document.getElementById('customize-modal').classList.remove('active');
+    gameState = 'playing';
+    saveGame();
+  }
+
+  function renderCustomizeOptions() {
+    const container = document.getElementById('customize-options');
+    container.innerHTML = '';
+    const catNames = {
+      tarboosh: 'الطربوش', robe: 'الثوب', belt: 'الحزام',
+      mustache: 'الشارب', sword: 'السيف', turban: 'العمامة'
+    };
+    for (let [catKey, cat] of Object.entries(customization)) {
+      const group = document.createElement('div');
+      group.className = 'option-group';
+      const label = document.createElement('label');
+      label.textContent = catNames[catKey] || catKey;
+      group.appendChild(label);
+      const row = document.createElement('div');
+      row.className = 'options-row';
+      cat.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        if (opt.id === cat.selected) btn.classList.add('selected');
+        if (opt.purchased) btn.classList.add('purchased');
+        let displayText = opt.label;
+        if (opt.color) {
+          const colorSpan = document.createElement('span');
+          colorSpan.style.display = 'inline-block';
+          colorSpan.style.width = '12px';
+          colorSpan.style.height = '12px';
+          colorSpan.style.borderRadius = '50%';
+          colorSpan.style.backgroundColor = opt.color;
+          colorSpan.style.marginLeft = '4px';
+          colorSpan.style.verticalAlign = 'middle';
+          btn.prepend(colorSpan);
+        }
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'price-tag';
+        if (!opt.purchased && opt.price > 0) {
+          priceSpan.textContent = `🪙${opt.price}`;
+          btn.appendChild(priceSpan);
+        } else if (opt.purchased) {
+          const checkSpan = document.createElement('span');
+          checkSpan.textContent = ' ✅';
+          checkSpan.style.color = '#27ae60';
+          btn.appendChild(checkSpan);
+        }
+        btn.appendChild(document.createTextNode(' ' + displayText));
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!opt.purchased) {
+            if (purchaseOption(catKey, opt.id)) {
+              renderCustomizeOptions(); renderPreview(); updateUI();
+            }
+          } else {
+            selectOption(catKey, opt.id);
+            renderCustomizeOptions(); renderPreview();
+          }
+        });
+        row.appendChild(btn);
+      });
+      group.appendChild(row);
+      container.appendChild(group);
+    }
+  }
+
+  // ==================== INPUT ====================
+  window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  });
+  window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function setupTouch(id, key) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', e => { e.preventDefault(); touchState[key] = true; });
+    el.addEventListener('touchend', e => { e.preventDefault(); touchState[key] = false; });
+    el.addEventListener('touchcancel', e => { touchState[key] = false; });
+    el.addEventListener('mousedown', e => { e.preventDefault(); touchState[key] = true; });
+    el.addEventListener('mouseup', e => { e.preventDefault(); touchState[key] = false; });
+    el.addEventListener('mouseleave', e => { touchState[key] = false; });
+  }
+  setupTouch('t-left','left');
+  setupTouch('t-right','right');
+  setupTouch('t-jump','jump');
+  setupTouch('t-attack','attack');
+
+  // ==================== ربط الأزرار ====================
+  document.getElementById('shop-btn').addEventListener('click', openShop);
+  document.getElementById('close-shop').addEventListener('click', closeShop);
+  document.getElementById('customize-btn').addEventListener('click', openCustomizeShop);
+  document.getElementById('close-customize').addEventListener('click', closeCustomizeShop);
+
+  document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('message-overlay').style.display = 'none';
+    initLevel();
+    gameState = 'playing';
+  });
+
+  // ==================== MAIN LOOP ====================
+  function gameLoop() {
+    frame++;
+    if (gameState === 'playing') {
+      updatePlayer();
+      updateEnemies();
+      updateProjectiles();
+      updateCoins();
+      updateParticles();
+      updateCamera();
+      updateUI();
+      updateSpeech();
+      if (frame % 60 === 0) saveGame();
+    }
+    render();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // ==================== بدء التشغيل ====================
+  loadGame();
+  initLevel();
+  gameLoop();
+
+})();
+</script>
+</body>
+</html>
