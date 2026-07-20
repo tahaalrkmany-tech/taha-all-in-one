@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>الألعاب والأدوات | Taha alrakamany-Teck</title>
-    <!-- سيتم إضافة رقم الإصدار تلقائياً عبر JavaScript -->
+    <title>TahaTechPro | ألعاب وأدوات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --primary: #0d1b2a;
             --secondary: #1b3a5c;
             --gold: #ffd700;
-            --light: #f8f9fa;
             --card-bg: #ffffff;
             --text-dark: #1a2a3f;
         }
@@ -25,14 +23,13 @@
             display: flex;
             flex-direction: column;
         }
-
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             padding: 18px 20px;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
             border-bottom: 3px solid var(--gold);
         }
         .header-container {
@@ -45,11 +42,9 @@
             gap: 15px;
         }
         .logo h1 {
-            color: #ffffff;
+            color: #fff;
             font-size: 1.5rem;
             font-weight: 700;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .logo h1 span { color: var(--gold); }
         .search-box {
@@ -67,7 +62,6 @@
             color: #fff;
             font-size: 14px;
             backdrop-filter: blur(4px);
-            transition: 0.3s;
             border: 1px solid rgba(255,255,255,0.1);
         }
         .search-box input::placeholder { color: rgba(255,255,255,0.6); }
@@ -117,7 +111,7 @@
         .tab-btn.active {
             color: #fff;
             background: var(--primary);
-            box-shadow: 0 4px 12px rgba(13, 27, 42, 0.2);
+            box-shadow: 0 4px 12px rgba(13,27,42,0.2);
         }
         .tab-btn .badge {
             background: var(--gold);
@@ -138,7 +132,7 @@
             background: var(--card-bg);
             border-radius: 20px;
             padding: 18px 16px 16px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.04);
             border: 1px solid #e9f0f5;
             transition: all 0.25s ease;
             text-align: center;
@@ -151,24 +145,13 @@
             box-shadow: 0 14px 30px rgba(0,0,0,0.07);
         }
         .card .icon { font-size: 38px; margin-bottom: 6px; }
-        .card h3 {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
-        .card p {
-            font-size: 13px;
-            color: #6f8eae;
-            line-height: 1.4;
-            margin-bottom: 6px;
-            flex: 1;
-        }
+        .card h3 { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .card p { font-size: 13px; color: #6f8eae; line-height: 1.4; margin-bottom: 6px; flex: 1; }
         .card .channel-tag {
             font-size: 11px;
             color: var(--gold);
             font-weight: 600;
-            background: rgba(13, 27, 42, 0.04);
+            background: rgba(13,27,42,0.04);
             padding: 2px 10px;
             border-radius: 30px;
             display: inline-block;
@@ -221,7 +204,7 @@
             background: var(--gold);
             color: #000;
             transform: translateY(-4px);
-            box-shadow: 0 6px 14px rgba(201, 168, 76, 0.3);
+            box-shadow: 0 6px 14px rgba(201,168,76,0.3);
         }
 
         footer {
@@ -252,11 +235,9 @@
 
 <header>
     <div class="header-container">
-        <div class="logo">
-            <h1>⚜️ Taha <span>alrakamany</span>-Teck</h1>
-        </div>
+        <div class="logo"><h1>⚜️ Taha<span>TechPro</span></h1></div>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="ابحث عن لعبة أو أداة...">
+            <input type="text" id="searchInput" placeholder="ابحث...">
             <i class="fas fa-search"></i>
         </div>
     </div>
@@ -264,15 +245,14 @@
 
 <main class="container">
     <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 الألعاب <span class="badge" id="gamesCount">12</span></button>
-        <button class="tab-btn" data-tab="tools">🛠️ الأدوات <span class="badge" id="toolsCount">5</span></button>
-        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">17</span></button>
+        <button class="tab-btn active" data-tab="games">🎮 ألعاب <span class="badge" id="gamesCount">0</span></button>
+        <button class="tab-btn" data-tab="tools">🛠️ أدوات <span class="badge" id="toolsCount">0</span></button>
+        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">0</span></button>
     </div>
-
     <div class="grid" id="cardGrid"></div>
-
     <div class="social-section">
         <div class="social-links">
+            <a href="https://youtube.com/@superss2824?si=dFcVrqzzPXhuPXZu" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
             <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
             <a href="https://wa.me/963993382234" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
@@ -282,144 +262,126 @@
 </main>
 
 <footer>
-    © 2026 Taha alrakamany-Teck | 
-    <a href="https://t.me/TahaAllinOne" target="_blank">قناتنا @TahaAllinOne</a> | 
-    <a href="https://t.me/TahaTecH2026Bot" target="_blank">بوتنا @TahaTecH2026Bot</a>
+    © 2026 TahaTechPro | 
+    <a href="https://t.me/TahaAllinOne" target="_blank">@TahaAllinOne</a> | 
+    <a href="https://t.me/TahaTecH2026Bot" target="_blank">البوت</a>
 </footer>
 
 <script>
-    // ============================================================
-    // إضافة رقم إصدار تلقائي لكل ملف CSS و JS لتفادي الكاش
-    // ============================================================
+    // ==================== تجاوز الكاش تلقائياً ====================
     (function() {
         const version = Date.now();
-        const links = document.querySelectorAll('link[rel="stylesheet"]');
-        const scripts = document.querySelectorAll('script[src]');
-        links.forEach(link => {
-            const href = link.getAttribute('href');
-            if (href && !href.includes('?v=')) {
-                link.setAttribute('href', href + '?v=' + version);
-            }
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(el => {
+            const href = el.getAttribute('href');
+            if (href && !href.includes('?v=')) el.setAttribute('href', href + '?v=' + version);
         });
-        scripts.forEach(script => {
-            const src = script.getAttribute('src');
-            if (src && !src.includes('?v=')) {
-                script.setAttribute('src', src + '?v=' + version);
-            }
+        document.querySelectorAll('script[src]').forEach(el => {
+            const src = el.getAttribute('src');
+            if (src && !src.includes('?v=')) el.setAttribute('src', src + '?v=' + version);
         });
     })();
-</script>
 
-<script>
-    (function() {
-        const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
-        const PLAY_URL = BASE + 'Play.html?file=';
+    // ==================== البيانات ====================
+    const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
+    const PLAY_URL = BASE + 'Play.html?file=';
+    const version = Date.now();
+    const v = (f) => BASE + f + '?v=' + version;
 
-        // قائمة الألعاب (تم استبعاد bayblade.html)
-        const games = [
-            { id: 'BALLONe', icon: '🎈', name: 'لعبة البالونات', desc: 'تسلية سريعة وممتعة', file: 'BALLONe.html' },
-            { id: 'Dino', icon: '🦖', name: 'لعبة الديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
-            { id: 'Draw', icon: '🎨', name: 'تحدي الرسم', desc: 'إبداع وتلوين في لعبة تفاعلية', file: 'Draw.html' },
-            { id: 'GlintRush', icon: '💫', name: 'Glint Rush', desc: 'تحدي سرعة وتركيز عالي', file: 'Glint Rush.html' },
-            { id: 'hockey', icon: '🏒', name: 'لعبة الهوكي', desc: 'هوكي سريعة وممتعة', file: 'هوكي.html' },
-            { id: 'SeaStrike', icon: '⚓', name: 'Sea Strike', desc: 'معركة بحرية مشوقة', file: 'SeaStrike.html' },
-            { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: '  DinoGame ', file: 'Super-dino.html' },
-            { id: 'XOGame', icon: '❌', name: 'X-O Game', desc: 'تيك تاك تو بلمسة عصرية', file: 'X-OGame.html' },
-            { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة مع متجر داخلي', file: 'YT-CRUSH4.html' },
-            { id: 'Summerblaze', icon: '🔥', name: 'Summerblaze', desc: 'مغامرة نارية ومثيرة', file: 'Summerblaze.html' },
-            { id: 'FalconsFortune', icon: '🦅', name: 'Falcon\'s Fortune', desc: 'حظ الصقر في لعبة جديدة', file: 'Falcon\'s Fortune.html' },
-            { id: 'MeteorSlayer', icon: '🚀', name: 'Meteor Slayer', desc: 'دمر النيازك وحقق أعلى نتيجة', file: 'MeteorSlayer.html' },
-            { id: 'Snakeladder', icon: '🎲', name: 'الدودة والسلالم', desc: 'لعبة عائلية ممتعة مع النرد', file: 'Snakeladder.html' },
-            { id: '8Ball', icon: '🎱', name: '8 Ball Pool', desc: 'لعبة البلياردو الكلاسيكية', file: '8Ball.html' }
-        ];
+    // الألعاب (21 لعبة، مستبعد: bayblade.html)
+    const games = [
+        { id: 'BALLONe', icon: '🎈', name: 'بالونات', desc: 'تسلية سريعة', file: 'BALLONe.html' },
+        { id: 'Dino', icon: '🦖', name: 'ديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
+        { id: 'Draw', icon: '🎨', name: 'تحدي الرسم', desc: 'إبداع وتلوين', file: 'Draw.html' },
+        { id: 'GlintRush', icon: '💫', name: 'Glint Rush', desc: 'تحدي سرعة', file: 'Glint Rush.html' },
+        { id: 'hockey', icon: '🏒', name: 'هوكي', desc: 'هوكي سريعة', file: 'هوكي.html' },
+        { id: 'SeaStrike', icon: '⚓', name: 'Sea Strike', desc: 'معركة بحرية', file: 'SeaStrike.html' },
+        { id: 'Super-dino', icon: '🦕', name: 'Dino-2', desc: 'ديناصور متقدم', file: 'Super-dino.html' },
+        { id: 'XOGame', icon: '❌', name: 'X-O', desc: 'تيك تاك تو', file: 'X-OGame.html' },
+        { id: 'YT-CRUSH4', icon: '💥', name: 'YT Crush', desc: 'ألغاز ومطابقة', file: 'YT-CRUSH4.html' },
+        { id: 'Summerblaze', icon: '🔥', name: 'Summerblaze', desc: 'مغامرة نارية', file: 'Summerblaze.html' },
+        { id: 'FalconsFortune', icon: '🦅', name: 'Falcon\'s Fortune', desc: 'حظ الصقر', file: 'Falcon\'s Fortune.html' },
+        { id: 'MeteorSlayer', icon: '🚀', name: 'Meteor Slayer', desc: 'دمر النيازك', file: 'MeteorSlayer.html' },
+        { id: 'Snakeladder', icon: '🎲', name: 'الدودة والسلالم', desc: 'لعبة عائلية', file: 'Snakeladder.html' },
+        { id: '8Ball', icon: '🎱', name: '8 Ball Pool', desc: 'بلياردو كلاسيكي', file: '8Ball.html' },
+        { id: 'IceCreamBlitz', icon: '🍦', name: 'IceCream Blitz', desc: 'مغامرة مثلجات', file: 'IceCreamBlitz.html' },
+        { id: 'FruitNinja', icon: '🍉', name: 'Fruit Ninja', desc: 'تقطيع الفواكه', file: 'FruitNinja.html' },
+        { id: 'CubexMaster', icon: '🧱', name: 'Cubex Master', desc: 'تكديس المكعبات', file: 'CubexMaster.html' },
+        { id: 'Sudoku', icon: '🧩', name: 'سودوكو', desc: 'ألغاز ذهنية', file: 'Sudoku.html' },
+        { id: 'BowlingStrike', icon: '🎳', name: 'بولينغ', desc: 'إسقاط الأعمدة', file: 'BowlingStrike.html' },
+        { id: 'DamascusDash', icon: '🏘️', name: 'Damascus Dash', desc: 'مغامرة دمشقية', file: 'DamascusDash.html' }
+    ];
 
-        // قائمة الأدوات (مع Translate_weather)
-        const tools = [
-            { id: 'Files write and edit', icon: '✍️', name: 'محرر وتنسيق النصوص', desc: 'تحرير وتنسيق النصوص بسهولة', file: 'Files write and edit.html' },
-            { id: 'PDFCONVERTOR', icon: '📄', name: 'محول النص إلى PDF', desc: 'حوّل النصوص إلى ملفات PDF بسهولة', file: 'PDFCONVERTOR.html' },
-            { id: 'weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة فورية وطقس نسخة لأي مدينة', file: 'Translate_weather.html' },
-            { id: 'QuranCalendar', icon: '🕌', name: 'QuranCalendar', desc: 'روزنامة + قرآن', file: 'QuranCalendar.html' },
-            { id: 'TahaProCalculator', icon: '🧮', name: 'TahaProCalculator', desc: 'حاسبة علمية ومحول وحدات', file: 'TahaProCalculator.html' }
-        ];
+    // الأدوات (5 أدوات)
+    const tools = [
+        { id: 'Files write and edit', icon: '✍️', name: 'محرر نصوص', desc: 'تحرير وتنسيق النصوص', file: 'Files write and edit.html', special: true },
+        { id: 'PDFCONVERTOR', icon: '📄', name: 'محول PDF', desc: 'تحويل النصوص إلى PDF', file: 'PDFCONVERTOR.html' },
+        { id: 'TahaProCalculator', icon: '🧮', name: 'حاسبة علمية', desc: 'عمليات رياضية متقدمة', file: 'TahaProCalculator.html' },
+        { id: 'TahaSignature', icon: '✒️', name: 'توقيعات فنية', desc: 'تحويل النص إلى توقيع', file: 'TahaSignature.html' },
+        { id: 'Translate_weather', icon: '🌐', name: 'مترجم وطقس', desc: 'ترجمة وطقس فوري', file: 'Translate_weather.html' }
+    ];
 
-        // دمج الكل
-        const allItems = [
-            ...games.map(g => ({ ...g, type: 'game' })),
-            ...tools.map(t => ({ ...t, type: 'tool' }))
-        ];
+    const allItems = [
+        ...games.map(g => ({ ...g, type: 'game' })),
+        ...tools.map(t => ({ ...t, type: 'tool' }))
+    ];
 
-        // تحديث الأعداد
-        document.getElementById('gamesCount').textContent = games.length;
-        document.getElementById('toolsCount').textContent = tools.length;
-        document.getElementById('allCount').textContent = allItems.length;
+    // تحديث الأعداد
+    document.getElementById('gamesCount').textContent = games.length;
+    document.getElementById('toolsCount').textContent = tools.length;
+    document.getElementById('allCount').textContent = allItems.length;
 
-        const grid = document.getElementById('cardGrid');
-        const searchInput = document.getElementById('searchInput');
+    const grid = document.getElementById('cardGrid');
+    const searchInput = document.getElementById('searchInput');
 
-        function renderCards(filterType = 'all', searchTerm = '') {
-            grid.innerHTML = '';
-            const lowerSearch = searchTerm.toLowerCase().trim();
-
-            const filtered = allItems.filter(item => {
-                if (filterType === 'games' && item.type !== 'game') return false;
-                if (filterType === 'tools' && item.type !== 'tool') return false;
-                if (lowerSearch) {
-                    const matchName = item.name.toLowerCase().includes(lowerSearch);
-                    const matchDesc = item.desc.toLowerCase().includes(lowerSearch);
-                    if (!matchName && !matchDesc) return false;
-                }
-                return true;
-            });
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#6f8eae; padding:40px 0;">🔍 لا توجد نتائج تطابق بحثك.</div>`;
-                return;
+    function renderCards(filterType = 'all', searchTerm = '') {
+        grid.innerHTML = '';
+        const term = searchTerm.toLowerCase().trim();
+        const filtered = allItems.filter(item => {
+            if (filterType === 'games' && item.type !== 'game') return false;
+            if (filterType === 'tools' && item.type !== 'tool') return false;
+            if (term) {
+                const matchName = item.name.toLowerCase().includes(term);
+                const matchDesc = item.desc.toLowerCase().includes(term);
+                if (!matchName && !matchDesc) return false;
             }
+            return true;
+        });
 
-            filtered.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                // استخدام Play.html للملفات الخاصة
-                const specialFiles = ['Files write and edit.html'];
-                let finalUrl;
-                if (specialFiles.includes(item.file)) {
-                    finalUrl = PLAY_URL + encodeURIComponent(item.file);
-                } else {
-                    finalUrl = BASE + encodeURIComponent(item.file);
-                }
-
-                card.innerHTML = `
-                    <div class="icon">${item.icon}</div>
-                    <h3>${item.name}</h3>
-                    <p>${item.desc}</p>
-                    <span class="channel-tag">✨ المزيد على @TahaAllinOne</span>
-                    <a href="${finalUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
-                `;
-                grid.appendChild(card);
-            });
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#6f8eae; padding:40px 0;">🔍 لا نتائج</div>`;
+            return;
         }
 
-        // أحداث التبويبات
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                tabBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                renderCards(this.dataset.tab, searchInput.value);
-            });
+        filtered.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const finalUrl = item.special ? PLAY_URL + encodeURIComponent(item.file) : v(item.file);
+            card.innerHTML = `
+                <div class="icon">${item.icon}</div>
+                <h3>${item.name}</h3>
+                <p>${item.desc}</p>
+                <span class="channel-tag">✨ @TahaAllinOne</span>
+                <a href="${finalUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
+            `;
+            grid.appendChild(card);
         });
+    }
 
-        // أحداث البحث
-        searchInput.addEventListener('input', function() {
-            const activeTab = document.querySelector('.tab-btn.active');
-            renderCards(activeTab ? activeTab.dataset.tab : 'all', this.value);
+    // الأحداث
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            renderCards(this.dataset.tab, searchInput.value);
         });
+    });
 
-        // التحميل الأولي
-        renderCards('all', '');
-    })();
+    searchInput.addEventListener('input', function() {
+        const activeTab = document.querySelector('.tab-btn.active');
+        renderCards(activeTab ? activeTab.dataset.tab : 'all', this.value);
+    });
+
+    renderCards('all', '');
 </script>
-
 </body>
 </html>
