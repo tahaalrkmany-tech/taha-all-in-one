@@ -3,640 +3,1515 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لعبة بالون الهواء 2D - نظام النقاط والمشتركين</title>
+  <title>لعبة بالون الهواء 2D - النسخة المتطورة</title>
   <style>
-    /* الإعدادات العامة وأنماط الشاشات */
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html {
-      margin: 0;
-      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: #000;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       direction: rtl;
+      user-select: none;
     }
     .screen {
       position: absolute;
       width: 100%;
       height: 100%;
-      background: #222;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      transition: opacity 0.5s ease;
     }
+    .screen.hidden { display: none; }
+    
     button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 18px;
+      padding: 14px 40px;
+      margin: 12px;
+      font-size: 20px;
+      font-weight: bold;
       cursor: pointer;
       border: none;
-      border-radius: 5px;
-      background: #ff9800;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ff9800, #f57c00);
       color: #fff;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+      letter-spacing: 1px;
     }
-    /* شاشة البداية */
-    #startScreen h1 { font-size: 48px; margin-bottom: 30px; }
-    /* شاشة اختيار البالون */
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(255, 152, 0, 0.5);
+    }
+    button:active { transform: scale(0.95); }
+    
+    #startScreen h1 {
+      font-size: 64px;
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: none;
+      margin-bottom: 20px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      0% { filter: drop-shadow(0 0 10px rgba(255,107,107,0.3)); }
+      100% { filter: drop-shadow(0 0 30px rgba(77,150,255,0.5)); }
+    }
+    
     #balloonOptions {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
-      max-width: 90%;
+      gap: 15px;
+      max-width: 95%;
       margin: 20px;
+      padding: 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      max-height: 70vh;
+      overflow-y: auto;
     }
     .balloon-option {
-      width: 80px;
-      height: 100px;
+      width: 90px;
+      height: 110px;
       cursor: pointer;
-      border: 2px solid transparent;
-      border-radius: 10px;
-      transition: border 0.3s;
-    }
-    .balloon-option.selected { border: 2px solid #ff9800; }
-    /* لوحة النتائج */
-    #scoreboard {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 2;
-      font-size: 20px;
-      color: #fff;
-      background: rgba(0,0,0,0.5);
-      padding: 5px 10px;
-      border-radius: 5px;
-    }
-    /* شاشة اللعبة */
-    #gameScreen {
-      background: #000;
+      border: 3px solid transparent;
+      border-radius: 15px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.05);
+      padding: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
     }
-    canvas { display: block; }
-    /* شاشة انتهاء اللعبة */
+    .balloon-option:hover {
+      transform: scale(1.08);
+      background: rgba(255,255,255,0.1);
+    }
+    .balloon-option.selected {
+      border-color: #ff9800;
+      background: rgba(255,152,0,0.2);
+      box-shadow: 0 0 30px rgba(255,152,0,0.3);
+    }
+    .balloon-option svg { width: 80px; height: 100px; }
+    
+    .category-label {
+      width: 100%;
+      text-align: center;
+      color: #ffd93d;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0 5px 0;
+      padding: 5px;
+      border-bottom: 2px solid rgba(255,217,61,0.3);
+    }
+    
+    #scoreboard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 2;
+      font-size: 22px;
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      padding: 12px 24px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    #scoreboard span { color: #ffd93d; }
+    
+    #gameScreen {
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    
     #gameOverScreen {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 3;
+      animation: fadeIn 0.5s ease;
     }
-    #gameOverScreen h2 { font-size: 48px; margin-bottom: 20px; color: #ff5722; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    #gameOverScreen h2 {
+      font-size: 56px;
+      color: #ff5722;
+      margin-bottom: 10px;
+      text-shadow: 0 0 30px rgba(255,87,34,0.5);
+    }
+    #gameOverScreen .final-score {
+      font-size: 28px;
+      color: #ffd93d;
+      margin-bottom: 30px;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 10px;
+    }
+    
+    #balloonOptions::-webkit-scrollbar {
+      width: 8px;
+    }
+    #balloonOptions::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    #balloonOptions::-webkit-scrollbar-thumb {
+      background: #ff9800;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
-  <!-- شاشة البداية -->
   <div id="startScreen" class="screen">
-    <h1>لعبة بالون الهواء</h1>
-    <button id="startButton">ابدأ</button>
-    <button id="selectBalloonButton">اختر بالون</button>
+    <h1>🎈 بالون الهواء</h1>
+    <p class="subtitle">اختر بالونك وانطلق في المغامرة</p>
+    <button id="startButton">🚀 ابدأ اللعبة</button>
+    <button id="selectBalloonButton" style="background: linear-gradient(135deg, #4d96ff, #3a7bd5);">🎨 اختر بالونك</button>
   </div>
 
-  <!-- شاشة اختيار البالون -->
-  <div id="selectBalloonScreen" class="screen" style="display: none;">
-    <h2>اختر بالون</h2>
+  <div id="selectBalloonScreen" class="screen hidden">
+    <h2 style="color: #ffd93d;">🎈 اختر بالونك المفضل</h2>
+    <p class="subtitle">اضغط مرتين على البالون لاختياره</p>
     <div id="balloonOptions"></div>
+    <button id="backButton" style="background: linear-gradient(135deg, #666, #444);">↩️ رجوع</button>
   </div>
 
-  <!-- شاشة اللعبة -->
-  <div id="gameScreen" class="screen" style="display: none;">
+  <div id="gameScreen" class="screen hidden">
     <div id="scoreboard">
-      <!-- سيتم تعديل عناوين لوحة النتائج حسب نوع البالون -->
-      <span id="scoreLabel">النقاط:</span> <span id="score">0</span> |
-      <span id="highScoreLabel">أعلى نقاط:</span> <span id="highScore">0</span>
+      <span id="scoreLabel">⭐ النقاط:</span> <span id="score">0</span> |
+      <span id="highScoreLabel">🏆 أعلى:</span> <span id="highScore">0</span>
     </div>
     <canvas id="gameCanvas"></canvas>
-    <!-- شاشة انتهاء اللعبة -->
-    <div id="gameOverScreen" style="display: none;">
-      <h2>انتهت اللعبة</h2>
-      <button id="restartButton">أعد المحاولة</button>
+    <div id="gameOverScreen">
+      <h2>💥 انتهت اللعبة</h2>
+      <div class="final-score">النقاط النهائية: <span id="finalScore">0</span></div>
+      <button id="restartButton">🔄 أعد المحاولة</button>
     </div>
   </div>
 
-  <!-- مشغل صوتي للموسيقى الخلفية (اختياري) -->
-  <audio id="bgMusic" loop>
-    <source src="bg.mp3" type="audio/mpeg">
-  </audio>
-
   <script>
-    /********** المتغيرات العامة **********/
-    let gameState = "start"; // القيم: start, select, playing, gameover
-    let chosenBalloon = { color: "#ff0000", shape: "circle" }; // الافتراضي للبالونات غير يوتيوب
-    let canvas = document.getElementById("gameCanvas");
-    let ctx = canvas.getContext("2d");
-    let balloon;
-    let obstacles = [];
-    let score = 0, highScore = 0;
-    let lastFrameTime = 0, lastObstacleSpawn = 0;
-    let obstacleSpawnInterval = 2000; // بالملّي ثانية
-    const BALLOON_VERTICAL_SPEED = 50; // سرعة الصعود (تحريك العالم)
-    const BASE_OBSTACLE_SPEED = 50;
-    let currentWind = 0;
-    const windUpdateInterval = 5000;
-    let lastWindUpdate = 0;
-    const COLLISION_DAMAGE = 100; // "الضريبة" عند الاصطدام
+    /*************************************************************
+     *                      النظام الصوتي
+     *************************************************************/
+    class SoundManager {
+      constructor() {
+        this.audioCtx = null;
+        this.bgLoop = null;
+        this.isMuted = false;
+        this.initAudio();
+      }
 
-    // لنظام بالون يوتيوب (المشتركين)
-    let initialBalloonY = 0;
-    let currentMilestone = 0;
-    let milestoneMessage = "";
-    let milestoneTimer = 0; // بالثواني
+      initAudio() {
+        try {
+          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {
+          console.warn('Web Audio API غير مدعوم');
+        }
+      }
 
-    // متغيرات التنويه عند بلوغ الرقم 70
-    let subscribers70Shown = false;
-    let subscriber70Timer = 0;
-    let subscriber70Message = "";
+      resume() {
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      }
 
-    // متغير لمشهد الافتتاح الخاص باليوتيوب (عند اختيار بالون يوتيوب)
-    let openingCinematicTimer = 0;
+      playCollect() {
+        if (!this.audioCtx || this.isMuted) return;
+        try {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.08);
+          osc.start(this.audioCtx.currentTime);
+          osc.stop(this.audioCtx.currentTime + 0.08);
+        } catch(e) { /* تجاهل */ }
+      }
 
-    /********** تغيير حجم الكانفاس **********/
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+      playCollision() {
+        if (!this.audioCtx || this.isMuted) return;
+        try {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.frequency.setValueAtTime(200, this.audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(80, this.audioCtx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.25);
+          osc.start(this.audioCtx.currentTime);
+          osc.stop(this.audioCtx.currentTime + 0.25);
+        } catch(e) { /* تجاهل */ }
+      }
 
-    /********** التبديل بين الشاشات **********/
-    function showScreen(screenId) {
-      const screens = ["startScreen", "selectBalloonScreen", "gameScreen"];
-      screens.forEach(id => {
-        document.getElementById(id).style.display = (id === screenId) ? "flex" : "none";
-      });
-    }
+      playGameOver() {
+        if (!this.audioCtx || this.isMuted) return;
+        try {
+          const notes = [523, 494, 440, 392, 349];
+          notes.forEach((freq, i) => {
+            setTimeout(() => {
+              const osc = this.audioCtx.createOscillator();
+              const gain = this.audioCtx.createGain();
+              osc.type = 'sine';
+              osc.connect(gain);
+              gain.connect(this.audioCtx.destination);
+              osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.2);
+              osc.start(this.audioCtx.currentTime);
+              osc.stop(this.audioCtx.currentTime + 0.2);
+            }, i * 150);
+          });
+        } catch(e) { /* تجاهل */ }
+      }
 
-    /********** رسم الخلفية **********/
-    function drawBackground() {
-      let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, "#87CEEB");
-      gradient.addColorStop(1, "#0000FF");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+      playAchievement() {
+        if (!this.audioCtx || this.isMuted) return;
+        try {
+          const notes = [523, 659, 784, 1047];
+          notes.forEach((freq, i) => {
+            setTimeout(() => {
+              const osc = this.audioCtx.createOscillator();
+              const gain = this.audioCtx.createGain();
+              osc.type = 'sine';
+              osc.connect(gain);
+              gain.connect(this.audioCtx.destination);
+              osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+              gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.12);
+              osc.start(this.audioCtx.currentTime);
+              osc.stop(this.audioCtx.currentTime + 0.12);
+            }, i * 100);
+          });
+        } catch(e) { /* تجاهل */ }
+      }
 
-    /********** رسم الغيوم **********/
-    function drawClouds() {
-      ctx.save();
-      ctx.globalAlpha = 0.7;
-      ctx.fillStyle = "#555";
-      // رسم غيمة بسيطة
-      ctx.beginPath();
-      ctx.arc(150, 150, 40, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.arc(190, 140, 35, Math.PI, Math.PI * 2);
-      ctx.arc(230, 150, 30, Math.PI * 1.2, Math.PI * 2.2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
+      playBackground() {
+        if (!this.audioCtx || this.isMuted || this.bgLoop) return;
+        try {
+          const playNote = (freq, dur, time) => {
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.type = 'sine';
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            osc.frequency.setValueAtTime(freq, time);
+            gain.gain.setValueAtTime(0.04, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+            osc.start(time);
+            osc.stop(time + dur);
+          };
 
-    /********** رسم الشمس مع أشعتها **********/
-    function drawSun() {
-      let sunX = canvas.width * 0.85;
-      let sunY = canvas.height * 0.15;
-      let radius = 50;
-      let gradSun = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, radius);
-      gradSun.addColorStop(0, "yellow");
-      gradSun.addColorStop(1, "orange");
-      ctx.fillStyle = gradSun;
-      ctx.beginPath();
-      ctx.arc(sunX, sunY, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,200,0,0.5)";
-      ctx.lineWidth = 3;
-      for (let i = 0; i < 12; i++) {
-        let angle = i * (Math.PI * 2 / 12);
-        let x1 = sunX + Math.cos(angle) * (radius + 10);
-        let y1 = sunY + Math.sin(angle) * (radius + 10);
-        let x2 = sunX + Math.cos(angle) * (radius + 30);
-        let y2 = sunY + Math.sin(angle) * (radius + 30);
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+          const melody = [
+            [261, 0.2], [293, 0.2], [329, 0.2], [349, 0.2],
+            [392, 0.2], [440, 0.2], [493, 0.2], [523, 0.2]
+          ];
+
+          let time = this.audioCtx.currentTime;
+          melody.forEach(([freq, dur]) => {
+            playNote(freq, dur, time);
+            time += dur + 0.08;
+          });
+
+          this.bgLoop = setTimeout(() => this.playBackground(), time * 1000 + 200);
+        } catch(e) { /* تجاهل */ }
+      }
+
+      stopBackground() {
+        if (this.bgLoop) {
+          clearTimeout(this.bgLoop);
+          this.bgLoop = null;
+        }
+      }
+
+      toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.isMuted) this.stopBackground();
+        else this.playBackground();
       }
     }
 
-    /********** إعداد خيارات البالون **********/
-    function populateBalloonOptions() {
-      const balloonOptionsDiv = document.getElementById("balloonOptions");
-      balloonOptionsDiv.innerHTML = "";
-      const colors = ["#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#00ffff", "#ffff00", "#ff9800", "#9c27b0", "#3f51b5", "#e91e63"];
-      // 20 خيار بالون عادي مع زخارف
-      for (let i = 0; i < 20; i++) {
-        const option = document.createElement("div");
-        option.classList.add("balloon-option");
-        let color = colors[i % colors.length];
-        option.innerHTML = `<svg width="80" height="100">
-                              <circle cx="40" cy="40" r="30" fill="${color}" stroke="#fff" stroke-width="2"/>
-                              <circle cx="30" cy="30" r="3" fill="#fff"/>
-                              <circle cx="50" cy="30" r="3" fill="#fff"/>
-                              <rect x="38" y="70" width="4" height="20" fill="#fff"/>
-                            </svg>`;
-        option.dataset.color = color;
-        option.addEventListener("dblclick", function() {
-          document.querySelectorAll(".balloon-option").forEach(el => el.classList.remove("selected"));
-          option.classList.add("selected");
-          chosenBalloon = { color: color, shape: "circle" };
-          showScreen("gameScreen");
-          startGame();
-        });
-        balloonOptionsDiv.appendChild(option);
+    /*************************************************************
+     *                      نظام النقاط
+     *************************************************************/
+    class ScoringSystem {
+      constructor() {
+        this.score = 0;
+        this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        this.milestone = 0;
+        this.milestoneMessage = '';
+        this.milestoneTimer = 0;
+        this.soundManager = null;
       }
-      // خيار بالون يوتيوب
-      const ytOption = document.createElement("div");
-      ytOption.classList.add("balloon-option");
-      ytOption.innerHTML = `<svg width="80" height="100">
-        <defs>
-          <linearGradient id="gradYT" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#FF0000" />
-            <stop offset="100%" stop-color="#AA0000" />
-          </linearGradient>
-        </defs>
-        <circle cx="40" cy="40" r="30" fill="url(#gradYT)" stroke="#fff" stroke-width="2"/>
-        <polygon points="33,30 33,50 55,40" fill="#fff"/>
-        <rect x="38" y="70" width="4" height="20" fill="#fff"/>
-      </svg>`;
-      ytOption.addEventListener("dblclick", function() {
-        document.querySelectorAll(".balloon-option").forEach(el => el.classList.remove("selected"));
-        ytOption.classList.add("selected");
-        chosenBalloon = { tag: "youtube" };
-        showScreen("gameScreen");
-        startGame();
-      });
-      balloonOptionsDiv.appendChild(ytOption);
+
+      setSoundManager(sm) { this.soundManager = sm; }
+
+      update(deltaTime, balloon, obstacles) {
+        this.score += deltaTime * 10;
+        this.checkMilestones();
+      }
+      
+      getScoreDisplay() { return `النقاط: ${Math.floor(this.score)}`; }
+      getScoreLabel() { return '⭐ النقاط:'; }
+      getHighLabel() { return '🏆 أعلى:'; }
+      
+      handleCollision() {
+        if (this.score >= 100) {
+          this.score -= 100;
+          if (this.soundManager) this.soundManager.playCollision();
+          return true;
+        }
+        return false;
+      }
+
+      checkMilestones() {
+        const newMilestone = Math.floor(this.score / 1000);
+        if (newMilestone > this.milestone) {
+          this.milestone = newMilestone;
+          this.milestoneMessage = `🎉 ${this.milestone * 1000} نقطة!`;
+          this.milestoneTimer = 2.5;
+          if (this.soundManager) this.soundManager.playAchievement();
+          return true;
+        }
+        return false;
+      }
+
+      getMilestone() {
+        if (this.milestoneTimer > 0) {
+          this.milestoneTimer -= 0.016;
+          return this.milestoneMessage;
+        }
+        return null;
+      }
+
+      saveHighScore() {
+        if (this.score > this.highScore) {
+          this.highScore = this.score;
+          localStorage.setItem('highScore', this.highScore);
+        }
+      }
     }
 
-    /********** تعريف كائن البالون **********/
+    /*************************************************************
+     *                      إدارة النقاط
+     *************************************************************/
+    class ScoreManager {
+      constructor() {
+        this.system = new ScoringSystem();
+        this.soundManager = null;
+      }
+
+      setSoundManager(sm) {
+        this.soundManager = sm;
+        this.system.setSoundManager(sm);
+      }
+
+      update(deltaTime, balloon, obstacles) {
+        this.system.update(deltaTime, balloon, obstacles);
+        this.updateUI();
+      }
+
+      updateUI() {
+        document.getElementById('score').textContent = Math.floor(this.system.score);
+        document.getElementById('highScore').textContent = Math.floor(this.system.highScore);
+        document.getElementById('scoreLabel').textContent = this.system.getScoreLabel();
+        document.getElementById('highScoreLabel').textContent = this.system.getHighLabel();
+      }
+
+      handleCollision() {
+        return this.system.handleCollision();
+      }
+
+      getMilestone() {
+        return this.system.getMilestone();
+      }
+
+      saveHighScore() {
+        this.system.saveHighScore();
+      }
+
+      getScore() {
+        return this.system.score;
+      }
+    }
+
+    /*************************************************************
+     *                      كائن البالون
+     *************************************************************/
     class Balloon {
       constructor(style) {
-        this.x = canvas.width / 2;
-        this.y = canvas.height - 100;
-        this.radius = 30;
-        this.targetX = this.x;
-        if (style.flag) {
-          this.flag = style.flag;
-        } else if (style.custom) {
-          this.custom = true;
-        } else if (style.tag && style.tag === "youtube") {
-          this.youtube = true;
-        } else {
-          this.custom = false;
-          this.color = style.color;
-        }
+        this.x = 0;
+        this.y = 0;
+        this.radius = 32;
+        this.targetX = 0;
+        this.style = style;
+        this.wobble = 0;
+        this.wobbleSpeed = 2 + Math.random() * 2;
+        
+        this.color = style && style.color ? style.color : '#ff0000';
+        this.flag = style && style.flag ? style.flag : null;
+        this.custom = style && style.custom ? style.custom : false;
+        this.pattern = style && style.pattern ? style.pattern : null;
       }
+
       update(deltaTime) {
-        this.x += (this.targetX - this.x) * deltaTime * 5 + (currentWind * deltaTime);
-        this.y -= BALLOON_VERTICAL_SPEED * deltaTime;
+        this.x += (this.targetX - this.x) * deltaTime * 6;
+        this.y -= 50 * deltaTime;
+        this.wobble += deltaTime * this.wobbleSpeed;
       }
+
       draw(ctx) {
         ctx.save();
+        const x = this.x;
+        const y = this.y;
+        const r = this.radius;
+        const wobbleOffset = Math.sin(this.wobble) * 2;
+
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 5;
+
         if (this.flag) {
-          let grad;
-          if(this.flag === "us") {
-            grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
-            grad.addColorStop(0, "red");
-            grad.addColorStop(0.5, "white");
-            grad.addColorStop(1, "red");
-          } else if(this.flag === "rus") {
-            grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
-            grad.addColorStop(0, "white");
-            grad.addColorStop(0.5, "blue");
-            grad.addColorStop(1, "red");
-          }
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
+          this.drawFlag(ctx, x, y + wobbleOffset, r);
+        } else if (this.pattern) {
+          this.drawPattern(ctx, x, y + wobbleOffset, r);
+        } else if (this.custom) {
+          this.drawCustom(ctx, x, y + wobbleOffset, r);
+        } else {
+          this.drawNormal(ctx, x, y + wobbleOffset, r);
         }
-        else if(this.youtube) {
-          let grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
-          grad.addColorStop(0, "#FF0000");
-          grad.addColorStop(1, "#AA0000");
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.beginPath();
-          ctx.moveTo(this.x - 7, this.y - 10);
-          ctx.lineTo(this.x - 7, this.y + 10);
-          ctx.lineTo(this.x + 10, this.y);
-          ctx.closePath();
-          ctx.fill();
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
-        }
-        else if(this.custom) {
-          let grad = ctx.createLinearGradient(this.x, this.y - this.radius, this.x, this.y + this.radius);
-          grad.addColorStop(0, "green");
-          grad.addColorStop(0.5, "white");
-          grad.addColorStop(1, "black");
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-          drawStar(ctx, this.x, this.y, this.radius/3, 5, 0.5, "red");
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
-        }
-        else {
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.fillStyle = "rgba(255,255,255,0.6)";
-          ctx.beginPath();
-          ctx.arc(this.x - 10, this.y - 10, 3, 0, Math.PI * 2);
-          ctx.arc(this.x + 10, this.y - 10, 3, 0, Math.PI * 2);
-          ctx.arc(this.x, this.y + 5, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#654321";
-          ctx.fillRect(this.x - 10, this.y + this.radius, 20, 15);
-        }
+
         ctx.restore();
       }
-    }
 
-    function drawStar(ctx, cx, cy, outerRadius, points, inset, color) {
-      let angle = Math.PI / points;
-      ctx.save();
-      ctx.beginPath();
-      for(let i = 0; i < 2 * points; i++){
-        let r = (i % 2 === 0) ? outerRadius : outerRadius * inset;
-        let a = i * angle;
-        let x = cx + Math.cos(a)*r;
-        let y = cy + Math.sin(a)*r;
-        if(i === 0)
-          ctx.moveTo(x, y);
-        else
-          ctx.lineTo(x, y);
+      drawNormal(ctx, x, y, r) {
+        const grad = ctx.createRadialGradient(
+          x - r * 0.3, y - r * 0.3, r * 0.1,
+          x, y, r
+        );
+        const color = this.color;
+        grad.addColorStop(0, this.lightenColor(color, 50));
+        grad.addColorStop(0.6, color);
+        grad.addColorStop(1, this.darkenColor(color, 40));
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const highlight = ctx.createRadialGradient(
+          x - r * 0.25, y - r * 0.3, 0,
+          x - r * 0.25, y - r * 0.3, r * 0.3
+        );
+        highlight.addColorStop(0, 'rgba(255,255,255,0.4)');
+        highlight.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#8B7355';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + r);
+        ctx.quadraticCurveTo(x + 5, y + r + 20, x - 3, y + r + 35);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8B7355';
+        ctx.beginPath();
+        ctx.arc(x + 1, y + r + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.restore();
+
+      drawFlag(ctx, x, y, r) {
+        let colors;
+        switch(this.flag) {
+          case 'us': colors = ['#ff0000', '#ffffff', '#ff0000']; break;
+          case 'rus': colors = ['#ffffff', '#0039a6', '#d52b1e']; break;
+          case 'fr': colors = ['#002395', '#ffffff', '#ed2939']; break;
+          case 'de': colors = ['#000000', '#dd0000', '#ffce00']; break;
+          case 'it': colors = ['#009246', '#ffffff', '#ce2b37']; break;
+          case 'eg': colors = ['#ce1126', '#ffffff', '#000000']; break;
+          case 'sa': colors = ['#006c35', '#ffffff', '#006c35']; break;
+          case 'jo': colors = ['#000000', '#ffffff', '#007a3d']; break;
+          default: colors = ['#ff0000', '#ffffff', '#ff0000'];
+        }
+
+        const grad = ctx.createLinearGradient(x, y - r, x, y + r);
+        grad.addColorStop(0, colors[0]);
+        grad.addColorStop(0.5, colors[1]);
+        grad.addColorStop(1, colors[2]);
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // إضافة نجوم أو رموز للأعلام
+        if (this.flag === 'us') {
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 4; j++) {
+              const sx = x - r * 0.4 + i * r * 0.2 + (j % 2) * r * 0.1;
+              const sy = y - r * 0.3 + j * r * 0.15;
+              this.drawStar(ctx, sx, sy, r * 0.04, 5, 0.5, '#ffffff');
+            }
+          }
+        } else if (this.flag === 'sa') {
+          ctx.font = `${r * 0.25}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.fillText('لا إله إلا الله', x, y);
+        }
+
+        const highlight = ctx.createRadialGradient(
+          x - r * 0.25, y - r * 0.3, 0,
+          x - r * 0.25, y - r * 0.3, r * 0.3
+        );
+        highlight.addColorStop(0, 'rgba(255,255,255,0.25)');
+        highlight.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#8B7355';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + r);
+        ctx.quadraticCurveTo(x + 5, y + r + 20, x - 3, y + r + 35);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8B7355';
+        ctx.beginPath();
+        ctx.arc(x + 1, y + r + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawPattern(ctx, x, y, r) {
+        // بالونات مميزة
+        const grad = ctx.createRadialGradient(
+          x - r * 0.3, y - r * 0.3, r * 0.1,
+          x, y, r
+        );
+        
+        switch(this.pattern) {
+          case 'earth':
+            grad.addColorStop(0, '#4d96ff');
+            grad.addColorStop(0.5, '#2d7b3a');
+            grad.addColorStop(1, '#1a4a2a');
+            break;
+          case 'star':
+            grad.addColorStop(0, '#ffd700');
+            grad.addColorStop(0.5, '#ffaa00');
+            grad.addColorStop(1, '#cc8800');
+            break;
+          case 'diamond':
+            grad.addColorStop(0, '#b9f2ff');
+            grad.addColorStop(0.5, '#7dd8f0');
+            grad.addColorStop(1, '#4ab0d0');
+            break;
+          case 'fire':
+            grad.addColorStop(0, '#ff4400');
+            grad.addColorStop(0.5, '#ff8800');
+            grad.addColorStop(1, '#ffcc00');
+            break;
+          case 'water':
+            grad.addColorStop(0, '#00ccff');
+            grad.addColorStop(0.5, '#0066ff');
+            grad.addColorStop(1, '#0000cc');
+            break;
+          case 'camo':
+            grad.addColorStop(0, '#4a7a3a');
+            grad.addColorStop(0.5, '#2d5a2a');
+            grad.addColorStop(1, '#1a3a1a');
+            break;
+          default:
+            grad.addColorStop(0, '#ff6b6b');
+            grad.addColorStop(0.5, '#ff0000');
+            grad.addColorStop(1, '#aa0000');
+        }
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // إضافة زخارف خاصة
+        if (this.pattern === 'earth') {
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(x, y, r * 0.3, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (this.pattern === 'star') {
+          this.drawStar(ctx, x, y, r * 0.4, 5, 0.5, 'rgba(255,255,255,0.3)');
+        } else if (this.pattern === 'diamond') {
+          ctx.fillStyle = 'rgba(255,255,255,0.1)';
+          ctx.beginPath();
+          ctx.moveTo(x, y - r * 0.5);
+          ctx.lineTo(x + r * 0.5, y);
+          ctx.lineTo(x, y + r * 0.5);
+          ctx.lineTo(x - r * 0.5, y);
+          ctx.closePath();
+          ctx.fill();
+        } else if (this.pattern === 'camo') {
+          ctx.fillStyle = 'rgba(0,0,0,0.1)';
+          for (let i = 0; i < 6; i++) {
+            const angle = i * Math.PI / 3;
+            const cx = x + Math.cos(angle) * r * 0.4;
+            const cy = y + Math.sin(angle) * r * 0.4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        const highlight = ctx.createRadialGradient(
+          x - r * 0.25, y - r * 0.3, 0,
+          x - r * 0.25, y - r * 0.3, r * 0.3
+        );
+        highlight.addColorStop(0, 'rgba(255,255,255,0.25)');
+        highlight.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#8B7355';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + r);
+        ctx.quadraticCurveTo(x + 5, y + r + 20, x - 3, y + r + 35);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8B7355';
+        ctx.beginPath();
+        ctx.arc(x + 1, y + r + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawCustom(ctx, x, y, r) {
+        const grad = ctx.createLinearGradient(x, y - r, x, y + r);
+        grad.addColorStop(0, '#00ff00');
+        grad.addColorStop(0.5, '#ffffff');
+        grad.addColorStop(1, '#000000');
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        this.drawStar(ctx, x, y, r * 0.3, 5, 0.5, '#ff0000');
+
+        const highlight = ctx.createRadialGradient(
+          x - r * 0.25, y - r * 0.3, 0,
+          x - r * 0.25, y - r * 0.3, r * 0.3
+        );
+        highlight.addColorStop(0, 'rgba(255,255,255,0.25)');
+        highlight.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#8B7355';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y + r);
+        ctx.quadraticCurveTo(x + 5, y + r + 20, x - 3, y + r + 35);
+        ctx.stroke();
+
+        ctx.fillStyle = '#8B7355';
+        ctx.beginPath();
+        ctx.arc(x + 1, y + r + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawStar(ctx, cx, cy, outerRadius, points, inset, color) {
+        const angle = Math.PI / points;
+        ctx.save();
+        ctx.beginPath();
+        for (let i = 0; i < 2 * points; i++) {
+          const r = (i % 2 === 0) ? outerRadius : outerRadius * inset;
+          const a = i * angle - Math.PI / 2;
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      lightenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+      }
+
+      darkenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+      }
     }
 
-    function getRandomObstacleType() {
-      let r = Math.random();
-      if(r < 0.5) return "dislike";
-      else if(r < 0.8) return "copyright";
-      else return "report";
-    }
-
+    /*************************************************************
+     *                      العقبات (صخور فقط)
+     *************************************************************/
     class Obstacle {
-      constructor(x, y, width, height, speed, type) {
+      constructor(x, y, width, height, speed) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.speed = speed;
-        this.type = type;
+        this.wobble = Math.random() * Math.PI * 2;
+        this.pulse = 0;
       }
+
       update(deltaTime) {
         this.y += this.speed * deltaTime;
-        this.x += currentWind * deltaTime * 0.5;
+        this.wobble += deltaTime * 3;
+        this.pulse += deltaTime * 2;
       }
+
       draw(ctx) {
         ctx.save();
-        ctx.fillStyle = "#333";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.font = Math.min(this.width, this.height) + "px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        if(this.type === "copyright") {
-          ctx.beginPath();
-          ctx.moveTo(this.x + this.width/2 - 5, this.y + this.height/2);
-          ctx.lineTo(this.x + this.width/2 + 5, this.y + this.height/2);
-          ctx.lineTo(this.x + this.width/2 + 5, this.y + this.height/2 + 10);
-          ctx.lineTo(this.x + this.width/2 - 5, this.y + this.height/2 + 10);
-          ctx.closePath();
-          ctx.fillStyle = "#fff";
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(this.x + this.width/2, this.y + this.height/2 - 5, 4, 0, Math.PI * 2);
-          ctx.fillStyle = "#ff0";
-          ctx.fill();
-        } else {
-          let icon = "";
-          if(this.type === "dislike") icon = "👎";
-          else if(this.type === "report") icon = "🚩";
-          ctx.fillStyle = "#fff";
-          ctx.fillText(icon, this.x + this.width/2, this.y + this.height/2);
+        const x = this.x;
+        const y = this.y;
+        const w = this.width;
+        const h = this.height;
+        const pulseOffset = Math.sin(this.pulse) * 2;
+
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 3;
+
+        // لون الصخرة متدرج
+        const rockGrad = ctx.createRadialGradient(
+          x + w * 0.3, y + h * 0.2, 0,
+          x + w/2, y + h/2, Math.max(w, h) * 0.7
+        );
+        rockGrad.addColorStop(0, '#8a8a8a');
+        rockGrad.addColorStop(0.5, '#6b6b6b');
+        rockGrad.addColorStop(0.8, '#4a4a4a');
+        rockGrad.addColorStop(1, '#2a2a2a');
+
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = rockGrad;
+        
+        // شكل الصخرة غير منتظم
+        ctx.beginPath();
+        const points = 12;
+        for (let i = 0; i <= points; i++) {
+          const angle = (i / points) * Math.PI * 2;
+          const rx = w/2 * (0.8 + 0.2 * Math.sin(i * 1.7 + this.wobble));
+          const ry = h/2 * (0.8 + 0.2 * Math.cos(i * 2.3 + this.wobble * 0.5));
+          const px = x + w/2 + Math.cos(angle) * rx;
+          const py = y + h/2 + Math.sin(angle) * ry;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(100,100,100,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // شقوق الصخرة
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(50,50,50,0.2)';
+        ctx.lineWidth = 1;
+        
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.3, y + h * 0.2);
+        ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.4, x + w * 0.4, y + h * 0.6);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.6, y + h * 0.3);
+        ctx.quadraticCurveTo(x + w * 0.7, y + h * 0.5, x + w * 0.8, y + h * 0.7);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.2, y + h * 0.7);
+        ctx.quadraticCurveTo(x + w * 0.3, y + h * 0.8, x + w * 0.5, y + h * 0.75);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.beginPath();
+        ctx.ellipse(x + w * 0.35, y + h * 0.3, w * 0.15, h * 0.1, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath();
+        ctx.ellipse(x + w/2, y + h * 0.9, w * 0.5, h * 0.1, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
       }
     }
 
-    function circleRectCollision(cx, cy, radius, rx, ry, rw, rh) {
-      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
-      let closestX = clamp(cx, rx, rx + rw);
-      let closestY = clamp(cy, ry, ry + rh);
-      let dx = cx - closestX, dy = cy - closestY;
-      return (dx*dx + dy*dy) < (radius * radius);
-    }
+    /*************************************************************
+     *                      اللعبة الرئيسية
+     *************************************************************/
+    class Game {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.soundManager = new SoundManager();
+        this.scoreManager = new ScoreManager();
+        this.scoreManager.setSoundManager(this.soundManager);
+        
+        this.balloon = null;
+        this.obstacles = [];
+        this.gameState = 'start';
+        this.lastFrameTime = 0;
+        this.lastObstacleSpawn = 0;
+        this.obstacleSpawnInterval = 2000;
+        this.currentWind = 0;
+        this.lastWindUpdate = 0;
+        this.windUpdateInterval = 5000;
+        this.chosenStyle = { color: '#ff0000' };
+        
+        this.resizeCanvas();
+        this.setupEventListeners();
+        this.populateBalloonOptions();
+        this.gameLoop(0);
+      }
 
-    function updateWind(timestamp) {
-      if(timestamp - lastWindUpdate > windUpdateInterval) {
-        currentWind = Math.random()*60 - 30;
-        lastWindUpdate = timestamp;
+      resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
       }
-    }
 
-    function updateGame(deltaTime, timestamp) {
-      updateWind(timestamp);
-      balloon.update(deltaTime);
-      // إذا كان هناك مشهد افتتاحي (لنظام يوتيوب) نتوقف عن تحديث باقي اللعبة
-      if(openingCinematicTimer > 0) {
-        openingCinematicTimer -= deltaTime;
-        return;
+      setupEventListeners() {
+        document.getElementById('startButton').addEventListener('click', () => {
+          this.showScreen('gameScreen');
+          this.soundManager.resume();
+          this.startGame();
+        });
+
+        document.getElementById('selectBalloonButton').addEventListener('click', () => {
+          this.showScreen('selectBalloonScreen');
+        });
+
+        document.getElementById('backButton').addEventListener('click', () => {
+          this.showScreen('startScreen');
+        });
+
+        document.getElementById('restartButton').addEventListener('click', () => {
+          this.startGame();
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+          if (this.balloon) {
+            const rect = this.canvas.getBoundingClientRect();
+            this.balloon.targetX = e.clientX - rect.left;
+          }
+        });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          if (this.balloon) {
+            const rect = this.canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            this.balloon.targetX = touch.clientX - rect.left;
+          }
+        }, { passive: false });
+
+        window.addEventListener('resize', () => this.resizeCanvas());
       }
-      obstacles.forEach(obstacle => obstacle.update(deltaTime));
-      obstacles = obstacles.filter(obstacle => obstacle.y < balloon.y + canvas.height);
-      if(performance.now() - lastObstacleSpawn > obstacleSpawnInterval) {
-        spawnObstacle();
-        lastObstacleSpawn = performance.now();
-        obstacleSpawnInterval = Math.max(800, obstacleSpawnInterval - 20);
+
+      showScreen(screenId) {
+        const screens = ['startScreen', 'selectBalloonScreen', 'gameScreen'];
+        screens.forEach(id => {
+          document.getElementById(id).classList.toggle('hidden', id !== screenId);
+        });
       }
-      for(let i = obstacles.length - 1; i >= 0; i--){
-        if(circleRectCollision(balloon.x, balloon.y, balloon.radius, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height)){
-          if(score >= COLLISION_DAMAGE) {
-            score -= COLLISION_DAMAGE;
-            obstacles.splice(i, 1);
-          } else {
-            gameOver();
-            break;
+
+      populateBalloonOptions() {
+        const container = document.getElementById('balloonOptions');
+        container.innerHTML = '';
+        
+        // ========== البالونات الملونة (35 لون) ==========
+        const label1 = document.createElement('div');
+        label1.className = 'category-label';
+        label1.textContent = '🎨 بالونات ملونة';
+        container.appendChild(label1);
+
+        const colors = [
+          '#ff0000', '#00ff00', '#0000ff', '#ff00ff', '#00ffff',
+          '#ffff00', '#ff9800', '#9c27b0', '#3f51b5', '#e91e63',
+          '#4caf50', '#2196f3', '#ff5722', '#795548', '#607d8b',
+          '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bcb',
+          '#ff1493', '#00ced1', '#ff8c00', '#8a2be2', '#7cfc00',
+          '#ff4500', '#1e90ff', '#ff69b4', '#32cd32', '#ffa500',
+          '#9370db', '#3cb371', '#dc143c', '#00bfff', '#ff6347'
+        ];
+
+        colors.forEach((color) => {
+          const option = document.createElement('div');
+          option.className = 'balloon-option';
+          option.innerHTML = this.createBalloonSVG(color);
+          option.dataset.color = color;
+          
+          option.addEventListener('dblclick', () => {
+            document.querySelectorAll('.balloon-option').forEach(el => el.classList.remove('selected'));
+            option.classList.add('selected');
+            this.chosenStyle = { color: color };
+            this.showScreen('gameScreen');
+            this.startGame();
+          });
+          
+          container.appendChild(option);
+        });
+
+        // ========== بالونات الأعلام (8 أعلام) ==========
+        const label2 = document.createElement('div');
+        label2.className = 'category-label';
+        label2.textContent = '🏴 أعلام';
+        container.appendChild(label2);
+
+        const flags = [
+          { id: 'us', name: '🇺🇸' },
+          { id: 'rus', name: '🇷🇺' },
+          { id: 'fr', name: '🇫🇷' },
+          { id: 'de', name: '🇩🇪' },
+          { id: 'it', name: '🇮🇹' },
+          { id: 'eg', name: '🇪🇬' },
+          { id: 'sa', name: '🇸🇦' },
+          { id: 'jo', name: '🇯🇴' }
+        ];
+
+        flags.forEach(flag => {
+          const option = document.createElement('div');
+          option.className = 'balloon-option';
+          option.innerHTML = this.createFlagSVG(flag.id);
+          option.dataset.flag = flag.id;
+          
+          option.addEventListener('dblclick', () => {
+            document.querySelectorAll('.balloon-option').forEach(el => el.classList.remove('selected'));
+            option.classList.add('selected');
+            this.chosenStyle = { flag: flag.id };
+            this.showScreen('gameScreen');
+            this.startGame();
+          });
+          
+          container.appendChild(option);
+        });
+
+        // ========== بالونات مميزة (6 أنواع) ==========
+        const label3 = document.createElement('div');
+        label3.className = 'category-label';
+        label3.textContent = '✨ بالونات مميزة';
+        container.appendChild(label3);
+
+        const patterns = [
+          { id: 'earth', name: '🌍 كرة أرضية' },
+          { id: 'star', name: '⭐ نجمي' },
+          { id: 'diamond', name: '💎 ألماسي' },
+          { id: 'fire', name: '🔥 ناري' },
+          { id: 'water', name: '🌊 مائي' },
+          { id: 'camo', name: '🎯 مموه' }
+        ];
+
+        patterns.forEach(pattern => {
+          const option = document.createElement('div');
+          option.className = 'balloon-option';
+          option.innerHTML = this.createPatternSVG(pattern.id);
+          option.dataset.pattern = pattern.id;
+          
+          option.addEventListener('dblclick', () => {
+            document.querySelectorAll('.balloon-option').forEach(el => el.classList.remove('selected'));
+            option.classList.add('selected');
+            this.chosenStyle = { pattern: pattern.id };
+            this.showScreen('gameScreen');
+            this.startGame();
+          });
+          
+          container.appendChild(option);
+        });
+
+        // ========== بالون مخصص ==========
+        const label4 = document.createElement('div');
+        label4.className = 'category-label';
+        label4.textContent = '🎯 بالونات خاصة';
+        container.appendChild(label4);
+
+        const customOption = document.createElement('div');
+        customOption.className = 'balloon-option';
+        customOption.innerHTML = this.createCustomSVG();
+        customOption.addEventListener('dblclick', () => {
+          document.querySelectorAll('.balloon-option').forEach(el => el.classList.remove('selected'));
+          customOption.classList.add('selected');
+          this.chosenStyle = { custom: true };
+          this.showScreen('gameScreen');
+          this.startGame();
+        });
+        container.appendChild(customOption);
+      }
+
+      createBalloonSVG(color) {
+        return `<svg width="80" height="100" viewBox="0 0 80 100">
+          <defs>
+            <radialGradient id="grad_${color.replace('#','')}" cx="35%" cy="30%" r="60%">
+              <stop offset="0%" stop-color="${this.lightenColor(color, 50)}"/>
+              <stop offset="60%" stop-color="${color}"/>
+              <stop offset="100%" stop-color="${this.darkenColor(color, 40)}"/>
+            </radialGradient>
+          </defs>
+          <circle cx="40" cy="40" r="30" fill="url(#grad_${color.replace('#','')})" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="5" fill="rgba(255,255,255,0.25)"/>
+          <rect x="38" y="70" width="4" height="20" fill="#8B7355" rx="2"/>
+          <circle cx="40" cy="72" r="3" fill="#8B7355"/>
+        </svg>`;
+      }
+
+      createFlagSVG(flagId) {
+        const colors = {
+          us: ['#ff0000', '#ffffff', '#ff0000'],
+          rus: ['#ffffff', '#0039a6', '#d52b1e'],
+          fr: ['#002395', '#ffffff', '#ed2939'],
+          de: ['#000000', '#dd0000', '#ffce00'],
+          it: ['#009246', '#ffffff', '#ce2b37'],
+          eg: ['#ce1126', '#ffffff', '#000000'],
+          sa: ['#006c35', '#ffffff', '#006c35'],
+          jo: ['#000000', '#ffffff', '#007a3d']
+        };
+        const c = colors[flagId] || ['#ff0000', '#ffffff', '#ff0000'];
+        return `<svg width="80" height="100" viewBox="0 0 80 100">
+          <defs>
+            <linearGradient id="flag_${flagId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${c[0]}"/>
+              <stop offset="50%" stop-color="${c[1]}"/>
+              <stop offset="100%" stop-color="${c[2]}"/>
+            </linearGradient>
+          </defs>
+          <circle cx="40" cy="40" r="30" fill="url(#flag_${flagId})" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="5" fill="rgba(255,255,255,0.2)"/>
+          <rect x="38" y="70" width="4" height="20" fill="#8B7355" rx="2"/>
+          <circle cx="40" cy="72" r="3" fill="#8B7355"/>
+        </svg>`;
+      }
+
+      createPatternSVG(patternId) {
+        const colors = {
+          earth: ['#4d96ff', '#2d7b3a', '#1a4a2a'],
+          star: ['#ffd700', '#ffaa00', '#cc8800'],
+          diamond: ['#b9f2ff', '#7dd8f0', '#4ab0d0'],
+          fire: ['#ff4400', '#ff8800', '#ffcc00'],
+          water: ['#00ccff', '#0066ff', '#0000cc'],
+          camo: ['#4a7a3a', '#2d5a2a', '#1a3a1a']
+        };
+        const c = colors[patternId] || ['#ff6b6b', '#ff0000', '#aa0000'];
+        return `<svg width="80" height="100" viewBox="0 0 80 100">
+          <defs>
+            <radialGradient id="pat_${patternId}" cx="35%" cy="30%" r="60%">
+              <stop offset="0%" stop-color="${c[0]}"/>
+              <stop offset="50%" stop-color="${c[1]}"/>
+              <stop offset="100%" stop-color="${c[2]}"/>
+            </radialGradient>
+          </defs>
+          <circle cx="40" cy="40" r="30" fill="url(#pat_${patternId})" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="5" fill="rgba(255,255,255,0.2)"/>
+          <rect x="38" y="70" width="4" height="20" fill="#8B7355" rx="2"/>
+          <circle cx="40" cy="72" r="3" fill="#8B7355"/>
+        </svg>`;
+      }
+
+      createCustomSVG() {
+        return `<svg width="80" height="100" viewBox="0 0 80 100">
+          <defs>
+            <linearGradient id="custom_grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00ff00"/>
+              <stop offset="50%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#000000"/>
+            </linearGradient>
+          </defs>
+          <circle cx="40" cy="40" r="30" fill="url(#custom_grad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <polygon points="40,25 43,35 54,35 45,42 48,52 40,46 32,52 35,42 26,35 37,35" fill="#ff0000"/>
+          <circle cx="32" cy="32" r="5" fill="rgba(255,255,255,0.2)"/>
+          <rect x="38" y="70" width="4" height="20" fill="#8B7355" rx="2"/>
+          <circle cx="40" cy="72" r="3" fill="#8B7355"/>
+        </svg>`;
+      }
+
+      lightenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+      }
+
+      darkenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+      }
+
+      startGame() {
+        this.obstacles = [];
+        this.lastFrameTime = 0;
+        this.lastObstacleSpawn = 0;
+        this.obstacleSpawnInterval = 2000;
+        this.currentWind = 0;
+        this.lastWindUpdate = 0;
+        
+        this.balloon = new Balloon(this.chosenStyle);
+        this.balloon.x = this.canvas.width / 2;
+        this.balloon.y = this.canvas.height - 100;
+        this.balloon.targetX = this.balloon.x;
+
+        document.getElementById('gameOverScreen').style.display = 'none';
+        
+        this.gameState = 'playing';
+        this.soundManager.resume();
+        this.soundManager.playBackground();
+        this.scoreManager.updateUI();
+      }
+
+      gameLoop(timestamp) {
+        if (!this.lastFrameTime) this.lastFrameTime = timestamp;
+        const deltaTime = Math.min((timestamp - this.lastFrameTime) / 1000, 0.05);
+        this.lastFrameTime = timestamp;
+
+        if (this.gameState === 'playing') {
+          this.update(deltaTime, timestamp);
+          this.render();
+        } else if (this.gameState === 'gameover') {
+          this.render();
+        }
+
+        requestAnimationFrame((t) => this.gameLoop(t));
+      }
+
+      update(deltaTime, timestamp) {
+        if (!this.balloon) return;
+
+        this.updateWind(timestamp);
+        this.balloon.update(deltaTime);
+
+        this.obstacles.forEach(obs => obs.update(deltaTime));
+        this.obstacles = this.obstacles.filter(obs => obs.y < this.balloon.y + this.canvas.height + 100);
+
+        if (timestamp - this.lastObstacleSpawn > this.obstacleSpawnInterval) {
+          this.spawnObstacle();
+          this.lastObstacleSpawn = timestamp;
+          this.obstacleSpawnInterval = Math.max(600, this.obstacleSpawnInterval - 15);
+        }
+
+        for (let i = this.obstacles.length - 1; i >= 0; i--) {
+          if (this.checkCollision(this.balloon, this.obstacles[i])) {
+            const handled = this.scoreManager.handleCollision();
+            if (handled) {
+              this.obstacles.splice(i, 1);
+              this.soundManager.playCollision();
+            } else {
+              this.gameOver();
+              return;
+            }
           }
         }
+
+        this.scoreManager.update(deltaTime, this.balloon, this.obstacles);
       }
-      if(chosenBalloon.tag === "youtube") {
-        let travel = initialBalloonY - balloon.y;
-        if(travel < 100) {
-          score += deltaTime * 5;
-        } else {
-          score += deltaTime * 10 * Math.log(1 + (travel-100)/100);
+
+      updateWind(timestamp) {
+        if (timestamp - this.lastWindUpdate > this.windUpdateInterval) {
+          this.currentWind = (Math.random() * 60) - 30;
+          this.lastWindUpdate = timestamp;
         }
-        if(!subscribers70Shown && score >= 70) {
-          subscribers70Shown = true;
-          subscriber70Message = "70 مشترك حقيقي! شكرًا لدعمكم!";
-          subscriber70Timer = 3;
+      }
+
+      spawnObstacle() {
+        const w = 40 + Math.random() * 40;
+        const h = 25 + Math.random() * 25;
+        const x = Math.random() * (this.canvas.width - w);
+        const y = this.balloon.y - this.canvas.height - 50;
+        const speed = 40 + this.scoreManager.getScore() / 80;
+        this.obstacles.push(new Obstacle(x, y, w, h, speed));
+      }
+
+      checkCollision(balloon, obstacle) {
+        const cx = balloon.x;
+        const cy = balloon.y;
+        const r = balloon.radius;
+        const rx = obstacle.x;
+        const ry = obstacle.y;
+        const rw = obstacle.width;
+        const rh = obstacle.height;
+
+        const closestX = Math.max(rx, Math.min(cx, rx + rw));
+        const closestY = Math.max(ry, Math.min(cy, ry + rh));
+        const dx = cx - closestX;
+        const dy = cy - closestY;
+
+        return (dx * dx + dy * dy) < (r * r);
+      }
+
+      gameOver() {
+        this.gameState = 'gameover';
+        this.scoreManager.saveHighScore();
+        this.soundManager.stopBackground();
+        this.soundManager.playGameOver();
+        
+        document.getElementById('finalScore').textContent = Math.floor(this.scoreManager.getScore());
+        document.getElementById('gameOverScreen').style.display = 'flex';
+      }
+
+      render() {
+        const ctx = this.ctx;
+        const canvas = this.canvas;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        this.drawBackground(ctx, canvas);
+        this.drawClouds(ctx, canvas);
+        this.drawSun(ctx, canvas);
+
+        if (this.balloon) {
+          const offsetY = this.balloon.y - (canvas.height - 50);
+          ctx.save();
+          ctx.translate(0, -offsetY);
+          
+          this.obstacles.forEach(obs => obs.draw(ctx));
+          this.balloon.draw(ctx);
+          
+          ctx.restore();
+
+          this.renderOverlayMessages(ctx, canvas);
         }
-      } else {
-        score += deltaTime * 10;
       }
-      document.getElementById("score").textContent = Math.floor(score);
-      let newMilestone = Math.floor(score / 1000);
-      if(newMilestone > currentMilestone) {
-        currentMilestone = newMilestone;
-        milestoneMessage = "تهانينا! أصبحت " + (currentMilestone * 1000) + (chosenBalloon.tag === "youtube" ? " مشترك!" : " نقطة!");
-        milestoneTimer = 3;
-      }
-      if(milestoneTimer > 0) milestoneTimer -= deltaTime;
-      if(subscriber70Timer > 0) subscriber70Timer -= deltaTime;
-    }
 
-    function renderGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground();
-      drawClouds();
-      drawSun();
-      // ترجمة العالم بحيث يظهر البالون دائمًا على بعد 50 بكسل من أسفل الشاشة
-      let offsetY = balloon.y - (canvas.height - 50);
-      ctx.save();
-      ctx.translate(0, -offsetY);
-      obstacles.forEach(obstacle => obstacle.draw(ctx));
-      balloon.draw(ctx);
-      ctx.restore();
-      if(openingCinematicTimer > 0) {
+      drawBackground(ctx, canvas) {
+        const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#1a1a3e');
+        grad.addColorStop(0.3, '#2d1b69');
+        grad.addColorStop(0.6, '#0f3460');
+        grad.addColorStop(1, '#000033');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      drawClouds(ctx, canvas) {
         ctx.save();
-        ctx.font = "32px Arial";
-        ctx.fillStyle = "cyan";
-        ctx.textAlign = "center";
-        ctx.fillText("انطلق... بداية رحلة القناة", canvas.width/2, canvas.height/2);
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = '#88ccff';
+        
+        const clouds = [
+          { x: canvas.width * 0.1, y: canvas.height * 0.1, s: 1 },
+          { x: canvas.width * 0.6, y: canvas.height * 0.05, s: 1.3 },
+          { x: canvas.width * 0.3, y: canvas.height * 0.2, s: 0.8 },
+          { x: canvas.width * 0.8, y: canvas.height * 0.15, s: 1.1 }
+        ];
+
+        clouds.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 40 * c.s, Math.PI * 0.5, Math.PI * 1.5);
+          ctx.arc(c.x + 50 * c.s, c.y - 15 * c.s, 45 * c.s, Math.PI, Math.PI * 2);
+          ctx.arc(c.x + 90 * c.s, c.y, 35 * c.s, Math.PI * 1.2, Math.PI * 2.2);
+          ctx.closePath();
+          ctx.fill();
+        });
+        
         ctx.restore();
       }
-      if(milestoneTimer > 0) {
+
+      drawSun(ctx, canvas) {
+        const sx = canvas.width * 0.85;
+        const sy = canvas.height * 0.12;
+        const radius = 45;
+
+        const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, radius * 3);
+        glow.addColorStop(0, 'rgba(255,200,50,0.15)');
+        glow.addColorStop(0.5, 'rgba(255,150,50,0.05)');
+        glow.addColorStop(1, 'rgba(255,150,50,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.save();
-        ctx.font = "30px Arial";
-        ctx.fillStyle = "yellow";
-        ctx.textAlign = "center";
-        ctx.fillText(milestoneMessage, canvas.width/2, canvas.height/2);
+        ctx.translate(sx, sy);
+        for (let i = 0; i < 16; i++) {
+          const angle = i * (Math.PI * 2 / 16);
+          ctx.rotate(Math.PI / 16);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * (radius + 5), Math.sin(angle) * (radius + 5));
+          ctx.lineTo(Math.cos(angle) * (radius + 25), Math.sin(angle) * (radius + 25));
+          ctx.strokeStyle = 'rgba(255,200,50,0.2)';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
         ctx.restore();
+
+        const grad = ctx.createRadialGradient(sx - 10, sy - 10, 5, sx, sy, radius);
+        grad.addColorStop(0, '#fff5a0');
+        grad.addColorStop(0.3, '#ffdd44');
+        grad.addColorStop(0.7, '#ffaa00');
+        grad.addColorStop(1, '#ff7700');
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(255,200,50,0.3)';
+        ctx.shadowBlur = 30;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.arc(sx - 15, sy - 15, 12, 0, Math.PI * 2);
+        ctx.fill();
       }
-      if(subscriber70Timer > 0) {
-        ctx.save();
-        ctx.font = "30px Arial";
-        ctx.fillStyle = "orange";
-        ctx.textAlign = "center";
-        ctx.fillText(subscriber70Message, canvas.width/2, canvas.height/2 + 50);
-        ctx.restore();
+
+      renderOverlayMessages(ctx, canvas) {
+        const milestone = this.scoreManager.getMilestone();
+        if (milestone) {
+          ctx.save();
+          ctx.font = 'bold 36px Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = '#ffd93d';
+          ctx.fillText(milestone, canvas.width/2, canvas.height/2);
+          ctx.restore();
+        }
       }
     }
 
-    function gameLoop(timestamp) {
-      if(!lastFrameTime) lastFrameTime = timestamp;
-      let deltaTime = (timestamp - lastFrameTime) / 1000;
-      lastFrameTime = timestamp;
-      if(gameState === "playing") {
-        updateGame(deltaTime, timestamp);
-        renderGame();
-      } else if(gameState === "gameover") {
-        renderGame();
-      }
-      requestAnimationFrame(gameLoop);
-    }
-
-    function spawnObstacle() {
-      let obstacleWidth = 50 + Math.random() * 50;
-      let obstacleHeight = 20 + Math.random() * 30;
-      let x = Math.random() * (canvas.width - obstacleWidth);
-      let y = balloon.y - canvas.height;
-      let speed = BASE_OBSTACLE_SPEED + score / 100;
-      let type = getRandomObstacleType();
-      obstacles.push(new Obstacle(x, y, obstacleWidth, obstacleHeight, speed, type));
-    }
-
-    function gameOver() {
-      gameState = "gameover";
-      if(score > highScore) { highScore = score; }
-      document.getElementById("gameOverScreen").style.display = "flex";
-      let bgMusic = document.getElementById("bgMusic");
-      if(bgMusic) bgMusic.pause();
-    }
-
-    function startGame() {
-      score = 0;
-      obstacles.forEach(obs => ctx.clearRect(0,0,canvas.width,canvas.height));
-      obstacles = [];
-      lastFrameTime = 0;
-      obstacleSpawnInterval = 2000;
-      document.getElementById("gameOverScreen").style.display = "none";
-      balloon = new Balloon(chosenBalloon);
-      if(chosenBalloon.tag === "youtube") {
-        initialBalloonY = balloon.y;
-        document.getElementById("scoreboard").innerHTML = "المشتركين: <span id='score'>0</span> | أعلى مشتركين: <span id='highScore'>0</span>";
-        openingCinematicTimer = 3;
-      } else {
-        document.getElementById("scoreboard").innerHTML = "النقاط: <span id='score'>0</span> | أعلى نقاط: <span id='highScore'>0</span>";
-      }
-      gameState = "playing";
-      resizeCanvas();
-      let bgMusic = document.getElementById("bgMusic");
-      if(bgMusic) {
-        bgMusic.currentTime = 0;
-        bgMusic.play().catch(()=>{});
-      }
-      gameLoop(0);
-    }
-
-    function handlePointerMove(e) {
-      let rect = canvas.getBoundingClientRect();
-      let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      balloon.targetX = clientX - rect.left;
-    }
-
-    function restartGame() { startGame(); }
-
-    window.addEventListener("DOMContentLoaded", function(){
-      canvas = document.getElementById("gameCanvas");
-      ctx = canvas.getContext("2d");
-      resizeCanvas();
-      populateBalloonOptions();
-      document.getElementById("startButton").addEventListener("click", function(){
-        showScreen("gameScreen");
-        startGame();
+    /*************************************************************
+     *                      تشغيل اللعبة
+     *************************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      const game = new Game();
+      
+      const muteBtn = document.createElement('button');
+      muteBtn.textContent = '🔊';
+      muteBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 10px 15px;
+        font-size: 24px;
+        border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      `;
+      muteBtn.addEventListener('mouseenter', () => {
+        muteBtn.style.transform = 'scale(1.1)';
       });
-      document.getElementById("selectBalloonButton").addEventListener("click", function(){
-        showScreen("selectBalloonScreen");
+      muteBtn.addEventListener('mouseleave', () => {
+        muteBtn.style.transform = 'scale(1)';
       });
-      document.getElementById("restartButton").addEventListener("click", function(){
-        restartGame();
+      muteBtn.addEventListener('click', () => {
+        game.soundManager.toggleMute();
+        muteBtn.textContent = game.soundManager.isMuted ? '🔇' : '🔊';
       });
-      canvas.addEventListener("mousemove", handlePointerMove);
-      canvas.addEventListener("touchmove", function(e){
-        e.preventDefault();
-        handlePointerMove(e);
-      }, {passive: false});
-      requestAnimationFrame(gameLoop);
+      document.body.appendChild(muteBtn);
     });
-    window.addEventListener("resize", resizeCanvas);
   </script>
 </body>
 </html>
