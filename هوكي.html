@@ -1,611 +1,1179 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة الهوكي – النسخة المتطورة</title>
-  <style>
-    /* إعداد عام للصفحة والنمط */
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background-color: #222;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      touch-action: none;
-      -ms-touch-action: none;
-    }
-    /* إعداد طبقات الواجهة (Overlay) */
-    .overlay {
-      position: absolute;
-      top: 0; 
-      left: 0;
-      width: 100%; 
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    .menu {
-      text-align: center;
-    }
-    .menu h1 {
-      margin-bottom: 20px;
-      font-size: 36px;
-    }
-    .menu button {
-      font-size: 18px;
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-    }
-    /* الحاويات داخل شاشة التخصيص */
-    #styleContainer, #emojiContainer {
-      width: 90%;
-      max-height: 40vh;
-      overflow-y: auto;
-      margin: 10px 0;
-      border: 1px solid #555;
-      padding: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .styleItem {
-      width: 80px;
-      height: 80px;
-      margin: 10px;
-      cursor: pointer;
-      border: 2px solid white;
-    }
-    .emojiItem {
-      width: 100px;   /* تكبير لتتماشى مع القياسات الجديدة */
-      height: 100px;
-      margin: 10px;
-      cursor: pointer;
-      font-size: 58px;
-      line-height: 100px;
-      text-align: center;
-      border: 2px solid white;
-      border-radius: 50%;
-    }
-    /* أزرار تبديل الأقسام داخل شاشة التخصيص */
-    .tabButtons {
-      margin: 10px;
-    }
-    .tabButtons button {
-      font-size: 16px;
-      padding: 5px 10px;
-      margin: 0 5px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏒 هوكي هوائي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #0a0a1a;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none;
+            cursor: none;
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+        .ui-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .ui-container {
+            background: linear-gradient(145deg, rgba(30, 30, 60, 0.95), rgba(10, 10, 30, 0.95));
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .ui-title {
+            color: #fff;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(100, 200, 255, 0.3);
+        }
+        .ui-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .ui-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        .ui-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+        }
+        .ui-btn:active {
+            transform: scale(0.95);
+        }
+        .ui-btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.3);
+        }
+        .ui-btn.difficulty {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .ui-btn.difficulty.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hud-score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 1.2em;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+        .hud-score.enemy {
+            left: auto;
+            right: 20px;
+        }
+        .hud-timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 1.5em;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            font-variant-numeric: tabular-nums;
+        }
+        .notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 4em;
+            font-weight: bold;
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 6;
+        }
+        .notification.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .tab-buttons button {
+            padding: 8px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9em;
+        }
+        .tab-buttons button.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        .emoji-grid button {
+            font-size: 1.8em;
+            padding: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .emoji-grid button:hover {
+            transform: scale(1.1);
+        }
+        .emoji-grid button.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.3);
+        }
+        @media (max-width:600px) {
+            .ui-container {
+                padding: 25px;
+            }
+            .ui-title {
+                font-size: 1.8em;
+            }
+            .hud-score {
+                font-size: 0.9em;
+                padding: 5px 15px;
+            }
+            .hud-timer {
+                font-size: 1em;
+                padding: 3px 15px;
+            }
+            .notification {
+                font-size: 2.5em;
+            }
+            .emoji-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-
-  <!-- شاشة البداية -->
-  <div id="startScreen" class="overlay">
-    <div class="menu">
-      <h1>لعبة الهوكي</h1>
-      <button id="startButton">ابدأ اللعبة</button>
-      <button id="customizationButton">تخصيص النمط</button>
+    <!-- Menu Screen -->
+    <div id="menuScreen" class="ui-overlay">
+        <div class="ui-container">
+            <div class="ui-title">🏒 هوكي هوائي</div>
+            <div class="ui-subtitle">🎯 اختر مستوى الصعوبة</div>
+            <div class="difficulty-grid">
+                <button class="ui-btn difficulty" data-diff="easy">🟢 سهل</button>
+                <button class="ui-btn difficulty active" data-diff="medium">🟡 متوسط</button>
+                <button class="ui-btn difficulty" data-diff="hard">🔴 صعب</button>
+            </div>
+            <button class="ui-btn" id="startBtn">🚀 ابدأ اللعبة</button>
+            <button class="ui-btn secondary" id="customizeBtn">🎨 تخصيص</button>
+        </div>
     </div>
-  </div>
 
-  <!-- شاشة التخصيص -->
-  <div id="customizationScreen" class="overlay" style="display: none;">
-    <div class="menu">
-      <h1>التخصيص</h1>
-      <!-- أزرار التبديل بين أقسام الأنماط والإيموجي -->
-      <div class="tabButtons">
-        <button id="showStyles">أنماط الملعب</button>
-        <button id="showEmoji">أقراص الإيموجي</button>
-      </div>
-      <!-- حاوية أنماط الملعب -->
-      <div id="styleContainer"></div>
-      <!-- حاوية أقراص الإيموجي -->
-      <div id="emojiContainer" style="display: none;"></div>
-      <button id="backButton">عودة</button>
+    <!-- Customization Screen -->
+    <div id="customizeScreen" class="ui-overlay hidden">
+        <div class="ui-container">
+            <div class="ui-title">🎨 التخصيص</div>
+            <div style="margin:10px 0; text-align:center; color:rgba(255,255,255,0.6); font-size:0.9em;">
+                اختر رمز اللاعب (إيموجي أو علم دولة)
+            </div>
+            <div class="tab-buttons">
+                <button class="active" data-tab="emojis">😊 إيموجي</button>
+                <button data-tab="flags">🏳️ أعلام</button>
+            </div>
+            <div id="emojiContainer" class="emoji-grid"></div>
+            <div id="flagContainer" class="emoji-grid" style="display:none;"></div>
+            <button class="ui-btn" id="backBtn">↩️ عودة</button>
+        </div>
     </div>
-  </div>
 
-  <script>
-    /******************* المتغيرات العامة والإعدادات *******************/
-    let game = null; // سيتم تعريف كائن اللعبة عند بدء اللعب
-    const goalMargin = 30; // الحد العمودي قرب المرمى الذي لا يمكن تجاوزُه
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="ui-overlay hidden">
+        <div class="ui-container">
+            <div class="ui-title" id="gameOverTitle">🎉 فوز!</div>
+            <div style="text-align:center; color:#fff; font-size:1.5em; margin:20px 0;"><span id="finalScore">0 - 0</span></div>
+            <button class="ui-btn" id="restartBtn">🔄 لعب مرة أخرى</button>
+            <button class="ui-btn secondary" id="menuBtn">🏠 القائمة الرئيسية</button>
+        </div>
+    </div>
 
-    // إعدادات اللعبة الافتراضية
-    let gameConfig = {
-      background: "#004400",
-      playerColor: "blue",
-      enemyColor: "red",
-      puckColor: "white",
-      useEmoji: false,
-      playerEmoji: null
-    };
+    <canvas id="gameCanvas"></canvas>
 
-    // تعريف أنماط الملعب (حوالي 10 أنماط)
-    const styles = [
-      { id: 0, name: "الكلاسيكي", background: "#004400", playerColor: "blue", enemyColor: "red", puckColor: "white" },
-      { id: 1, name: "أخضر ذهبي", background: "#31572c", playerColor: "#6a994e", enemyColor: "#bc4749", puckColor: "#f2e9e4" },
-      { id: 2, name: "بنفسجي مشرق", background: "#360568", playerColor: "#d72638", enemyColor: "#f46036", puckColor: "#2e294e" },
-      { id: 3, name: "محيطي", background: "#003049", playerColor: "#d62828", enemyColor: "#f77f00", puckColor: "#fcbf49" },
-      { id: 4, name: "هادئ", background: "#023e8a", playerColor: "#0077b6", enemyColor: "#0096c7", puckColor: "#00b4d8" },
-      { id: 5, name: "ليلي", background: "#1b1b2f", playerColor: "#e43f5a", enemyColor: "#e84393", puckColor: "#8d99ae" },
-      { id: 6, name: "شرقي", background: "#3d2c8d", playerColor: "#ff6f61", enemyColor: "#f7cac9", puckColor: "#92a8d1" },
-      { id: 7, name: "تكنو", background: "#0d1b2a", playerColor: "#1b263b", enemyColor: "#415a77", puckColor: "#778da9" },
-      { id: 8, name: "سايبربانك", background: "#2e294e", playerColor: "#ffaa00", enemyColor: "#ff4800", puckColor: "#f5f5f5" },
-      { id: 9, name: "كلاسيكي2", background: "#002635", playerColor: "#006494", enemyColor: "#ffd166", puckColor: "#ef476f" }
-    ];
+    <!-- HUD -->
+    <div id="hud">
+        <div class="hud-score" id="playerScore">👤 0</div>
+        <div class="hud-score enemy" id="enemyScore">🤖 0</div>
+        <div class="hud-timer" id="gameTimer">⏱️ 00:00</div>
+    </div>
 
-    // تعريف قائمة أقراص الإيموجي (كل أيقونة تُعرض كقرص منفرد)
-    const emojiDiscs = ["🦁","🐯","😀","😁","😂","😎","🤖","🐶","🐱","🐵"];
+    <div class="notification" id="notification"></div>
 
-    /******************* إعداد الكانفس *******************/
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      if (game) {
-        game.goalWidth = canvas.width / 5;
-        game.updateBarriers(); // تحديث مواقع الحواجز عند تغيير الحجم
-      }
-    }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
-
-    /******************* إعداد الصوت باستخدام Web Audio API *******************/
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(frequency, duration) {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = frequency;
-      gain.gain.value = 0.1;
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
-    // صوت مشترك لأقراص الإيموجي
-    function playEmojiSound() {
-      playSound(800, 0.1);
-    }
-
-    /******************* تعريف الكلاسات الأساسية *******************/
-
-    // كلاس يمثل القرص (Disc)
-    class Disc {
-      constructor(x, y, radius, color, speed = 0) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.color = color;
-        this.speed = speed;
-      }
-      draw(ctx) {
-        // إذا كان قرص اللاعب ويستخدم إيموجي، نعرض الإيموجي بدلاً من الدائرة الملونة
-        if (gameConfig.useEmoji && this.isPlayer) {
-          ctx.font = this.radius * 2 + "px serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(gameConfig.playerEmoji, this.x, this.y);
-        } else {
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // كلاس يمثل الكرة (Puck)
-    class Puck {
-      constructor(x, y, radius, speed, color) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.baseSpeed = speed; // السرعة الأساسية لإعادة التعيين
-        this.speed = speed;
-        this.dx = speed * (Math.random() > 0.5 ? 1 : -1);
-        this.dy = speed * (Math.random() > 0.5 ? 1 : -1);
-        this.color = color;
-        this.sineEffectTimer = 0; // مؤقت لتأثير Sine Twist بالثواني
-      }
-      update() {
-        if (this.sineEffectTimer > 0) {
-          this.sineEffectTimer -= 1/60; // نفترض 60 إطار بالثانية
-          let twist = Math.sin(Date.now() / 100) * 0.5;
-          this.dx += twist;
-        }
-        this.x += this.dx;
-        this.y += this.dy;
-      }
-      draw(ctx) {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // إعادة ضبط موقع وسرعة الكرة بعد كل هدف
-      reset(centerX, centerY, scoredByPlayer) {
-        this.x = centerX;
-        this.y = centerY;
-        this.speed = this.baseSpeed; // تعيين السرعة الأساسية
-        let angle = Math.random() * (Math.PI / 2) + (Math.PI / 4);
-        if (scoredByPlayer) {
-          this.dx = this.speed * Math.cos(angle);
-          this.dy = -this.speed * Math.sin(angle);
-        } else {
-          this.dx = this.speed * Math.cos(angle);
-          this.dy = this.speed * Math.sin(angle);
-        }
-        this.sineEffectTimer = 0;
-        playSound(300, 0.1);
-      }
-    }
-
-    // كلاس يمثل الحواجز الجانبية (Barriers)
-    class Barrier {
-      constructor(x, y, width, height, type, side) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.type = type; // "accel" أو "slow" أو "sine"
-        this.side = side; // "left" أو "right"
-      }
-      draw(ctx) {
-        ctx.save();
-        if(this.type === "accel") {
-          ctx.fillStyle = "#00FF00"; // أخضر للتسريع
-        } else if(this.type === "slow") {
-          ctx.fillStyle = "#FF00FF"; // لون للتبطيء
-        } else if(this.type === "sine") {
-          ctx.fillStyle = "#FFFF00"; // أصفر لتأثير Sine Twist
-        }
-        ctx.beginPath();
-        if (this.side === "left") {
-          ctx.moveTo(this.x, this.y);
-          ctx.lineTo(this.x + this.width, this.y + this.height / 2);
-          ctx.lineTo(this.x, this.y + this.height);
-        } else if (this.side === "right") {
-          ctx.moveTo(this.x, this.y);
-          ctx.lineTo(this.x - this.width, this.y + this.height / 2);
-          ctx.lineTo(this.x, this.y + this.height);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    // الكلاس الرئيسي للعبة (Game)
-    class Game {
-      constructor() {
-        this.goalWidth = canvas.width / 5; // لم يعد يُستخدم لحساب "مرمى" محدد؛ المرمى هو الجدار الخلفي
-        // تعديل حجم الأقراص: اللاعب والخصم نصف قطرهما 25 (بدلاً من 20)؛ الكرة نصف قطرها 12 (بدلاً من 10)
-        this.player = new Disc(canvas.width / 2, (canvas.height * 3) / 4, 25, gameConfig.playerColor);
-        this.player.isPlayer = true;
-        this.enemy = new Disc(canvas.width / 2, canvas.height / 4, 25, gameConfig.enemyColor, 2);
-        this.puck = new Puck(canvas.width / 2, canvas.height / 2, 12, 4, gameConfig.puckColor);
-
-        this.playerScore = 0;
-        this.enemyScore = 0;
-        this.isDragging = false;
-        this.dragStart = { x: 0, y: 0 };
-        this.playerStart = { x: this.player.x, y: this.player.y };
-
-        this.barriers = [];
-        this.createBarriers();
-
-        this.addTouchEvents();
-      }
-      createBarriers() {
-        // تصغير حجم الحواجز: عرض 20، ارتفاع 60
-        const bWidth = 20, bHeight = 60;
-        let tempBarriers = [];
-        // عدد الحواجز لكل جانب: 2 على اليسار و2 على اليمين
-        let countLeft = 2, countRight = 2;
-        // إنشاء حواجز على اليسار
-        for (let i = 0; i < countLeft; i++) {
-          let randY = Math.random() * (canvas.height - 2 * goalMargin - bHeight) + goalMargin;
-          // x = 0 على اليسار
-          // نعيّن النوع مؤقتًا "accel" أو "slow" عشوائياً
-          let type = Math.random() < 0.5 ? "accel" : "slow";
-          tempBarriers.push(new Barrier(0, randY, bWidth, bHeight, type, "left"));
-        }
-        // إنشاء حواجز على اليمين
-        for (let i = 0; i < countRight; i++) {
-          let randY = Math.random() * (canvas.height - 2 * goalMargin - bHeight) + goalMargin;
-          // x = canvas.width على اليمين
-          let type = Math.random() < 0.5 ? "accel" : "slow";
-          tempBarriers.push(new Barrier(canvas.width, randY, bWidth, bHeight, type, "right"));
-        }
-        // اختيار حاجز واحد عشوائي لجعله من نوع "sine" فقط
-        if (tempBarriers.length > 0) {
-          let index = Math.floor(Math.random() * tempBarriers.length);
-          tempBarriers[index].type = "sine";
-        }
-        // تعيين الناتج للحواجز
-        this.barriers = tempBarriers;
-      }
-      updateBarriers() {
-        this.createBarriers();
-      }
-      addTouchEvents() {
-        canvas.addEventListener(
-          "touchstart",
-          (e) => {
-            audioCtx.resume();
-            this.isDragging = true;
-            let touch = e.touches[0];
-            this.dragStart.x = touch.clientX;
-            this.dragStart.y = touch.clientY;
-            this.playerStart.x = this.player.x;
-            this.playerStart.y = this.player.y;
-            e.preventDefault();
-          },
-          { passive: false }
-        );
-        canvas.addEventListener(
-          "touchmove",
-          (e) => {
-            if (!this.isDragging) return;
-            let touch = e.touches[0];
-            let dx = touch.clientX - this.dragStart.x;
-            let dy = touch.clientY - this.dragStart.y;
-            this.player.x = this.playerStart.x + dx;
-            this.player.y = this.playerStart.y + dy;
-            // تطبيق حدود حركة الرأسية للاعب:
-            // الحركة العمودية مسموحة بين (canvas.height/2 + goalMargin + radius) وبين (canvas.height - goalMargin - radius)
-            if (this.player.y < canvas.height/2 + goalMargin + this.player.radius) {
-              this.player.y = canvas.height/2 + goalMargin + this.player.radius;
+    <script>
+        // ============================================================
+        //  Sound Manager
+        // ============================================================
+        class SoundManager {
+            constructor() {
+                this.ctx = null;
+                this.ready = false;
             }
-            if (this.player.y > canvas.height - goalMargin - this.player.radius) {
-              this.player.y = canvas.height - goalMargin - this.player.radius;
+            init() {
+                if (this.ready) return;
+                try {
+                    this.ctx = new(window.AudioContext || window.webkitAudioContext)();
+                    this.ready = true;
+                } catch (e) { /* ignore */ }
             }
-            // الحركة الأفقية حرة ضمن حدود الكانفس
-            if (this.player.x < this.player.radius)
-              this.player.x = this.player.radius;
-            if (this.player.x > canvas.width - this.player.radius)
-              this.player.x = canvas.width - this.player.radius;
-            e.preventDefault();
-          },
-          { passive: false }
-        );
-        canvas.addEventListener(
-          "touchend",
-          (e) => {
-            this.isDragging = false;
-            e.preventDefault();
-          },
-          { passive: false }
-        );
-      }
-      distance(x1, y1, x2, y2) {
-        return Math.hypot(x1 - x2, y1 - y2);
-      }
-      checkBarrierCollisions() {
-        for (let barrier of this.barriers) {
-          if (
-            this.puck.x + this.puck.radius > barrier.x - (barrier.side === "right" ? barrier.width : 0) &&
-            this.puck.x - this.puck.radius < barrier.x + (barrier.side === "left" ? barrier.width : 0) &&
-            this.puck.y + this.puck.radius > barrier.y &&
-            this.puck.y - this.puck.radius < barrier.y + barrier.height
-          ) {
-            if (barrier.type === "accel") {
-              let factor = 0.5;
-              this.puck.dx += (this.puck.dx > 0 ? factor : -factor);
-              this.puck.dy += (this.puck.dy > 0 ? factor : -factor);
-              playSound(550, 0.05);
-            } else if (barrier.type === "slow") {
-              let factor = 0.5;
-              if (Math.abs(this.puck.dx) > factor) {
-                this.puck.dx -= (this.puck.dx > 0 ? factor : -factor);
-              }
-              if (Math.abs(this.puck.dy) > factor) {
-                this.puck.dy -= (this.puck.dy > 0 ? factor : -factor);
-              }
-              playSound(450, 0.05);
-            } else if (barrier.type === "sine") {
-              this.puck.sineEffectTimer = 2; // تأثير Sine Twist لمدة ثانيتين
-              playSound(600, 0.05);
+            play(freq, dur, type = 'sine', vol = 0.3) {
+                if (!this.ready) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.value = vol;
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + dur);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+                } catch (e) { /* ignore */ }
             }
-          }
+            hit() { this.play(400, 0.08); }
+            goal() { this.play(800, 0.3, 'square'); }
+            start() { this.play(600, 0.15); }
+            gameOver(win) { this.play(win ? 500 : 300, 0.5, 'sawtooth'); }
         }
-      }
-      updatePuck() {
-        this.puck.update();
-        if (this.puck.x - this.puck.radius < 0) {
-          this.puck.x = this.puck.radius;
-          this.puck.dx = -this.puck.dx;
-          playSound(500, 0.05);
-        }
-        if (this.puck.x + this.puck.radius > canvas.width) {
-          this.puck.x = canvas.width - this.puck.radius;
-          this.puck.dx = -this.puck.dx;
-          playSound(500, 0.05);
-        }
-        this.checkBarrierCollisions();
-        // نظام المرمى: سواءً كانت الكرة تخرج من الأعلى أو الأسفل
-        if (this.puck.y - this.puck.radius < 0) {
-          this.playerScore++;
-          this.puck.reset(canvas.width/2, canvas.height/2, true);
-        }
-        if (this.puck.y + this.puck.radius > canvas.height) {
-          this.enemyScore++;
-          this.puck.reset(canvas.width/2, canvas.height/2, false);
-        }
-      }
-      moveEnemy() {
-        let dx = this.puck.x - this.enemy.x;
-        let dy = this.puck.y - this.enemy.y;
-        let dist = Math.hypot(dx, dy);
-        let predictedTime = Math.min(Math.max(dist / this.enemy.speed, 0.2), 0.8);
-        let predictedX = this.puck.x + this.puck.dx * predictedTime;
-        let predictedY = this.puck.y + this.puck.dy * predictedTime;
-        let targetDx = predictedX - this.enemy.x;
-        let targetDy = predictedY - this.enemy.y;
-        let targetDist = Math.hypot(targetDx, targetDy);
-        if (targetDist > 0) {
-          let step = this.enemy.speed;
-          this.enemy.x += (targetDx / targetDist) * step;
-          this.enemy.y += (targetDy / targetDist) * step;
-        }
-        // تقييد الحركة الرأسية للخصم:
-        // للخصم (النصف العلوي) يسمح له بالحركة من goalMargin+radius حتى (canvas.height/2 - goalMargin - radius)
-        if (this.enemy.y < goalMargin + this.enemy.radius) {
-          this.enemy.y = goalMargin + this.enemy.radius;
-        }
-        if (this.enemy.y > canvas.height/2 - goalMargin - this.enemy.radius) {
-          this.enemy.y = canvas.height/2 - goalMargin - this.enemy.radius;
-        }
-        // الحركة الأفقية تبقى ضمن حدود الكانفس
-        if (this.enemy.x < this.enemy.radius)
-          this.enemy.x = this.enemy.radius;
-        if (this.enemy.x > canvas.width - this.enemy.radius)
-          this.enemy.x = canvas.width - this.enemy.radius;
-      }
-      handleCollision(disc) {
-        let dist = this.distance(this.puck.x, this.puck.y, disc.x, disc.y);
-        if (dist < this.puck.radius + disc.radius) {
-          let angle = Math.atan2(this.puck.y - disc.y, this.puck.x - disc.x);
-          let currentSpeed = Math.hypot(this.puck.dx, this.puck.dy) * 1.05;
-          this.puck.dx = currentSpeed * Math.cos(angle);
-          this.puck.dy = currentSpeed * Math.sin(angle);
-          this.puck.x = disc.x + (this.puck.radius + disc.radius + 1) * Math.cos(angle);
-          this.puck.y = disc.y + (this.puck.radius + disc.radius + 1) * Math.sin(angle);
-          if(disc.isPlayer && gameConfig.useEmoji) {
-            playEmojiSound();
-          } else {
-            playSound(600, 0.05);
-          }
-        }
-      }
-      draw() {
-        ctx.fillStyle = gameConfig.background;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height / 2);
-        ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.stroke();
-        // رسم الحواجز
-        for (let barrier of this.barriers) {
-          barrier.draw(ctx);
-        }
-        this.puck.draw(ctx);
-        this.player.draw(ctx);
-        this.enemy.draw(ctx);
-        ctx.fillStyle = "white";
-        ctx.font = "20px Arial";
-        ctx.fillText("اللاعب: " + this.playerScore, 20, canvas.height - 20);
-        ctx.fillText("الخصم: " + this.enemyScore, 20, 30);
-      }
-      gameLoop() {
-        this.updatePuck();
-        this.moveEnemy();
-        this.handleCollision(this.player);
-        this.handleCollision(this.enemy);
-        this.draw();
-        requestAnimationFrame(() => this.gameLoop());
-      }
-    }
 
-    /******************* التعامل مع واجهة المستخدم *******************/
-    const startScreen = document.getElementById("startScreen");
-    const customizationScreen = document.getElementById("customizationScreen");
-    const startButton = document.getElementById("startButton");
-    const customizationButton = document.getElementById("customizationButton");
-    const backButton = document.getElementById("backButton");
-    const styleContainer = document.getElementById("styleContainer");
-    const emojiContainer = document.getElementById("emojiContainer");
-    const showStyles = document.getElementById("showStyles");
-    const showEmoji = document.getElementById("showEmoji");
-
-    // تعبئة قائمة أنماط الملعب
-    styles.forEach((style) => {
-      let div = document.createElement("div");
-      div.classList.add("styleItem");
-      div.style.background = style.background;
-      div.title = style.name;
-      div.addEventListener("dblclick", () => {
-        gameConfig.background = style.background;
-        gameConfig.playerColor = style.playerColor;
-        gameConfig.enemyColor = style.enemyColor;
-        gameConfig.puckColor = style.puckColor;
-        customizationScreen.style.display = "none";
-        startScreen.style.display = "block";
-        if (game) {
-          game.player.color = gameConfig.playerColor;
-          game.enemy.color = gameConfig.enemyColor;
-          game.puck.color = gameConfig.puckColor;
+        // ============================================================
+        //  Particle System
+        // ============================================================
+        class ParticleSystem {
+            constructor() {
+                this.particles = [];
+                this.max = 200;
+            }
+            emit(x, y, color, count = 20, speed = 4, life = 1) {
+                const n = Math.min(count, this.max - this.particles.length);
+                for (let i = 0; i < n; i++) {
+                    const angle = Math.random() * 2 * Math.PI;
+                    const spd = Math.random() * speed + 1;
+                    this.particles.push({
+                        x,
+                        y,
+                        dx: Math.cos(angle) * spd,
+                        dy: Math.sin(angle) * spd - 1,
+                        life: life * (0.5 + Math.random() * 0.5),
+                        maxLife: life,
+                        size: Math.random() * 5 + 2,
+                        color: color,
+                        gravity: 0.05,
+                        friction: 0.98
+                    });
+                }
+            }
+            update() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    p.dx *= p.friction;
+                    p.dy *= p.friction;
+                    p.dy += p.gravity;
+                    p.life -= 0.02;
+                    p.size *= 0.99;
+                    if (p.life <= 0 || p.size < 0.3) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+            draw(ctx) {
+                for (const p of this.particles) {
+                    const alpha = Math.max(0, p.life / p.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+            }
+            emitGoal(x, y) {
+                const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'];
+                for (let i = 0; i < 5; i++) {
+                    this.emit(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 100,
+                        colors[i % colors.length], 15, 7, 1.5);
+                }
+            }
         }
-      });
-      styleContainer.appendChild(div);
-    });
 
-    // تعبئة قائمة أقراص الإيموجي
-    emojiDiscs.forEach((emoji) => {
-      let div = document.createElement("div");
-      div.classList.add("emojiItem");
-      div.textContent = emoji;
-      div.title = emoji;
-      div.addEventListener("dblclick", () => {
-        gameConfig.useEmoji = true;
-        gameConfig.playerEmoji = emoji;
-        customizationScreen.style.display = "none";
-        startScreen.style.display = "block";
-        if (game) {
-          game.player.isPlayer = true;
+        // ============================================================
+        //  AI Controller - تكيفي وتعلمي بدون تذبذب
+        // ============================================================
+        class AIController {
+            constructor(diff = 'medium') {
+                this.setDifficulty(diff);
+                this.timer = 0;
+                this.learningCounter = 0;
+                this.previousPuckX = 0;
+                this.previousPuckY = 0;
+                this.puckVelocityX = 0;
+                this.puckVelocityY = 0;
+                this.successfulBlocks = 0;
+                this.missedBlocks = 0;
+                this.adaptationRate = 0.01;
+            }
+
+            setDifficulty(diff) {
+                switch (diff) {
+                    case 'easy':
+                        this.reactionDelay = 0.6;
+                        this.predictionError = 0.5;
+                        this.aggressiveness = 0.3;
+                        this.defensePos = 0.6;
+                        this.speed = 2.8;
+                        this.learningRate = 0.02;
+                        break;
+                    case 'medium':
+                        this.reactionDelay = 0.35;
+                        this.predictionError = 0.25;
+                        this.aggressiveness = 0.5;
+                        this.defensePos = 0.7;
+                        this.speed = 3.8;
+                        this.learningRate = 0.03;
+                        break;
+                    case 'hard':
+                        this.reactionDelay = 0.15;
+                        this.predictionError = 0.1;
+                        this.aggressiveness = 0.7;
+                        this.defensePos = 0.8;
+                        this.speed = 4.8;
+                        this.learningRate = 0.04;
+                        break;
+                }
+            }
+
+            update(puck, enemy, player, canvas) {
+                this.timer++;
+
+                // حساب سرعة الكرة للتعلم
+                this.puckVelocityX = puck.x - this.previousPuckX;
+                this.puckVelocityY = puck.y - this.previousPuckY;
+                this.previousPuckX = puck.x;
+                this.previousPuckY = puck.y;
+
+                // تأخير رد الفعل
+                if (this.timer < this.reactionDelay * 60) return;
+
+                // التعلم من الأخطاء السابقة
+                this.learningCounter++;
+                if (this.learningCounter > 30) {
+                    // تحسين التكيف بناءً على الأداء
+                    const successRate = this.successfulBlocks / (this.successfulBlocks + this.missedBlocks + 1);
+                    this.adaptationRate = this.learningRate * (1 - successRate);
+                    this.learningCounter = 0;
+                }
+
+                // توقع موقع الكرة مع تحسين مستمر
+                const predictionTime = 15 + (1 - this.aggressiveness) * 10;
+                let px = puck.x + this.puckVelocityX * predictionTime;
+                let py = puck.y + this.puckVelocityY * predictionTime;
+
+                // إضافة خطأ تكيفي (يقل مع التعلم)
+                const errorFactor = 1 - Math.min(1, this.successfulBlocks / 50);
+                const errorX = (Math.random() - 0.5) * this.predictionError * 200 * errorFactor;
+                const errorY = (Math.random() - 0.5) * this.predictionError * 200 * errorFactor;
+
+                let tx = px + errorX;
+                let ty = py + errorY;
+
+                // استراتيجية ذكية - تحسين مستمر للموقع
+                const attacking = Math.abs(puck.y - canvas.height / 2) < 150;
+
+                if (attacking && this.aggressiveness > 0.5) {
+                    // هجوم مع حركة سلسة
+                    tx = puck.x + errorX * 0.3;
+                    ty = puck.y + errorY * 0.3;
+                } else {
+                    // دفاع متكيف مع حركة الخصم
+                    const playerInfluence = (player.x / canvas.width) * 0.2;
+                    ty = canvas.height * 0.25 + (puck.y - canvas.height * 0.25) *
+                        (1 - this.defensePos - playerInfluence);
+                    tx = puck.x * 0.25 + canvas.width * 0.35 + errorX * 0.2;
+                }
+
+                // الحدود مع حركة سلسة (بدون تذبذب)
+                const margin = 30 + enemy.radius;
+                tx = Math.max(margin, Math.min(canvas.width - margin, tx));
+                ty = Math.max(margin, Math.min(canvas.height / 2 - margin, ty));
+
+                // حركة سلسة ومتسقة - بدون تذبذب
+                const dx = tx - enemy.x;
+                const dy = ty - enemy.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist > 2) {
+                    // سرعة متغيرة حسب المسافة - تمنع التذبذب
+                    const speedFactor = Math.min(1, dist / 100);
+                    const step = this.speed * (0.8 + 0.4 * speedFactor);
+                    const moveStep = Math.min(step, dist);
+                    enemy.x += (dx / dist) * moveStep;
+                    enemy.y += (dy / dist) * moveStep;
+                }
+
+                // تسجيل الأداء للتعلم
+                if (dist < 50) {
+                    this.successfulBlocks++;
+                } else if (dist > 150) {
+                    this.missedBlocks++;
+                }
+
+                if (this.timer > 120) this.timer = 0;
+            }
         }
-        playEmojiSound();
-      });
-      emojiContainer.appendChild(div);
-    });
 
-    startButton.addEventListener("click", () => {
-      startScreen.style.display = "none";
-      game = new Game();
-      game.player.color = gameConfig.playerColor;
-      game.enemy.color = gameConfig.enemyColor;
-      game.puck.color = gameConfig.puckColor;
-      game.gameLoop();
-    });
+        // ============================================================
+        //  Main Game
+        // ============================================================
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
 
-    customizationButton.addEventListener("click", () => {
-      startScreen.style.display = "none";
-      customizationScreen.style.display = "block";
-      styleContainer.style.display = "flex";
-      emojiContainer.style.display = "none";
-    });
+                // الكائنات
+                this.player = {
+                    x: 0,
+                    y: 0,
+                    radius: 28,
+                    color: '#667eea',
+                    emoji: '😎'
+                };
+                this.enemy = {
+                    x: 0,
+                    y: 0,
+                    radius: 28,
+                    color: '#f5576c'
+                };
+                this.puck = {
+                    x: 0,
+                    y: 0,
+                    radius: 14,
+                    color: '#fff',
+                    dx: 0,
+                    dy: 0,
+                    speed: 6,
+                    trail: [],
+                    rotation: 0
+                };
 
-    backButton.addEventListener("click", () => {
-      customizationScreen.style.display = "none";
-      startScreen.style.display = "block";
-    });
+                this.sound = new SoundManager();
+                this.particles = new ParticleSystem();
+                this.ai = new AIController('medium');
 
-    showStyles.addEventListener("click", () => {
-      styleContainer.style.display = "flex";
-      emojiContainer.style.display = "none";
-    });
-    showEmoji.addEventListener("click", () => {
-      styleContainer.style.display = "none";
-      emojiContainer.style.display = "flex";
-    });
-  </script>
+                this.running = false;
+                this.gameTime = 0;
+                this.maxGameTime = 120;
+                this.playerScore = 0;
+                this.enemyScore = 0;
+                this.difficulty = 'medium';
+                this.isDragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.playerStart = { x: 0, y: 0 };
+                this.notification = document.getElementById('notification');
+                this.notifTimeout = null;
+                this.timerInterval = null;
+
+                this.resize();
+                this.init();
+                this.setupEvents();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                this.updatePositions();
+            }
+
+            updatePositions() {
+                const margin = 40;
+                this.player.x = this.centerX;
+                this.player.y = this.canvas.height - margin - this.player.radius;
+                this.enemy.x = this.centerX;
+                this.enemy.y = margin + this.enemy.radius;
+                if (!this.running) {
+                    this.puck.x = this.centerX;
+                    this.puck.y = this.centerY;
+                    this.puck.dx = 0;
+                    this.puck.dy = 0;
+                }
+            }
+
+            init() {
+                this.playerScore = 0;
+                this.enemyScore = 0;
+                this.gameTime = 0;
+                this.puck.trail = [];
+                this.puck.rotation = 0;
+                this.updatePositions();
+                this.updateHUD();
+            }
+
+            setupEvents() {
+                // Touch
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!this.running) return;
+                    const t = e.touches[0];
+                    this.startDrag(t.clientX, t.clientY);
+                }, { passive: false });
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (!this.running || !this.isDragging) return;
+                    const t = e.touches[0];
+                    this.moveDrag(t.clientX, t.clientY);
+                }, { passive: false });
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.endDrag();
+                }, { passive: false });
+
+                // Mouse
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (!this.running) return;
+                    this.startDrag(e.clientX, e.clientY);
+                });
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.running || !this.isDragging) return;
+                    this.moveDrag(e.clientX, e.clientY);
+                });
+                this.canvas.addEventListener('mouseup', () => { this.endDrag(); });
+
+                window.addEventListener('resize', () => { this.resize(); });
+
+                // Buttons
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    const active = document.querySelector('.difficulty.active');
+                    if (active) {
+                        this.difficulty = active.dataset.diff;
+                        this.ai.setDifficulty(this.difficulty);
+                    }
+                    this.startGame();
+                });
+                document.getElementById('customizeBtn').addEventListener('click', () => {
+                    document.getElementById('menuScreen').classList.add('hidden');
+                    document.getElementById('customizeScreen').classList.remove('hidden');
+                    this.setupCustomization();
+                });
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    document.getElementById('customizeScreen').classList.add('hidden');
+                    document.getElementById('menuScreen').classList.remove('hidden');
+                });
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    document.getElementById('gameOverScreen').classList.add('hidden');
+                    this.startGame();
+                });
+                document.getElementById('menuBtn').addEventListener('click', () => {
+                    document.getElementById('gameOverScreen').classList.add('hidden');
+                    document.getElementById('menuScreen').classList.remove('hidden');
+                    this.stopGame();
+                });
+                document.querySelectorAll('.difficulty').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.difficulty').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                });
+
+                document.querySelectorAll('.tab-buttons button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-buttons button').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        const tab = btn.dataset.tab;
+                        document.getElementById('emojiContainer').style.display = (tab === 'emojis') ? 'grid' :
+                            'none';
+                        document.getElementById('flagContainer').style.display = (tab === 'flags') ? 'grid' :
+                        'none';
+                    });
+                });
+            }
+
+            setupCustomization() {
+                const emojiContainer = document.getElementById('emojiContainer');
+                emojiContainer.innerHTML = '';
+                const emojis = ['😎', '🦁', '🐯', '🐶', '🐱', '🐵', '🤖', '👾', '🎮', '🏆', '⭐', '🔥'];
+                emojis.forEach(emoji => {
+                    const btn = document.createElement('button');
+                    btn.textContent = emoji;
+                    if (this.player.emoji === emoji) btn.classList.add('selected');
+                    btn.onclick = () => {
+                        this.player.emoji = emoji;
+                        this.setupCustomization();
+                    };
+                    emojiContainer.appendChild(btn);
+                });
+
+                const flagContainer = document.getElementById('flagContainer');
+                flagContainer.innerHTML = '';
+                const flags = [
+                    '🇬🇧', '🇫🇷', '🇩🇪', '🇪🇸', '🇮🇹', '🇵🇹', '🇳🇱', '🇧🇪', '🇨🇭', '🇦🇹',
+                    '🇸🇪', '🇳🇴', '🇩🇰', '🇫🇮', '🇵🇱', '🇨🇿', '🇭🇺', '🇬🇷', '🇷🇺',
+                    '🇸🇦', '🇪🇬', '🇩🇿', '🇲🇦', '🇱🇾', '🇹🇳', '🇯🇴', '🇵🇸', '🇱🇧', '🇸🇾',
+                    '🇮🇶', '🇰🇼', '🇶🇦', '🇦🇪', '🇴🇲', '🇾🇪', '🇸🇩', '🇩🇯', '🇸🇴',
+                    '🇺🇸', '🇨🇦', '🇲🇽', '🇧🇷', '🇦🇷', '🇨🇱', '🇨🇴', '🇵🇪', '🇻🇪', '🇪🇨',
+                    '🇿🇦', '🇳🇬', '🇰🇪', '🇪🇹', '🇬🇭', '🇨🇲', '🇸🇳', '🇨🇮'
+                ];
+                flags.forEach(flag => {
+                    const btn = document.createElement('button');
+                    btn.textContent = flag;
+                    if (this.player.emoji === flag) btn.classList.add('selected');
+                    btn.onclick = () => {
+                        this.player.emoji = flag;
+                        this.setupCustomization();
+                    };
+                    flagContainer.appendChild(btn);
+                });
+            }
+
+            startDrag(x, y) {
+                this.sound.init();
+                this.isDragging = true;
+                this.dragStart.x = x;
+                this.dragStart.y = y;
+                this.playerStart.x = this.player.x;
+                this.playerStart.y = this.player.y;
+            }
+
+            moveDrag(x, y) {
+                const dx = x - this.dragStart.x;
+                const dy = y - this.dragStart.y;
+                this.player.x = this.playerStart.x + dx;
+                this.player.y = this.playerStart.y + dy;
+                const margin = this.player.radius;
+                const half = this.canvas.height / 2 + margin;
+                this.player.x = Math.max(margin, Math.min(this.canvas.width - margin, this.player.x));
+                this.player.y = Math.max(half, Math.min(this.canvas.height - margin, this.player.y));
+            }
+
+            endDrag() { this.isDragging = false; }
+
+            startGame() {
+                this.sound.init();
+                document.getElementById('menuScreen').classList.add('hidden');
+                document.getElementById('gameOverScreen').classList.add('hidden');
+                document.getElementById('customizeScreen').classList.add('hidden');
+                this.init();
+                this.running = true;
+                this.sound.start();
+                this.launchPuck();
+                this.updateHUD();
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => {
+                    this.gameTime++;
+                    this.updateHUD();
+                    if (this.gameTime >= this.maxGameTime) this.endGame();
+                }, 1000);
+                this.gameLoop();
+            }
+
+            stopGame() {
+                this.running = false;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                this.puck.dx = 0;
+                this.puck.dy = 0;
+            }
+
+            launchPuck() {
+                const angle = (Math.random() - 0.5) * Math.PI / 2;
+                const speed = this.puck.speed * (0.8 + Math.random() * 0.4);
+                // منع الحركة الأفقية المستقيمة تماماً
+                let dx = Math.cos(angle) * speed;
+                let dy = Math.sin(angle) * speed;
+
+                // التأكد من وجود زاوية عمودية كافية لمنع العلق في المنتصف
+                if (Math.abs(dx) > Math.abs(dy) * 2) {
+                    // إذا كانت الحركة أفقية أكثر من اللازم، نعدل الزاوية
+                    const newAngle = Math.atan2(Math.abs(dy), Math.abs(dx) * 0.7) * (Math.random() > 0.5 ? 1 : -1);
+                    dx = Math.cos(newAngle) * speed * (Math.random() > 0.5 ? 1 : -1);
+                    dy = Math.sin(newAngle) * speed * (Math.random() > 0.5 ? 1 : -1);
+                }
+
+                this.puck.dx = dx;
+                this.puck.dy = dy;
+            }
+
+            updateHUD() {
+                document.getElementById('playerScore').textContent = `👤 ${this.playerScore}`;
+                document.getElementById('enemyScore').textContent = `🤖 ${this.enemyScore}`;
+                const m = Math.floor(this.gameTime / 60);
+                const s = this.gameTime % 60;
+                document.getElementById('gameTimer').textContent =
+                    `⏱️ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+
+            showNotification(text, duration = 1500) {
+                const el = document.getElementById('notification');
+                el.textContent = text;
+                el.classList.add('show');
+                if (this.notifTimeout) clearTimeout(this.notifTimeout);
+                this.notifTimeout = setTimeout(() => { el.classList.remove('show'); }, duration);
+            }
+
+            endGame() {
+                this.running = false;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+                const win = this.playerScore > this.enemyScore;
+                const draw = this.playerScore === this.enemyScore;
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+                document.getElementById('finalScore').textContent = `${this.playerScore} - ${this.enemyScore}`;
+                let title = '';
+                if (win) {
+                    title = '🎉 فوز! أحسنت!';
+                    this.sound.gameOver(true);
+                    this.particles.emitGoal(this.centerX, this.centerY);
+                } else if (draw) {
+                    title = '🤝 تعادل!';
+                    this.sound.gameOver(false);
+                } else {
+                    title = '😅 خسارة! حاول مرة أخرى';
+                    this.sound.gameOver(false);
+                }
+                document.getElementById('gameOverTitle').textContent = title;
+            }
+
+            // ============================================================
+            //  Game Loop
+            // ============================================================
+            gameLoop() {
+                if (!this.running) return;
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                this.updatePuck();
+                this.ai.update(this.puck, this.enemy, this.player, this.canvas);
+                this.particles.update();
+                this.updateHUD();
+            }
+
+            updatePuck() {
+                // حفظ الأثر
+                this.puck.trail.push({ x: this.puck.x, y: this.puck.y });
+                if (this.puck.trail.length > 20) this.puck.trail.shift();
+
+                // تحريك الكرة
+                this.puck.x += this.puck.dx;
+                this.puck.y += this.puck.dy;
+
+                // سرعة ثابتة نسبياً - منع التباطؤ الغبي
+                const currentSpeed = Math.hypot(this.puck.dx, this.puck.dy);
+                const targetSpeed = this.puck.speed * 1.2;
+
+                // الحفاظ على سرعة ثابتة مع تغيرات طفيفة
+                if (currentSpeed > 0.5) {
+                    // تسريع طفيف إذا كانت السرعة منخفضة
+                    if (currentSpeed < targetSpeed * 0.6) {
+                        const factor = 1 + (targetSpeed / (currentSpeed + 0.1)) * 0.02;
+                        this.puck.dx *= factor;
+                        this.puck.dy *= factor;
+                    }
+                    // تباطؤ طفيف جداً إذا كانت السرعة عالية
+                    else if (currentSpeed > targetSpeed * 1.3) {
+                        const factor = 1 - (currentSpeed / targetSpeed) * 0.01;
+                        this.puck.dx *= factor;
+                        this.puck.dy *= factor;
+                    }
+                }
+
+                // سرعة قصوى وأدنى (منع التوقف التام)
+                const maxSpd = 10;
+                const minSpd = 1.5;
+                const curSpd = Math.hypot(this.puck.dx, this.puck.dy);
+
+                if (curSpd > maxSpd) {
+                    this.puck.dx = (this.puck.dx / curSpd) * maxSpd;
+                    this.puck.dy = (this.puck.dy / curSpd) * maxSpd;
+                } else if (curSpd < minSpd && curSpd > 0) {
+                    // إعادة ضبط السرعة إذا أصبحت بطيئة جداً
+                    const angle = Math.atan2(this.puck.dy, this.puck.dx);
+                    const newSpeed = minSpd + Math.random() * 1.5;
+                    this.puck.dx = Math.cos(angle) * newSpeed;
+                    this.puck.dy = Math.sin(angle) * newSpeed;
+                }
+
+                // منع الحركة الأفقية المستقيمة تماماً
+                const dxAbs = Math.abs(this.puck.dx);
+                const dyAbs = Math.abs(this.puck.dy);
+                if (dxAbs > dyAbs * 3 && dxAbs > 3) {
+                    // إضافة زاوية عمودية صغيرة لمنع العلق
+                    this.puck.dy += (Math.random() - 0.5) * 0.3;
+                    // إعادة ضبط الزاوية
+                    const angle = Math.atan2(this.puck.dy, this.puck.dx);
+                    const spd = Math.hypot(this.puck.dx, this.puck.dy);
+                    this.puck.dx = Math.cos(angle) * spd;
+                    this.puck.dy = Math.sin(angle) * spd;
+                }
+
+                const margin = this.puck.radius;
+
+                // أهداف - خط المرمى
+                if (this.puck.y - margin < 0) {
+                    this.playerScore++;
+                    this.sound.goal();
+                    this.particles.emitGoal(this.puck.x, 0);
+                    this.showNotification('⚽ هدف!', 1000);
+                    this.resetPuck(true);
+                    return;
+                }
+                if (this.puck.y + margin > this.canvas.height) {
+                    this.enemyScore++;
+                    this.sound.goal();
+                    this.particles.emitGoal(this.puck.x, this.canvas.height);
+                    this.showNotification('😅 هدف للخصم', 1000);
+                    this.resetPuck(false);
+                    return;
+                }
+
+                // الجدران الجانبية - ارتداد طبيعي
+                if (this.puck.x - margin < 0) {
+                    this.puck.x = margin;
+                    this.puck.dx = Math.abs(this.puck.dx);
+                    this.sound.hit();
+                }
+                if (this.puck.x + margin > this.canvas.width) {
+                    this.puck.x = this.canvas.width - margin;
+                    this.puck.dx = -Math.abs(this.puck.dx);
+                    this.sound.hit();
+                }
+
+                // تصادم مع اللاعب والخصم
+                this.handleCollision(this.player);
+                this.handleCollision(this.enemy);
+            }
+
+            handleCollision(entity) {
+                const dx = this.puck.x - entity.x;
+                const dy = this.puck.y - entity.y;
+                const dist = Math.hypot(dx, dy);
+                const minDist = this.puck.radius + entity.radius;
+                if (dist < minDist && dist > 0) {
+                    this.particles.emit(this.puck.x, this.puck.y, '#ffffff', 8, 3);
+                    this.sound.hit();
+                    const angle = Math.atan2(dy, dx);
+                    const overlap = minDist - dist;
+                    this.puck.x += Math.cos(angle) * overlap;
+                    this.puck.y += Math.sin(angle) * overlap;
+
+                    // ارتداد مع الحفاظ على السرعة
+                    const currentSpd = Math.hypot(this.puck.dx, this.puck.dy);
+                    const newSpd = Math.max(currentSpd, 2.5);
+                    this.puck.dx = Math.cos(angle) * newSpd;
+                    this.puck.dy = Math.sin(angle) * newSpd;
+                    this.puck.rotation += 0.1;
+                }
+            }
+
+            resetPuck(scoredByPlayer) {
+                this.puck.x = this.centerX;
+                this.puck.y = this.centerY;
+                this.puck.trail = [];
+                const angle = (Math.random() - 0.5) * Math.PI / 2;
+                const spd = this.puck.speed * (0.8 + Math.random() * 0.4);
+                const dir = scoredByPlayer ? 1 : -1;
+
+                let dx = Math.cos(angle) * spd * dir;
+                let dy = Math.sin(angle) * spd * (Math.random() > 0.5 ? 1 : -1);
+
+                // منع الحركة الأفقية المستقيمة عند إعادة الإطلاق
+                if (Math.abs(dx) > Math.abs(dy) * 2.5) {
+                    const newAngle = Math.atan2(Math.abs(dy), Math.abs(dx) * 0.6) * (Math.random() > 0.5 ? 1 : -1);
+                    dx = Math.cos(newAngle) * spd * dir;
+                    dy = Math.sin(newAngle) * spd * (Math.random() > 0.5 ? 1 : -1);
+                }
+
+                this.puck.dx = dx;
+                this.puck.dy = dy;
+            }
+
+            // ============================================================
+            //  Rendering
+            // ============================================================
+            render() {
+                const ctx = this.ctx;
+                const W = this.canvas.width;
+                const H = this.canvas.height;
+
+                // خلفية
+                const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.7);
+                grad.addColorStop(0, '#1a1a3e');
+                grad.addColorStop(1, '#0a0a1a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+
+                // خطوط الملعب
+                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([10, 20]);
+                ctx.beginPath();
+                ctx.moveTo(0, H / 2);
+                ctx.lineTo(W, H / 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(W / 2, H / 2, 100, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // المرمى العلوي
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([15, 10]);
+                ctx.beginPath();
+                ctx.moveTo(0, 30);
+                ctx.lineTo(W, 30);
+                ctx.stroke();
+
+                // المرمى السفلي
+                ctx.beginPath();
+                ctx.moveTo(0, H - 30);
+                ctx.lineTo(W, H - 30);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // أعمدة المرمى
+                const goalGlow = ctx.createLinearGradient(0, 0, 0, 30);
+                goalGlow.addColorStop(0, 'rgba(255,215,0,0.1)');
+                goalGlow.addColorStop(1, 'rgba(255,215,0,0)');
+                ctx.fillStyle = goalGlow;
+                ctx.fillRect(0, 0, W, 30);
+                ctx.fillRect(0, H - 30, W, 30);
+
+                // أثر الكرة
+                for (let i = 0; i < this.puck.trail.length; i++) {
+                    const t = this.puck.trail[i];
+                    const alpha = i / this.puck.trail.length * 0.5;
+                    const size = (i / this.puck.trail.length) * this.puck.radius * 0.5;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#4ecdc4';
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+
+                this.particles.draw(ctx);
+                this.drawPlayerWithFace(ctx, this.player, true);
+                this.drawPlayerWithFace(ctx, this.enemy, false);
+                this.drawPuck(ctx);
+            }
+
+            drawPlayerWithFace(ctx, player, isPlayer) {
+                // توهج
+                const grad = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, player.radius * 1.5);
+                grad.addColorStop(0, player.color + '40');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // جسم
+                ctx.shadowColor = player.color;
+                ctx.shadowBlur = 30;
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // إطار
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // عيون وفم
+                const r = player.radius;
+                const eyeOffset = r * 0.3;
+                const eyeRadius = r * 0.15;
+                const mouthRadius = r * 0.2;
+
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(player.x - eyeOffset, player.y - r * 0.15, eyeRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(player.x + eyeOffset, player.y - r * 0.15, eyeRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y + r * 0.2, mouthRadius, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+
+                // الرمز فوق الرأس
+                ctx.font = `${player.radius * 0.7}px serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.shadowBlur = 0;
+                ctx.fillText(isPlayer ? this.player.emoji : '🤖', player.x, player.y - r * 0.7);
+            }
+
+            drawPuck(ctx) {
+                const p = this.puck;
+                // وهج
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 3);
+                grad.addColorStop(0, 'rgba(255,255,255,0.1)');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // جسم
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // تأثير ثلاثي الأبعاد
+                const grad2 = ctx.createRadialGradient(p.x - p.radius * 0.3, p.y - p.radius * 0.3, 0, p.x, p.y, p.radius);
+                grad2.addColorStop(0, 'rgba(255,255,255,0.8)');
+                grad2.addColorStop(0.5, 'rgba(200,200,200,0.3)');
+                grad2.addColorStop(1, 'rgba(100,100,100,0.2)');
+                ctx.fillStyle = grad2;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.rotation) {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * 0.6, p.rotation, p.rotation + Math.PI / 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // ============================================================
+        //  Start
+        // ============================================================
+        const game = new Game();
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === ' ' || e.key === 'Enter') && !game.running) game.startGame();
+            if (e.key === 'r' && game.running) game.endGame();
+        });
+        console.log('🏒 هوكي هوائي');
+        console.log('🎯 استخدم الماوس أو اللمس لتحريك اللاعب');
+        console.log('⌨️ Space للبدء، R للإنهاء');
+    </script>
 </body>
 </html>
