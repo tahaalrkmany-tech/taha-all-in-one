@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GoalSphere -   </title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f0f;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #ui {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  select, button, input {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  select {
+    background: #1e1e1e;
+    color: #fff;
+    border: 1px solid #333;
+    min-width: 120px;
+  }
+  button {
+    background: #e63946;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+    min-width: 100px;
+  }
+  button:active { transform: scale(0.95); }
+  #scoreboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(26,26,26,0.9);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .team-score { display: flex; align-items: center; gap: 8px; }
+  .flag { font-size: 24px; }
+  #timer {
+    color: #ffd700;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s;
+    min-width: 50px;
+    text-align: center;
+  }
+  #timer.warning { color: #ff4444; animation: blink 0.5s ease-in-out infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  #gameContainer {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(255,255,255,0.05), inset 0 0 60px rgba(0,0,0,0.6);
+  }
+  #overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+    border-radius: 50%;
+    text-align: center;
+    padding: 20px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #overlay.active { opacity: 1; pointer-events: all; }
+  #overlay h2 { font-size: 28px; margin-bottom: 10px; color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
+  #overlay p { font-size: 18px; margin-bottom: 20px; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div class="row">
+    <select id="flag1"></select>
+    <span style="font-size:20px;">⚔️</span>
+    <select id="flag2"></select>
+  </div>
+  <div class="row">
+    <label style="font-size:14px; color:#aaa;">الوقت (ثانية):</label>
+    <input type="range" id="timeRange" min="1" max="200" value="60" style="width:120px;">
+    <span id="timeVal" style="min-width:40px;">60</span>
+    <button id="startBtn">ابدأ اللعبة</button>
+  </div>
+  <div id="scoreboard">
+    <div class="team-score"><span class="flag" id="sFlag1">🇪🇸</span> <span id="sScore1">0</span></div>
+    <div id="timer">01:00</div>
+    <div class="team-score"><span id="sScore2">0</span> <span class="flag" id="sFlag2">🇦🇷</span></div>
+  </div>
+</div>
+
+<div id="gameContainer">
+  <canvas id="gameCanvas"></canvas>
+  <div id="overlay">
+    <h2 id="ovTitle">انتهت المباراة!</h2>
+    <p id="ovText">النتيجة: 0 - 0</p>
+    <button id="restartBtn" style="pointer-events:all;">إعادة اللعب</button>
+  </div>
+</div>
+
+<script>
+// ===== قائمة الأعلام (40 علم) =====
+const flagsData = [
+  {code:'🇪🇸',name:'إسبانيا'},{code:'🇦🇷',name:'الأرجنتين'},{code:'🇧🇷',name:'البرازيل'},
+  {code:'🇫🇷',name:'فرنسا'},{code:'🇩🇪',name:'ألمانيا'},{code:'🇮🇹',name:'إيطاليا'},
+  {code:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',name:'إنجلترا'},{code:'🇵🇹',name:'البرتغال'},{code:'🇳🇱',name:'هولندا'},
+  {code:'🇧🇪',name:'بلجيكا'},{code:'🇭🇷',name:'كرواتيا'},{code:'🇲🇦',name:'المغرب'},
+  {code:'🇯🇵',name:'اليابان'},{code:'🇰🇷',name:'كوريا'},{code:'🇺🇸',name:'أمريكا'},
+  {code:'🇲🇽',name:'المكسيك'},{code:'🇺🇾',name:'أوروغواي'},{code:'🇨🇴',name:'كولومبيا'},
+  {code:'🇨🇦',name:'كندا'},{code:'🇦🇺',name:'أستراليا'},{code:'🇨🇭',name:'سويسرا'},
+  {code:'🇵🇱',name:'بولندا'},{code:'🇩🇿',name:'الجزائر'},{code:'🇪🇬',name:'مصر'},
+  {code:'🇸🇦',name:'السعودية'},{code:'🇶🇦',name:'قطر'},{code:'🇦🇪',name:'الإمارات'},
+  {code:'🇯🇴',name:'الأردن'},{code:'🇱🇧',name:'لبنان'},{code:'🇮🇶',name:'العراق'},
+  {code:'🇸🇾',name:'سوريا'},{code:'🇾🇪',name:'اليمن'},{code:'🇸🇩',name:'السودان'},
+  {code:'🇱🇾',name:'ليبيا'},{code:'🇹🇳',name:'تونس'},{code:'🇳🇬',name:'نيجيريا'},
+  {code:'🇨🇲',name:'الكاميرون'},{code:'🇬🇭',name:'غانا'},{code:'🇨🇮',name:'ساحل العاج'},
+  {code:'🇸🇳',name:'السنغال'}
+];
+
+const f1 = document.getElementById('flag1');
+const f2 = document.getElementById('flag2');
+flagsData.forEach((f,i) => {
+  const o1 = new Option(f.name + ' ' + f.code, i);
+  const o2 = new Option(f.name + ' ' + f.code, i);
+  f1.add(o1); f2.add(o2);
+});
+f1.selectedIndex = 0; f2.selectedIndex = 1;
+
+// ===== التحكم بالوقت (ثواني فقط) =====
+document.getElementById('timeRange').oninput = function(){
+  document.getElementById('timeVal').textContent = this.value;
+};
+
+// ===== Web Audio =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function initAudio(){
+  if(!audioCtx) audioCtx = new AudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playBounce(){
+  if(!audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(300, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+function playGoal(){
+  if(!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    [523,659,784,1047].forEach((freq,i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(freq, now + i*0.08);
+      g.gain.setValueAtTime(0.08, now + i*0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.2);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + i*0.08); o.stop(now + i*0.08 + 0.2);
+    });
+  } catch(e) {}
+}
+
+function playWhistle(){
+  if(!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(900, now);
+    o.frequency.linearRampToValueAtTime(700, now + 0.15);
+    g.gain.setValueAtTime(0.12, now);
+    g.gain.linearRampToValueAtTime(0, now + 0.3);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(now + 0.3);
+  } catch(e) {}
+}
+
+function playTick(){
+  if(!audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(800, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+// ===== محرك اللعبة =====
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, R, cx, cy;
+let lastTickSecond = -1;
+
+function resize(){
+  const rect = document.getElementById('gameContainer').getBoundingClientRect();
+  const size = Math.min(rect.width, rect.height, window.innerHeight - 200);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  W = canvas.width; H = canvas.height;
+  cx = W/2; cy = H/2;
+  R = W/2 - 20 * dpr;
+}
+window.addEventListener('resize', resize);
+resize();
+
+let balls = [];
+let goalAngle = 0;
+const goalWidth = Math.PI/5;
+let goalSpeed = 0.008;
+let scores = [0,0];
+let timeLeft = 0;
+let running = false;
+let lastT = 0;
+let particles = [];
+let maxSpeed = 0;
+
+class Ball {
+  constructor(idx, flag){
+    this.idx = idx;
+    this.flag = flag;
+    this.r = R * 0.12;
+    const d = Math.random() * (R - this.r - 15);
+    const a = Math.random() * Math.PI * 2;
+    this.x = cx + Math.cos(a)*d;
+    this.y = cy + Math.sin(a)*d;
+    const speed = R * 0.006 + Math.random() * R * 0.004;
+    const dir = Math.random() * Math.PI * 2;
+    this.vx = Math.cos(dir)*speed;
+    this.vy = Math.sin(dir)*speed;
+    this.mass = 1;
+    this.scored = false;
+    this.respawnT = 0;
+    this.trail = [];
+  }
+
+  update(dt){
+    if(this.respawnT > 0){
+      this.respawnT -= dt;
+      if(this.respawnT <= 0){
+        const d = Math.random() * (R - this.r - 20);
+        const a = Math.random() * Math.PI * 2;
+        this.x = cx + Math.cos(a)*d;
+        this.y = cy + Math.sin(a)*d;
+        this.scored = false;
+        this.trail = [];
+      }
+      return;
+    }
+
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+
+    // حفظ الأثر
+    this.trail.push({x: this.x, y: this.y});
+    if(this.trail.length > 8) this.trail.shift();
+
+    // الحد الأقصى للسرعة
+    const currentSpeed = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+    const maxAllowed = R * 0.025;
+    if(currentSpeed > maxAllowed) {
+      this.vx = (this.vx / currentSpeed) * maxAllowed;
+      this.vy = (this.vy / currentSpeed) * maxAllowed;
+    }
+
+    const dx = this.x - cx;
+    const dy = this.y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist + this.r > R){
+      const nx = dx/dist, ny = dy/dist;
+      const overlap = dist + this.r - R;
+      this.x -= nx * overlap;
+      this.y -= ny * overlap;
+      const dot = this.vx*nx + this.vy*ny;
+      this.vx -= 1.98 * dot * nx;
+      this.vy -= 1.98 * dot * ny;
+      playBounce();
+    }
+
+    if(!this.scored && dist > R - this.r - 5){
+      let a = Math.atan2(dy, dx);
+      if(a < 0) a += Math.PI*2;
+      
+      let g1 = goalAngle - goalWidth/2;
+      let g2 = goalAngle + goalWidth/2;
+      g1 = ((g1 % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
+      g2 = ((g2 % (Math.PI*2)) + (Math.PI*2)) % (Math.PI*2);
+      
+      let inGoal = false;
+      if(g1 < g2){
+        inGoal = (a >= g1 && a <= g2);
+      } else {
+        inGoal = (a >= g1 || a <= g2);
+      }
+
+      if(inGoal){
+        scores[this.idx]++;
+        this.scored = true;
+        this.respawnT = 1500;
+        playGoal();
+        const color = this.idx===0 ? '#e63946' : '#457b9d';
+        for(let i=0;i<30;i++){
+          const ang = Math.random()*Math.PI*2;
+          const sp = Math.random()*4+2;
+          particles.push({
+            x: this.x, y: this.y,
+            vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp,
+            life: 1.0,
+            color: color
+          });
+        }
+        updateScoreboard();
+      }
+    }
+  }
+
+  draw(){
+    if(this.respawnT > 0) return;
+    ctx.save();
+
+    // رسم الأثر
+    for(let i=0; i<this.trail.length; i++) {
+      const alpha = i / this.trail.length * 0.3;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(this.trail[i].x, this.trail[i].y, this.r * (i/this.trail.length) * 0.5, 0, Math.PI*2);
+      ctx.fillStyle = this.idx===0 ? '#e63946' : '#457b9d';
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ظل الكرة
+    ctx.shadowColor = this.idx===0 ? 'rgba(230,57,70,0.3)' : 'rgba(69,123,157,0.3)';
+    ctx.shadowBlur = 15;
+
+    // الجسم الرئيسي
+    const grad = ctx.createRadialGradient(
+      this.x - this.r*0.3, this.y - this.r*0.3, 0,
+      this.x, this.y, this.r
+    );
+    if(this.idx===0){
+      grad.addColorStop(0, '#e63946');
+      grad.addColorStop(1, '#8d1a2a');
+    } else {
+      grad.addColorStop(0, '#457b9d');
+      grad.addColorStop(1, '#1d3557');
+    }
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // إطار الكرة
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // العلم
+    ctx.fillStyle = '#fff';
+    ctx.font = `${this.r * 1.1}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.flag, this.x, this.y);
+    ctx.restore();
+  }
+}
+
+function updateParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.x += p.vx * dt/16;
+    p.y += p.vy * dt/16;
+    p.life -= dt/600;
+    if(p.life <= 0) particles.splice(i,1);
+  }
+}
+
+function drawParticles(){
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,3 + (1-p.life)*2,0,Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function resolveCollision(b1, b2){
+  const dx = b2.x - b1.x;
+  const dy = b2.y - b1.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const minDist = b1.r + b2.r;
+  if(dist < minDist && dist > 0){
+    const nx = dx/dist, ny = dy/dist;
+    const overlap = minDist - dist;
+    b1.x -= nx * overlap * 0.5;
+    b1.y -= ny * overlap * 0.5;
+    b2.x += nx * overlap * 0.5;
+    b2.y += ny * overlap * 0.5;
+
+    const dvx = b2.vx - b1.vx;
+    const dvy = b2.vy - b1.vy;
+    const velAlongNormal = dvx*nx + dvy*ny;
+    if(velAlongNormal > 0) return;
+
+    const j = -(1+0.95) * velAlongNormal / (1/b1.mass + 1/b2.mass);
+    b1.vx -= (j*nx)/b1.mass;
+    b1.vy -= (j*ny)/b1.mass;
+    b2.vx += (j*nx)/b2.mass;
+    b2.vy += (j*ny)/b2.mass;
+    playBounce();
+  }
+}
+
+function updateScoreboard(){
+  document.getElementById('sScore1').textContent = scores[0];
+  document.getElementById('sScore2').textContent = scores[1];
+}
+
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60);
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+
+function drawField(){
+  ctx.clearRect(0,0,W,H);
+
+  // تدرج الخلفية
+  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+  bgGrad.addColorStop(0, '#1a2a3a');
+  bgGrad.addColorStop(1, '#0a0a0a');
+  ctx.beginPath();
+  ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle = bgGrad;
+  ctx.fill();
+
+  // دوائر الملعب
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1.5;
+  [0.15, 0.30, 0.50, 0.75].forEach(ratio => {
+    ctx.beginPath();
+    ctx.arc(cx,cy,R*ratio,0,Math.PI*2);
+    ctx.stroke();
+  });
+
+  // خط المنتصف
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6,8]);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - R*0.9);
+  ctx.lineTo(cx, cy + R*0.9);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // المرمى الدوار - تأثير نيون
+  ctx.save();
+  // توهج المرمى
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 20;
+  ctx.beginPath();
+  ctx.arc(cx,cy,R+5, goalAngle - goalWidth/2, goalAngle + goalWidth/2);
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 10;
+  ctx.stroke();
+  
+  // المرمى الأساسي
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.arc(cx,cy,R+5, goalAngle - goalWidth/2, goalAngle + goalWidth/2);
+  ctx.strokeStyle = 'rgba(255,215,0,0.6)';
+  ctx.lineWidth = 6;
+  ctx.setLineDash([4,6]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // نقاط توجيهية للمرمى
+  for(let angle = goalAngle - goalWidth/2; angle <= goalAngle + goalWidth/2; angle += 0.05) {
+    const x = cx + (R+3) * Math.cos(angle);
+    const y = cy + (R+3) * Math.sin(angle);
+    ctx.fillStyle = `rgba(255,215,0,${0.2 + Math.random()*0.1})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function loop(ts){
+  if(!running) return;
+  if(!lastT) lastT = ts;
+  const dt = Math.min(ts - lastT, 32);
+  lastT = ts;
+
+  timeLeft -= dt/1000;
+  if(timeLeft <= 0){
+    timeLeft = 0;
+    endGame();
+    return;
+  }
+
+  // تحديث المؤقت
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = formatTime(timeLeft);
+  
+  // تحذير عند نهاية الوقت
+  if(timeLeft < 10) {
+    timerEl.className = 'warning';
+    const currentSec = Math.floor(timeLeft);
+    if(currentSec !== lastTickSecond && currentSec > 0) {
+      lastTickSecond = currentSec;
+      playTick();
+    }
+  } else {
+    timerEl.className = '';
+  }
+
+  goalAngle += goalSpeed * dt/16;
+  if(goalAngle > Math.PI*2) goalAngle -= Math.PI*2;
+
+  balls.forEach(b => b.update(dt));
+  resolveCollision(balls[0], balls[1]);
+  updateParticles(dt);
+
+  drawField();
+  balls.forEach(b => b.draw());
+  drawParticles();
+
+  requestAnimationFrame(loop);
+}
+
+function startGame(){
+  initAudio();
+  playWhistle();
+  scores = [0,0];
+  lastTickSecond = -1;
+  updateScoreboard();
+  
+  const idx1 = parseInt(f1.value);
+  const idx2 = parseInt(f2.value);
+  document.getElementById('sFlag1').textContent = flagsData[idx1].code;
+  document.getElementById('sFlag2').textContent = flagsData[idx2].code;
+
+  balls = [
+    new Ball(0, flagsData[idx1].code),
+    new Ball(1, flagsData[idx2].code)
+  ];
+  
+  balls.forEach(b => { b.vx *= 1.8; b.vy *= 1.8; });
+
+  timeLeft = parseInt(document.getElementById('timeRange').value);
+  document.getElementById('timer').textContent = formatTime(timeLeft);
+  
+  goalAngle = Math.random() * Math.PI * 2;
+  goalSpeed = 0.005 + Math.random() * 0.007;
+  particles = [];
+  running = true;
+  lastT = 0;
+  document.getElementById('overlay').classList.remove('active');
+  requestAnimationFrame(loop);
+}
+
+function endGame(){
+  running = false;
+  playWhistle();
+  const ov = document.getElementById('overlay');
+  const title = document.getElementById('ovTitle');
+  const text = document.getElementById('ovText');
+  if(scores[0] > scores[1]){
+    title.textContent = '🏆 فاز ' + flagsData[f1.value].name + '!';
+  } else if(scores[1] > scores[0]){
+    title.textContent = '🏆 فاز ' + flagsData[f2.value].name + '!';
+  } else {
+    title.textContent = '🤝 تعادل!';
+  }
+  text.textContent = `النتيجة: ${scores[0]} - ${scores[1]}`;
+  ov.classList.add('active');
+  
+  // إيقاف تحذير المؤقت
+  document.getElementById('timer').className = '';
+}
+
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('restartBtn').onclick = startGame;
+
+// تحميل مسبق
+resize();
+drawField();
+</script>
+</body>
+</html>
