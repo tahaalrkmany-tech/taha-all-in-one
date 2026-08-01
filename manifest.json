@@ -1,0 +1,16 @@
+{
+  "name": "TahaTechPro",
+  "short_name": "TahaTech",
+  "description": "ألعاب وأدوات تقنية مجانية",
+  "start_url": "/taha-all-in-one/",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#ffd700",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
