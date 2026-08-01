@@ -6,6 +6,8 @@
   "display": "standalone",
   "background_color": "#0d1b2a",
   "theme_color": "#ffd700",
+  "orientation": "portrait",
+  "id": "tahatech-app",
   "icons": [
     {
       "src": "icon-512.png",
