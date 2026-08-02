@@ -384,10 +384,18 @@
 
     renderCards('all', '');
 </script>
-    <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/taha-all-in-one/sw.js');
-  }
+    <
+            <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/taha-all-in-one/sw.js');
+      }
+
+      // استقبال رسائل التحديث من Service Worker
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'UPDATE_READY') {
+          alert(event.data.message);
+        }
+      });
     </script>
 </body>
 </html>
