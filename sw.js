@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tahatech-v2';
+const CACHE_NAME = 'tahatech-v5';
 const urlsToCache = [
   '/taha-all-in-one/',
   '/taha-all-in-one/index.html',
   '/taha-all-in-one/manifest.json',
   '/taha-all-in-one/icon-512.png',
   
-  // الألعاب (21 لعبة)
+  // الألعاب (ضع جميع روابط الألعاب هنا)
   '/taha-all-in-one/8Ball.html',
   '/taha-all-in-one/BALLONe.html',
   '/taha-all-in-one/BowlingStrike.html',
@@ -28,7 +28,7 @@ const urlsToCache = [
   '/taha-all-in-one/YT-CRUSH4.html',
   '/taha-all-in-one/%D9%87%D9%88%D9%83%D9%8A.html',
   
-  // الأدوات (6 أدوات)
+  // الأدوات
   '/taha-all-in-one/PDFCONVERTOR.html',
   '/taha-all-in-one/QuranCalendar.html',
   '/taha-all-in-one/TahaProCalculator.html',
@@ -37,7 +37,7 @@ const urlsToCache = [
   '/taha-all-in-one/Files%20write%20and%20edit.html'
 ];
 
-// تثبيت Service Worker وتخزين الملفات
+// تثبيت السيرفر ووركر وتخزين الملفات
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -46,9 +46,10 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting(); // يجبر التحديث على التفعيل فوراً
 });
 
-// جلب الملفات: من الكاش إذا كان موجوداً، وإلا من الشبكة
+// جلب الملفات: من الكاش أو من الشبكة
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
@@ -66,7 +67,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// تحديث الكاش عند وجود إصدار جديد
+// تفعيل السيرفر ووركر الجديد وإرسال رسالة ترحيب
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -78,6 +79,17 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    })
+  );
+  event.waitUntil(clients.claim()); // السيطرة على الصفحات المفتوحة فوراً
+  event.waitUntil(
+    clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'UPDATE_READY',
+          message: '🎉 تم تحديث التطبيق بنجاح! استمتع بالنسخة الجديدة.'
+        });
+      });
     })
   );
 });
