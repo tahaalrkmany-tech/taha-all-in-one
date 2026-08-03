@@ -1,11 +1,10 @@
-const CACHE_NAME = 'tahatech-v6';
+const CACHE_NAME = 'tahatech-v7';
 const urlsToCache = [
   '/taha-all-in-one/',
   '/taha-all-in-one/index.html',
   '/taha-all-in-one/manifest.json',
   '/taha-all-in-one/icon-512.png',
-  
-  // الألعاب (جميع الروابط)
+  // الألعاب
   '/taha-all-in-one/8Ball.html',
   '/taha-all-in-one/BALLONe.html',
   '/taha-all-in-one/BowlingStrike.html',
@@ -27,7 +26,6 @@ const urlsToCache = [
   '/taha-all-in-one/X-OGame.html',
   '/taha-all-in-one/YT-CRUSH4.html',
   '/taha-all-in-one/%D9%87%D9%88%D9%83%D9%8A.html',
-  
   // الأدوات
   '/taha-all-in-one/PDFCONVERTOR.html',
   '/taha-all-in-one/QuranCalendar.html',
@@ -50,14 +48,10 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  // تجاهل ?v= عند البحث في الكاش
   const cleanUrl = url.origin + url.pathname;
-
   event.respondWith(
     caches.match(cleanUrl).then(response => {
-      if (response) {
-        return response;
-      }
+      if (response) return response;
       return fetch(event.request).then(networkResponse => {
         return caches.open(CACHE_NAME).then(cache => {
           cache.put(cleanUrl, networkResponse.clone());
@@ -82,14 +76,4 @@ self.addEventListener('activate', event => {
     })
   );
   event.waitUntil(clients.claim());
-  event.waitUntil(
-    clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'UPDATE_READY',
-          message: '🎉 تم تحديث التطبيق بنجاح! استمتع بالنسخة الجديدة.'
-        });
-      });
-    })
-  );
 });
