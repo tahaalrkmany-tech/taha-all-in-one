@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tahatech-v5';
+const CACHE_NAME = 'tahatech-v6';
 const urlsToCache = [
   '/taha-all-in-one/',
   '/taha-all-in-one/index.html',
   '/taha-all-in-one/manifest.json',
   '/taha-all-in-one/icon-512.png',
   
-  // الألعاب (ضع جميع روابط الألعاب هنا)
+  // الألعاب (جميع الروابط)
   '/taha-all-in-one/8Ball.html',
   '/taha-all-in-one/BALLONe.html',
   '/taha-all-in-one/BowlingStrike.html',
@@ -37,7 +37,6 @@ const urlsToCache = [
   '/taha-all-in-one/Files%20write%20and%20edit.html'
 ];
 
-// تثبيت السيرفر ووركر وتخزين الملفات
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -46,28 +45,29 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
-  self.skipWaiting(); // يجبر التحديث على التفعيل فوراً
+  self.skipWaiting();
 });
 
-// جلب الملفات: من الكاش أو من الشبكة
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  // تجاهل ?v= عند البحث في الكاش
+  const cleanUrl = url.origin + url.pathname;
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(networkResponse => {
-          return caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
+    caches.match(cleanUrl).then(response => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request).then(networkResponse => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(cleanUrl, networkResponse.clone());
+          return networkResponse;
         });
-      })
+      });
+    })
   );
 });
 
-// تفعيل السيرفر ووركر الجديد وإرسال رسالة ترحيب
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -81,7 +81,7 @@ self.addEventListener('activate', event => {
       );
     })
   );
-  event.waitUntil(clients.claim()); // السيطرة على الصفحات المفتوحة فوراً
+  event.waitUntil(clients.claim());
   event.waitUntil(
     clients.matchAll().then(clients => {
       clients.forEach(client => {
