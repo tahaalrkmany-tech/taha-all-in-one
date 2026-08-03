@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <link rel="manifest" href="/taha-all-in-one/manifest.json">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>TahaTechPro | ألعاب وأدوات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: var(--text);
+            direction: rtl;
+        }
         :root {
             --primary: #0d1b2a;
             --secondary: #1b3a5c;
             --gold: #ffd700;
+            --bg: #f0f4f8;
             --card-bg: #ffffff;
-            --text-dark: #1a2a3f;
+            --text: #1a2a3f;
+            --shadow: rgba(0,0,0,0.04);
+            --border: #e9f0f5;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #f0f4f8;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            color: var(--text-dark);
-            direction: rtl;
-            min-height: 100vh;
+        [data-theme="dark"] {
+            --primary: #1a2a3f;
+            --secondary: #2a3f5c;
+            --bg: #0d1b2a;
+            --card-bg: #1a2a3f;
+            --text: #e9f0f5;
+            --shadow: rgba(0,0,0,0.3);
+            --border: #2a3f5c;
+        }
+
+        #app {
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
+
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 18px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            padding: 12px 16px;
+            flex-shrink: 0;
             border-bottom: 3px solid var(--gold);
         }
         .header-container {
@@ -40,28 +56,28 @@
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 15px;
+            gap: 10px;
         }
         .logo h1 {
             color: #fff;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
         }
         .logo h1 span { color: var(--gold); }
         .search-box {
             flex: 1;
-            min-width: 200px;
-            max-width: 400px;
+            min-width: 150px;
+            max-width: 350px;
             position: relative;
         }
         .search-box input {
             width: 100%;
-            padding: 10px 16px 10px 40px;
+            padding: 6px 12px 6px 32px;
             border-radius: 50px;
             border: none;
             background: rgba(255,255,255,0.12);
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255,255,255,0.1);
         }
@@ -73,219 +89,325 @@
         }
         .search-box i {
             position: absolute;
-            left: 15px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: rgba(255,255,255,0.5);
+            font-size: 14px;
         }
+        .theme-toggle {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.2); }
 
         .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 20px 20px 0;
             flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px 8px;
+            display: flex;
+            flex-direction: column;
         }
+        /* تخصيص شريط التمرير */
+        .container::-webkit-scrollbar { width: 4px; }
+        .container::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
 
         .tabs {
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #dce4ef;
-            padding-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
         .tab-btn {
             background: transparent;
             border: none;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #5c6f87;
-            padding: 8px 20px;
+            padding: 4px 16px;
             border-radius: 30px;
             cursor: pointer;
             transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
         .tab-btn:hover { color: var(--primary); background: rgba(0,0,0,0.03); }
         .tab-btn.active {
             color: #fff;
             background: var(--primary);
-            box-shadow: 0 4px 12px rgba(13,27,42,0.2);
         }
         .tab-btn .badge {
             background: var(--gold);
             color: #000;
-            font-size: 11px;
-            padding: 0 8px;
+            font-size: 10px;
+            padding: 0 6px;
             border-radius: 20px;
             font-weight: 700;
         }
 
+        .carousel-wrapper { flex-shrink: 0; margin-bottom: 8px; }
+        .carousel-title { font-size: 1rem; margin-bottom: 4px; padding-right: 6px; }
+        .carousel-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 6px 4px 12px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .carousel-container::-webkit-scrollbar { height: 3px; }
+        .carousel-container::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        .carousel-item {
+            min-width: 110px;
+            max-width: 140px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: 0.2s;
+        }
+        .carousel-item:hover { transform: scale(1.02); border-color: var(--gold); }
+        .carousel-item .icon { font-size: 28px; }
+        .carousel-item h4 { font-size: 12px; margin: 2px 0; }
+        .carousel-item .link-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 2px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 22px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            flex: 1;
+            align-content: start;
+            padding-bottom: 8px;
         }
         .card {
             background: var(--card-bg);
-            border-radius: 20px;
-            padding: 18px 16px 16px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.04);
-            border: 1px solid #e9f0f5;
-            transition: all 0.25s ease;
+            border-radius: 16px;
+            padding: 14px 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
             text-align: center;
             display: flex;
             flex-direction: column;
         }
-        .card:hover {
-            transform: translateY(-6px);
-            border-color: var(--gold);
-            box-shadow: 0 14px 30px rgba(0,0,0,0.07);
-        }
-        .card .icon { font-size: 38px; margin-bottom: 6px; }
-        .card h3 { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
-        .card p { font-size: 13px; color: #6f8eae; line-height: 1.4; margin-bottom: 6px; flex: 1; }
+        .card:hover { transform: translateY(-4px); border-color: var(--gold); }
+        .card .icon { font-size: 32px; margin-bottom: 4px; }
+        .card h3 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .card p { font-size: 12px; color: #6f8eae; line-height: 1.3; margin-bottom: 4px; flex: 1; }
         .card .channel-tag {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--gold);
             font-weight: 600;
             background: rgba(13,27,42,0.04);
-            padding: 2px 10px;
-            border-radius: 30px;
+            padding: 1px 8px;
+            border-radius: 20px;
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             border: 1px dashed var(--gold);
         }
         .card .link-btn {
             background: var(--primary);
             color: #fff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 13px;
-            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
             cursor: pointer;
-            transition: 0.2s;
             text-decoration: none;
             display: inline-block;
+            transition: 0.2s;
         }
-        .card .link-btn:hover {
-            background: var(--gold);
-            color: #000;
-            transform: scale(1.02);
+        .card .link-btn:hover { background: var(--gold); color: #000; }
+        .share-btn {
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 2px;
         }
 
         .social-section {
-            margin: 30px 0 10px;
+            flex-shrink: 0;
+            margin: 8px 0 4px;
             text-align: center;
         }
         .social-links {
             display: flex;
             justify-content: center;
-            gap: 18px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .social-links a {
             background: #eef2fa;
             color: var(--primary);
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
             transition: 0.25s;
             text-decoration: none;
         }
-        .social-links a:hover {
-            background: var(--gold);
-            color: #000;
-            transform: translateY(-4px);
-            box-shadow: 0 6px 14px rgba(201,168,76,0.3);
-        }
+        .social-links a:hover { background: var(--gold); color: #000; transform: translateY(-2px); }
 
         footer {
+            flex-shrink: 0;
             background: var(--primary);
             color: rgba(255,255,255,0.7);
             text-align: center;
-            padding: 18px 20px;
-            margin-top: 30px;
+            padding: 6px 12px;
             border-top: 2px solid var(--gold);
-            font-size: 14px;
+            font-size: 12px;
         }
         footer a { color: var(--gold); text-decoration: none; font-weight: 600; }
 
-        @media (max-width: 700px) {
-            .header-container { flex-direction: column; align-items: stretch; text-align: center; }
-            .search-box { max-width: 100%; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-            .tabs { justify-content: center; }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+            .carousel-item { min-width: 90px; max-width: 120px; padding: 6px 4px; }
+            .carousel-item .icon { font-size: 24px; }
+            .logo h1 { font-size: 1.1rem; }
+            .search-box { min-width: 100px; }
+            .card { padding: 10px 6px; }
+            .card .icon { font-size: 26px; }
+            .card h3 { font-size: 12px; }
         }
-        @media (max-width: 480px) {
-            .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-            .card { padding: 14px 10px; }
-            .card .icon { font-size: 28px; }
+        @media (max-width: 400px) {
+            .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .header-container { flex-wrap: wrap; gap: 4px; }
+            .search-box { max-width: 100%; }
         }
     </style>
 </head>
 <body>
-
-<header>
-    <div class="header-container">
-        <div class="logo"><h1>⚜️ Taha<span>TechPro</span></h1></div>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="ابحث...">
-            <i class="fas fa-search"></i>
+<div id="app">
+    <header>
+        <div class="header-container">
+            <div class="logo"><h1>⚜️ Taha<span>TechPro</span></h1></div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="ابحث...">
+                <i class="fas fa-search"></i>
+            </div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
-    </div>
-</header>
+    </header>
 
-<main class="container">
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="games">🎮 ألعاب <span class="badge" id="gamesCount">0</span></button>
-        <button class="tab-btn" data-tab="tools">🛠️ أدوات <span class="badge" id="toolsCount">0</span></button>
-        <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">0</span></button>
-    </div>
-    <div class="grid" id="cardGrid"></div>
-    <div class="social-section">
-        <div class="social-links">
-            <a href="https://youtube.com/@superss2824?si=dFcVrqzzPXhuPXZu" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-            <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="https://wa.me/963993382234" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://t.me/TahaTecH2026Bot" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+    <main class="container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="games">🎮 ألعاب <span class="badge" id="gamesCount">0</span></button>
+            <button class="tab-btn" data-tab="tools">🛠️ أدوات <span class="badge" id="toolsCount">0</span></button>
+            <button class="tab-btn" data-tab="all">🌟 الكل <span class="badge" id="allCount">0</span></button>
         </div>
-    </div>
-</main>
 
-<footer>
-    © 2026 TahaTechPro | 
-    <a href="https://t.me/TahaAllinOne" target="_blank">@TahaAllinOne</a> | 
-    <a href="https://t.me/TahaTecH2026Bot" target="_blank">البوت</a>
-    <!-- عداد زوار عالمي (من 3 أغسطس 2026) -->
-<div style="text-align: center; margin: 10px 0; font-size: 14px; color: #aaa; direction: ltr;">
-    👁️ عدد زيارات الموقع (منذ 3 أغسطس 2026): 
-    <img src="https://hits.sh/tahaalrkmany-tech.github.io/taha-all-in-one.svg" alt="عدد الزيارات" style="vertical-align: middle; display: inline-block;">
+        <div class="carousel-wrapper">
+            <div class="carousel-title">⭐ الأكثر زيارة</div>
+            <div class="carousel-container" id="carouselContainer"></div>
+        </div>
+
+        <div class="grid" id="cardGrid"></div>
+
+        <div class="social-section">
+            <div class="social-links">
+                <a href="https://youtube.com/@superss2824?si=dFcVrqzzPXhuPXZu" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://www.facebook.com/share/1BpdpMCkyj/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/thlrqmny?igsh=MW50eHlseHJ6ampzdQ==" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://wa.me/963993382234" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://t.me/TahaTecH2026Bot" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        © 2026 TahaTechPro |
+        <a href="https://t.me/TahaAllinOne" target="_blank">@TahaAllinOne</a> |
+        <a href="https://t.me/TahaTecH2026Bot" target="_blank">البوت</a>
+        <span style="margin:0 6px;font-size:11px;color:#888;">
+            👁️ <img src="https://hits.sh/tahaalrkmany-tech.github.io/taha-all-in-one.svg" alt="hits" style="vertical-align:middle;height:16px;">
+        </span>
+    </footer>
 </div>
-</footer>
 
 <script>
-    // ==================== تجاوز الكاش تلقائياً ====================
+    // ==================== تجاوز الكاش ====================
     (function() {
-        const version = Date.now();
+        const v = Date.now();
         document.querySelectorAll('link[rel="stylesheet"]').forEach(el => {
             const href = el.getAttribute('href');
-            if (href && !href.includes('?v=')) el.setAttribute('href', href + '?v=' + version);
+            if (href && !href.includes('?v=')) el.setAttribute('href', href + '?v=' + v);
         });
         document.querySelectorAll('script[src]').forEach(el => {
             const src = el.getAttribute('src');
-            if (src && !src.includes('?v=')) el.setAttribute('src', src + '?v=' + version);
+            if (src && !src.includes('?v=')) el.setAttribute('src', src + '?v=' + v);
         });
     })();
+
+    // ==================== الصوتيات ====================
+    let audioCtx = null;
+    function playSound(freq = 520, duration = 0.08, type = 'sine') {
+        try {
+            if (!window.AudioContext && !window.webkitAudioContext) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    // ==================== الوضع الليلي ====================
+    const themeToggle = document.getElementById('themeToggle');
+    try {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.textContent = '☀️';
+        }
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '☀️';
+            }
+            playSound(440, 0.06);
+        });
+    } catch(e) {}
 
     // ==================== البيانات ====================
     const BASE = 'https://tahaalrkmany-tech.github.io/taha-all-in-one/';
@@ -293,7 +415,6 @@
     const version = Date.now();
     const v = (f) => BASE + f + '?v=' + version;
 
-    // الألعاب (21 لعبة، مستبعد: bayblade.html)
     const games = [
         { id: 'BALLONe', icon: '🎈', name: 'بالونات', desc: 'تسلية سريعة', file: 'BALLONe.html' },
         { id: 'Dino', icon: '🦖', name: 'ديناصور', desc: 'قفز وتفادي العقبات', file: 'Dino.html' },
@@ -314,10 +435,10 @@
         { id: 'CubexMaster', icon: '🧱', name: 'Cubex Master', desc: 'تكديس المكعبات', file: 'CubexMaster.html' },
         { id: 'Sudoku', icon: '🧩', name: 'سودوكو', desc: 'ألغاز ذهنية', file: 'Sudoku.html' },
         { id: 'BowlingStrike', icon: '🎳', name: 'بولينغ', desc: 'إسقاط الأعمدة', file: 'BowlingStrike.html' },
-        { id: 'DamascusDash', icon: '🏘️', name: 'Damascus Dash', desc: 'مغامرة دمشقية', file: 'DamascusDash.html' }
+        { id: 'DamascusDash', icon: '🏘️', name: 'Damascus Dash', desc: 'مغامرة دمشقية', file: 'DamascusDash.html' },
+        { id: 'Goalsphere', icon: '⚽', name: 'Goalsphere', desc: 'تحدي الأهداف', file: 'Goalsphere.html' }
     ];
 
-    // الأدوات (5 أدوات)
     const tools = [
         { id: 'Files write and edit', icon: '✍️', name: 'محرر نصوص', desc: 'تحرير وتنسيق النصوص', file: 'Files write and edit.html', special: true },
         { id: 'PDFCONVERTOR', icon: '📄', name: 'محول PDF', desc: 'تحويل النصوص إلى PDF', file: 'PDFCONVERTOR.html' },
@@ -331,49 +452,114 @@
         ...tools.map(t => ({ ...t, type: 'tool' }))
     ];
 
-    // تحديث الأعداد
     document.getElementById('gamesCount').textContent = games.length;
     document.getElementById('toolsCount').textContent = tools.length;
     document.getElementById('allCount').textContent = allItems.length;
 
     const grid = document.getElementById('cardGrid');
     const searchInput = document.getElementById('searchInput');
+    const carouselContainer = document.getElementById('carouselContainer');
 
-    function renderCards(filterType = 'all', searchTerm = '') {
-        grid.innerHTML = '';
-        const term = searchTerm.toLowerCase().trim();
-        const filtered = allItems.filter(item => {
-            if (filterType === 'games' && item.type !== 'game') return false;
-            if (filterType === 'tools' && item.type !== 'tool') return false;
-            if (term) {
-                const matchName = item.name.toLowerCase().includes(term);
-                const matchDesc = item.desc.toLowerCase().includes(term);
-                if (!matchName && !matchDesc) return false;
-            }
-            return true;
-        });
-
-        if (filtered.length === 0) {
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#6f8eae; padding:40px 0;">🔍 لا نتائج</div>`;
-            return;
-        }
-
-        filtered.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            const finalUrl = item.special ? PLAY_URL + encodeURIComponent(item.file) : v(item.file);
-            card.innerHTML = `
-                <div class="icon">${item.icon}</div>
-                <h3>${item.name}</h3>
-                <p>${item.desc}</p>
-                <span class="channel-tag">✨ @TahaAllinOne</span>
-                <a href="${finalUrl}" class="link-btn" target="_blank">🚀 استكشف</a>
-            `;
-            grid.appendChild(card);
-        });
+    // ==================== إحصائيات الزيارات ====================
+    function updateStats(id) {
+        try {
+            const key = 'stats_' + id;
+            let count = parseInt(localStorage.getItem(key)) || 0;
+            count++;
+            localStorage.setItem(key, count);
+        } catch(e) {}
     }
 
-    // الأحداث
+    function getStats(id) {
+        try { return parseInt(localStorage.getItem('stats_' + id)) || 0; } catch(e) { return 0; }
+    }
+
+    function getMostPlayedGames(limit = 5) {
+        return games.map(g => ({ ...g, visits: getStats(g.id) })).sort((a,b) => b.visits - a.visits).slice(0, limit);
+    }
+
+    // ==================== عرض الكاروسيل ====================
+    function renderCarousel() {
+        try {
+            const topGames = getMostPlayedGames(5);
+            carouselContainer.innerHTML = '';
+            if (!topGames.some(g => g.visits > 0)) {
+                carouselContainer.innerHTML = '<div style="padding:10px;color:#aaa;font-size:13px;">لا توجد إحصائيات كافية بعد</div>';
+                return;
+            }
+            topGames.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'carousel-item';
+                div.innerHTML = `
+                    <div class="icon">${item.icon}</div>
+                    <h4>${item.name}</h4>
+                    <a href="${BASE + item.file}" class="link-btn" target="_blank">🚀</a>
+                `;
+                carouselContainer.appendChild(div);
+            });
+        } catch(e) {}
+    }
+
+    // ==================== عرض الشبكة ====================
+    function renderCards(filterType = 'all', searchTerm = '') {
+        try {
+            grid.innerHTML = '';
+            const term = searchTerm.toLowerCase().trim();
+            const filtered = allItems.filter(item => {
+                if (filterType === 'games' && item.type !== 'game') return false;
+                if (filterType === 'tools' && item.type !== 'tool') return false;
+                if (term) {
+                    const matchName = item.name.toLowerCase().includes(term);
+                    const matchDesc = item.desc.toLowerCase().includes(term);
+                    if (!matchName && !matchDesc) return false;
+                }
+                return true;
+            });
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#6f8eae;padding:20px 0;">🔍 لا نتائج</div>`;
+                return;
+            }
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const finalUrl = item.special ? PLAY_URL + encodeURIComponent(item.file) : v(item.file);
+                const visits = getStats(item.id);
+                card.innerHTML = `
+                    <div class="icon">${item.icon}</div>
+                    <h3>${item.name}</h3>
+                    <p>${item.desc}</p>
+                    <span class="channel-tag">✨ @TahaAllinOne</span>
+                    <a href="${finalUrl}" class="link-btn" target="_blank" data-id="${item.id}">🚀 استكشف</a>
+                    <button class="share-btn" data-url="${finalUrl}" data-name="${item.name}">📤 مشاركة</button>
+                    <div style="font-size:10px;color:#aaa;margin-top:2px;">👁️ ${visits}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.querySelectorAll('.link-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const id = this.dataset.id;
+                    if (id) { updateStats(id); playSound(600, 0.08); }
+                });
+            });
+
+            document.querySelectorAll('.share-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const url = this.dataset.url;
+                    const name = this.dataset.name;
+                    if (navigator.share) {
+                        navigator.share({ title: name, text: '🎮 جرب لعبة ' + name + ' على TahaTechPro', url: url }).catch(()=>{});
+                    } else {
+                        navigator.clipboard.writeText(url).then(() => alert('📋 تم نسخ الرابط: ' + url))
+                        .catch(() => prompt('انسخ الرابط:', url));
+                    }
+                    playSound(400, 0.08);
+                });
+            });
+        } catch(e) {}
+    }
+
+    // ==================== الأحداث ====================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -387,20 +573,20 @@
         renderCards(activeTab ? activeTab.dataset.tab : 'all', this.value);
     });
 
-    renderCards('all', '');
-</script>
-    <
-            <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/taha-all-in-one/sw.js');
-      }
+    // ==================== Service Worker ====================
+    if ('serviceWorker' in navigator) {
+        try {
+            navigator.serviceWorker.register('/taha-all-in-one/sw.js');
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'UPDATE_READY') alert(event.data.message);
+            });
+        } catch(e) {}
+    }
 
-      // استقبال رسائل التحديث من Service Worker
-      navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data && event.data.type === 'UPDATE_READY') {
-          alert(event.data.message);
-        }
-      });
-    </script>
+    // ==================== التحميل الأولي ====================
+    renderCarousel();
+    renderCards('all', '');
+    setTimeout(() => playSound(800, 0.06), 300);
+</script>
 </body>
 </html>
