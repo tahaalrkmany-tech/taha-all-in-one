@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoria</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(145deg, #f5f0eb 0%, #e8e0d8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 1rem;
+        }
+        .game-container {
+            max-width: 860px;
+            width: 100%;
+            background: rgba(255, 248, 240, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 3.5rem;
+            padding: 1.8rem 1.8rem 2rem;
+            box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 215, 180, 0.3);
+            transition: 0.3s;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 400;
+            letter-spacing: 3px;
+            font-size: 2.4rem;
+            color: #3d2e26;
+            text-shadow: 0 2px 8px rgba(180, 140, 110, 0.2);
+            margin-bottom: 0.3rem;
+        }
+        h1 small {
+            display: block;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            font-weight: 300;
+            margin-top: -0.2rem;
+            color: #6b5a4a;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(230, 215, 200, 0.5);
+            padding: 0.5rem 1.5rem;
+            border-radius: 60px;
+            margin: 0.3rem 0 1.5rem 0;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(200, 170, 145, 0.3);
+            color: #3d2e26;
+            font-weight: 500;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .stats i {
+            font-style: normal;
+            font-size: 1.2rem;
+        }
+        .btn-reset {
+            background: #c9b09b;
+            border: none;
+            color: #2d1f18;
+            font-size: 1rem;
+            padding: 0.3rem 1.3rem;
+            border-radius: 40px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #a08878;
+            transition: all 0.08s ease-in;
+            border: 1px solid #dcc5b4;
+        }
+        .btn-reset:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #a08878;
+        }
+        .btn-reset:hover {
+            background: #d8bfab;
+        }
+        .grid {
+            display: grid;
+            gap: 0.8rem;
+            justify-content: center;
+            margin: 0.2rem 0;
+        }
+        .card {
+            aspect-ratio: 1 / 1;
+            background: #f2e3d6;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 8px 0 #bfaa99, 0 6px 16px rgba(100, 70, 50, 0.2);
+            transition: all 0.12s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            cursor: pointer;
+            border: 2px solid #e4cfbe;
+            color: #2d1f18;
+            text-shadow: 0 1px 4px rgba(255, 255, 255, 0.3);
+            transform: scale(1);
+            will-change: transform;
+        }
+        .card.matched {
+            background: #b8d9c0;
+            border-color: #7fb08a;
+            box-shadow: 0 4px 0 #7f9a82, 0 4px 12px rgba(60, 100, 70, 0.25);
+            cursor: default;
+            filter: drop-shadow(0 0 8px #9ac7a5);
+            transform: scale(0.96);
+            color: #1d3a26;
+        }
+        .card.flipped {
+            background: #fffaf5;
+            border-color: #dcc5b4;
+            box-shadow: 0 4px 0 #bfaa99, 0 8px 20px rgba(80, 50, 30, 0.2);
+            color: #2d1f18;
+            transform: scale(0.98);
+        }
+        .card:active:not(.matched):not(.flipped) {
+            transform: scale(0.92);
+            box-shadow: 0 2px 0 #bfaa99;
+        }
+        .card.matched {
+            pointer-events: none;
+        }
+        .card[data-paired="true"] {
+            pointer-events: none;
+        }
+        .footer-message {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #7a6858;
+            letter-spacing: 1px;
+            border-top: 1px solid #dcc5b4;
+            padding-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .footer-message .credit {
+            background: #e4d3c4;
+            padding: 0.2rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: #4d3a2c;
+            font-weight: 500;
+        }
+        .footer-message .win-count {
+            background: #e4d3c4;
+            padding: 0.2rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: #3d6b4a;
+            font-weight: 600;
+        }
+        /* START SCREEN */
+        .start-screen {
+            background: rgba(240, 225, 212, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 3rem;
+            padding: 2rem 1.8rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(220, 195, 175, 0.4);
+        }
+        .start-screen h2 {
+            color: #3d2e26;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 1.8rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+        .option-group label {
+            color: #3d2e26;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .option-group select,
+        .option-group input {
+            background: #fcf5ee;
+            border: 1px solid #dcc5b4;
+            color: #2d1f18;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .option-group input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: #b8957a;
+        }
+        .btn-start {
+            background: #c9b09b;
+            border: none;
+            color: #2d1f18;
+            font-size: 1.2rem;
+            padding: 0.5rem 2.5rem;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #a08878;
+            transition: all 0.08s;
+            border: 1px solid #dcc5b4;
+            display: block;
+            margin: 0.5rem auto 0;
+        }
+        .btn-start:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #a08878;
+        }
+        .btn-start:hover {
+            background: #d8bfab;
+        }
+        .hidden {
+            display: none !important;
+        }
+        @media (max-width: 550px) {
+            .game-container {
+                padding: 1rem 0.6rem 1.2rem;
+                border-radius: 2rem;
+            }
+            .grid {
+                gap: 0.5rem;
+            }
+            .card {
+                font-size: 2.2rem;
+                border-radius: 18px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .stats {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .option-group {
+                gap: 0.6rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .card {
+                font-size: 1.6rem;
+            }
+            .grid {
+                gap: 0.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="app">
+        <h1>🧠 MEMORIA <small id="langSub">أعلام · إيموجي · صيف</small></h1>
+
+        <!-- START SCREEN -->
+        <div class="start-screen" id="startScreen">
+            <h2 id="startTitle">⚙️ إعدادات اللعبة</h2>
+            <div class="option-group">
+                <label>🃏 <span id="labelCards">عدد الأزواج</span>
+                    <select id="pairCountSelect">
+                        <option value="4">4 أزواج (8)</option>
+                        <option value="6">6 أزواج (12)</option>
+                        <option value="8" selected>8 أزواج (16)</option>
+                        <option value="10">10 أزواج (20)</option>
+                    </select>
+                </label>
+                <label>⏱️ <span id="labelTimer">مؤقت</span>
+                    <input type="checkbox" id="timerCheck" checked>
+                </label>
+                <label>🌐 <span id="labelLang">اللغة</span>
+                    <select id="langSelect">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                    </select>
+                </label>
+            </div>
+            <div class="option-group">
+                <label>🎨 <span id="labelStyle">النمط</span>
+                    <select id="styleSelect">
+                        <option value="emoji">😊 إيموجي</option>
+                        <option value="youtube">▶️ يوتيوبي</option>
+                        <option value="sport">⚽ رياضي</option>
+                        <option value="summer">☀️ صيفي</option>
+                        <option value="flags" selected>🏁 أعلام</option>
+                    </select>
+                </label>
+            </div>
+            <button class="btn-start" id="startGameBtn">🚀 <span id="startBtnText">ابدأ</span></button>
+        </div>
+
+        <!-- GAME STATS -->
+        <div class="stats" id="gameStats">
+            <span><i>🃏</i> <span id="movesDisplay">0</span></span>
+            <span><i>⏳</i> <span id="pairsMatched">0</span> / <span id="totalPairsDisplay">8</span></span>
+            <span id="timerDisplay" style="min-width:60px;">⏱️ 0s</span>
+            <button class="btn-reset" id="resetGameBtn">⟳ خلط</button>
+        </div>
+
+        <div class="grid" id="cardGrid"></div>
+
+        <div class="footer-message">
+            <span class="credit">🛠️ designed by Tahatech2026</span>
+            <span class="win-count">🏆 انتصارات: <span id="winCounter">0</span></span>
+            <span id="styleFooter">🏁 أعلام</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- TRANSLATIONS ----------
+            const LANG = {
+                ar: {
+                    title: 'أعلام · إيموجي · صيف',
+                    startTitle: '⚙️ إعدادات اللعبة',
+                    labelCards: 'عدد الأزواج',
+                    labelTimer: 'مؤقت',
+                    labelLang: 'اللغة',
+                    labelStyle: 'النمط',
+                    startBtn: 'ابدأ',
+                    winAlert: '🎉 لقد فزت! +1 فوز 🎉',
+                    resetBtn: 'خلط',
+                    footerWins: 'انتصارات:',
+                },
+                en: {
+                    title: 'flags · emojis · summer',
+                    startTitle: '⚙️ Game Settings',
+                    labelCards: 'Pairs',
+                    labelTimer: 'Timer',
+                    labelLang: 'Language',
+                    labelStyle: 'Style',
+                    startBtn: 'Start',
+                    winAlert: '🎉 You won! +1 win 🎉',
+                    resetBtn: 'Shuffle',
+                    footerWins: 'wins:',
+                }
+            };
+
+            // ---------- STYLE POOLS (FINAL - APPROVED) ----------
+            const STYLE_POOLS = {
+                // 1. FLAGS (unchanged, excellent)
+                flags: [
+                    '🇵🇸', '🇩🇿', '🇪🇬', '🇸🇦', '🇯🇴', '🇲🇦', '🇱🇧', '🇹🇳', '🇸🇾', '🇮🇶', '🇾🇪', '🇸🇩',
+                    '🇫🇷', '🇩🇪', '🇮🇹', '🇪🇸', '🇬🇧', '🇺🇦', '🇳🇴', '🇵🇱', '🇵🇹', '🇳🇱', '🇧🇪', '🇨🇭',
+                    '🇦🇹', '🇸🇪', '🇩🇰', '🇫🇮', '🇮🇪', '🇬🇷', '🇹🇷', '🇷🇺', '🇨🇿', '🇭🇺', '🇷🇴', '🇧🇬',
+                    '🇭🇷', '🇷🇸', '🇸🇰', '🇸🇮', '🇱🇹', '🇱🇻', '🇪🇪', '🇨🇾', '🇲🇹', '🇮🇸', '🇱🇺', '🇲🇨',
+                    '🇦🇩', '🇸🇲', '🇻🇦', '🇺🇸', '🇨🇦', '🇲🇽', '🇧🇷', '🇦🇷', '🇨🇱', '🇨🇴', '🇵🇪', '🇻🇪',
+                    '🇺🇾', '🇵🇾', '🇧🇴', '🇪🇨', '🇬🇾', '🇸🇷', '🇬🇫', '🇦🇼', '🇨🇼', '🇧🇶', '🇵🇦', '🇨🇷',
+                    '🇳🇮', '🇭🇳', '🇸🇻', '🇬🇹', '🇧🇿', '🇯🇲', '🇨🇺', '🇩🇴', '🇵🇷', '🇻🇮', '🇰🇾', '🇧🇲',
+                    '🇹🇨', '🇫🇰', '🇦🇮', '🇲🇸', '🇬🇩', '🇻🇨', '🇱🇨', '🇧🇧', '🇦🇬', '🇩🇲', '🇰🇳', '🇹🇹', '🇬🇾'
+                ],
+
+                // 2. EMOJI (approved)
+                emoji: [
+                    '😊', '😍', '🥰', '😘', '🤩', '😎', '🤗', '🤔', '🤫', '🤭', '🫣', '😏', '😌', '😇', '🥳',
+                    '😁', '😂', '🤣', '😅', '😆', '😉', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤓', '🧐', '🥸',
+                    '😺', '😸', '😻', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🙊', '💋', '💌', '💘', '💝', '💖',
+                    '💗', '💓', '💞', '💕', '💟', '❣️', '💔', '❤️‍🔥', '❤️‍🩹', '💯', '💢', '💬', '💭', '🗯️',
+                    '💤', '💦', '💨', '🔥', '🌟', '✨', '💫', '🎉', '🎊', '🎈', '🎁', '🎀', '🧸', '📿', '🧿',
+                    '🔮', '🪄', '🧙', '🧚', '🧛', '🧜', '🧝', '🧞', '🧟', '🦄', '🐉', '🐲', '🐳', '🐬', '🦋',
+                    '🌸', '🌺', '🌻', '🌹', '🌷', '🌼', '💐', '🌾', '🍀', '🌿', '☘️', '🍁', '🍂', '🍃', '🌵'
+                ],
+
+                // 3. YOUTUBE (FIXED - 20 icons only)
+                youtube: [
+                    '▶️', '⏸️', '⏹️', '⏺️', '📹', '🎥', '📽️', '🎬',
+                    '📺', '📡', '🔊', '🔉', '🔈', '🔇', '🔔', '🔕',
+                    '👍', '👎', '💬', '📢'
+                ],
+
+                // 4. SPORT (approved)
+                sport: [
+                    '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑',
+                    '🥍', '🏏', '⛳', '🪃', '🥊', '🥋', '🎽', '🛹', '🛼', '🎣', '🤿', '🎿', '⛷️', '🏂', '🪂',
+                    '🏋️', '🤼', '🤸', '⛹️', '🤾', '🏌️', '🏇', '🧘', '🏄', '🏊', '🤽', '🚣', '🧗', '🚵', '🚴',
+                    '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏵️', '🎗️', '🎫', '🎟️', '⛸️', '🥌', '🛷', '🎽', '🏁'
+                ],
+
+                // 5. SUMMER (FIXED - 20 icons, no rainbow)
+                summer: [
+                    '☀️', '🌞', '🌤️', '⛅', '🌥️', '🌦️', '🌊', '🏖️', '🏝️',
+                    '🌴', '🌵', '🕶️', '⛱️', '🍉', '🍊', '🍋', '🥝', '🍑', '🍓', '🌺'
+                ]
+            };
+
+            // ---------- AUDIO (fixed) ----------
+            let audioCtx = null;
+
+            function getAudioContext() {
+                try {
+                    if (!audioCtx) {
+                        audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    return audioCtx;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function playTone(freq, duration, type = 'sine', volume = 0.25) {
+                try {
+                    const ctx = getAudioContext();
+                    if (!ctx) return;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(volume, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + duration);
+                } catch (e) { /* silent fail */ }
+            }
+
+            function playMatchSound() {
+                playTone(880, 0.1, 'sine', 0.2);
+                setTimeout(() => playTone(1100, 0.08, 'sine', 0.18), 100);
+            }
+
+            function playWinSound() {
+                [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.15, 'sine', 0.2), i * 120));
+            }
+
+            function playLoseSound() {
+                playTone(300, 0.2, 'sawtooth', 0.12);
+                setTimeout(() => playTone(200, 0.25, 'sawtooth', 0.1), 150);
+            }
+
+            function playFlipSound() {
+                playTone(700, 0.05, 'sine', 0.15);
+            }
+
+            // ---------- STORAGE ----------
+            const STORAGE_KEY = 'memoria_wins_tahatech';
+
+            function getWins() { return parseInt(localStorage.getItem(STORAGE_KEY)) || 0; }
+
+            function incrementWins() { const w = getWins() + 1;
+                localStorage.setItem(STORAGE_KEY, w); return w; }
+
+            // ---------- GAME STATE ----------
+            let cards = [],
+                cardElements = [],
+                flippedIndices = [];
+            let lockBoard = false,
+                moves = 0,
+                matchedPairs = 0,
+                totalPairs = 8,
+                timerSeconds = 0;
+            let timeoutId = null,
+                timerInterval = null,
+                gameFinished = false,
+                timerEnabled = true;
+            let currentLang = 'ar',
+                currentStyle = 'flags';
+            let pairCount = 8;
+
+            // DOM refs
+            const grid = document.getElementById('cardGrid');
+            const movesSpan = document.getElementById('movesDisplay');
+            const pairsSpan = document.getElementById('pairsMatched');
+            const totalPairsSpan = document.getElementById('totalPairsDisplay');
+            const winCounterSpan = document.getElementById('winCounter');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const resetBtn = document.getElementById('resetGameBtn');
+            const startScreen = document.getElementById('startScreen');
+            const startBtn = document.getElementById('startGameBtn');
+            const langSub = document.getElementById('langSub');
+            const styleFooter = document.getElementById('styleFooter');
+
+            const pairSelect = document.getElementById('pairCountSelect');
+            const timerCheck = document.getElementById('timerCheck');
+            const langSelect = document.getElementById('langSelect');
+            const styleSelect = document.getElementById('styleSelect');
+
+            function updateLabels() {
+                const lang = currentLang;
+                const t = LANG[lang] || LANG.ar;
+                document.getElementById('startTitle').textContent = t.startTitle;
+                document.getElementById('labelCards').textContent = t.labelCards;
+                document.getElementById('labelTimer').textContent = t.labelTimer;
+                document.getElementById('labelLang').textContent = t.labelLang;
+                document.getElementById('labelStyle').textContent = t.labelStyle;
+                document.getElementById('startBtnText').textContent = t.startBtn;
+                langSub.textContent = t.title;
+                resetBtn.textContent = '⟳ ' + t.resetBtn;
+                document.querySelector('.win-count').innerHTML = `🏆 ${t.footerWins} <span id="winCounter">${getWins()}</span>`;
+            }
+
+            function setLanguage(lang) {
+                currentLang = lang;
+                updateLabels();
+            }
+
+            // ---------- DECK BUILDING ----------
+            function getPoolForStyle(style) {
+                return STYLE_POOLS[style] || STYLE_POOLS.flags;
+            }
+
+            function pickRandomItems(arr, count) {
+                const shuffled = [...arr];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled.slice(0, count);
+            }
+
+            function buildDeck(pairCount, style) {
+                const pool = getPoolForStyle(style);
+                const selected = pickRandomItems(pool, pairCount);
+                const deck = [];
+                selected.forEach((item, idx) => {
+                    deck.push({ id: idx, display: item, paired: false });
+                    deck.push({ id: idx, display: item, paired: false });
+                });
+                return deck;
+            }
+
+            function shuffleArray(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            // ---------- RENDER ----------
+            function renderBoard(pairCount, style) {
+                grid.innerHTML = '';
+                cardElements = [];
+                cards = shuffleArray(buildDeck(pairCount, style));
+                totalPairs = pairCount;
+                totalPairsSpan.textContent = totalPairs;
+                cards.forEach((card, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.dataset.index = index;
+                    div.dataset.paired = 'false';
+                    div.dataset.id = card.id;
+                    div.textContent = '';
+                    div.addEventListener('click', () => handleCardClick(index));
+                    grid.appendChild(div);
+                    cardElements.push(div);
+                });
+                const cols = Math.min(4, Math.ceil(Math.sqrt(cards.length)));
+                grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+                flippedIndices = [];
+                lockBoard = false;
+                moves = 0;
+                matchedPairs = 0;
+                gameFinished = false;
+                timerSeconds = 0;
+                updateStats();
+                if (timeoutId) clearTimeout(timeoutId);
+                if (timerInterval) { clearInterval(timerInterval);
+                    timerInterval = null; }
+                timerDisplay.textContent = '⏱️ 0s';
+                if (timerEnabled) {
+                    timerInterval = setInterval(() => {
+                        timerSeconds++;
+                        timerDisplay.textContent = `⏱️ ${timerSeconds}s`;
+                    }, 1000);
+                } else {
+                    timerDisplay.textContent = '⏱️ --';
+                }
+                updateLabels();
+            }
+
+            function updateStats() {
+                movesSpan.textContent = moves;
+                pairsSpan.textContent = matchedPairs;
+            }
+
+            function checkWin() {
+                if (matchedPairs === totalPairs) {
+                    gameFinished = true;
+                    if (timerInterval) { clearInterval(timerInterval);
+                        timerInterval = null; }
+                    playWinSound();
+                    const newWins = incrementWins();
+                    winCounterSpan.textContent = newWins;
+                    setTimeout(() => {
+                        const t = LANG[currentLang] || LANG.ar;
+                        alert(t.winAlert);
+                    }, 100);
+                }
+            }
+
+            function handleCardClick(index) {
+                if (lockBoard || gameFinished) return;
+                const card = cardElements[index];
+                if (card.dataset.paired === 'true') return;
+                if (flippedIndices.includes(index)) return;
+                if (flippedIndices.length >= 2) return;
+
+                flipCard(index, true);
+                playFlipSound();
+                flippedIndices.push(index);
+
+                if (flippedIndices.length === 2) {
+                    moves++;
+                    updateStats();
+                    const idx1 = flippedIndices[0],
+                        idx2 = flippedIndices[1];
+                    const isMatch = (cards[idx1].id === cards[idx2].id);
+                    if (isMatch) {
+                        playMatchSound();
+                        cardElements[idx1].dataset.paired = 'true';
+                        cardElements[idx2].dataset.paired = 'true';
+                        cardElements[idx1].classList.add('matched');
+                        cardElements[idx2].classList.add('matched');
+                        matchedPairs++;
+                        updateStats();
+                        flippedIndices = [];
+                        checkWin();
+                    } else {
+                        lockBoard = true;
+                        timeoutId = setTimeout(() => {
+                            if (cardElements[idx1] && cardElements[idx1].dataset.paired !== 'true') flipCard(idx1,
+                            false);
+                            if (cardElements[idx2] && cardElements[idx2].dataset.paired !== 'true') flipCard(idx2,
+                            false);
+                            flippedIndices = [];
+                            lockBoard = false;
+                            timeoutId = null;
+                            if (!gameFinished) playLoseSound();
+                        }, 700);
+                    }
+                }
+            }
+
+            function flipCard(index, show) {
+                const el = cardElements[index];
+                if (!el) return;
+                if (show) {
+                    el.textContent = cards[index].display;
+                    el.classList.add('flipped');
+                } else {
+                    el.textContent = '';
+                    el.classList.remove('flipped');
+                }
+            }
+
+            function resetGame() {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                lockBoard = false;
+                flippedIndices = [];
+                gameFinished = false;
+                renderBoard(pairCount, currentStyle);
+                winCounterSpan.textContent = getWins();
+                styleFooter.textContent = styleSelect.options[styleSelect.selectedIndex].text;
+                updateLabels();
+            }
+
+            // ---------- START GAME ----------
+            function startGame() {
+                pairCount = parseInt(pairSelect.value);
+                timerEnabled = timerCheck.checked;
+                currentLang = langSelect.value;
+                currentStyle = styleSelect.value;
+                setLanguage(currentLang);
+                startScreen.classList.add('hidden');
+                document.getElementById('gameStats').style.display = 'flex';
+                renderBoard(pairCount, currentStyle);
+                winCounterSpan.textContent = getWins();
+                styleFooter.textContent = styleSelect.options[styleSelect.selectedIndex].text;
+                updateLabels();
+            }
+
+            // ---------- INIT ----------
+            function init() {
+                startScreen.classList.remove('hidden');
+                document.getElementById('gameStats').style.display = 'none';
+                grid.innerHTML = '';
+                winCounterSpan.textContent = getWins();
+                setLanguage('ar');
+                startBtn.addEventListener('click', startGame);
+                resetBtn.addEventListener('click', resetGame);
+                langSelect.addEventListener('change', function() {
+                    currentLang = this.value;
+                    setLanguage(currentLang);
+                    updateLabels();
+                });
+                styleSelect.addEventListener('change', function() {
+                    styleFooter.textContent = this.options[this.selectedIndex].text;
+                });
+                updateLabels();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
