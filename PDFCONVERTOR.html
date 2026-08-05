@@ -161,7 +161,6 @@
             box-shadow: 0 4px 15px rgba(42, 82, 152, 0.25);
         }
 
-        /* لوحة التخصيص المتقدمة */
         .customization-panel {
             background: #fafdff;
             border: 1px solid var(--border);
@@ -583,6 +582,47 @@
             border-top: 2px solid #dce7f0;
             font-size: 12px;
             color: #6f8eae;
+            text-align: center;
+        }
+
+        /* دعم القوالب */
+        .pdf-inner.template-yearly .year-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .pdf-inner.template-monthly .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .pdf-inner.template-weekly .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .pdf-inner.template-yearly table,
+        .pdf-inner.template-monthly table,
+        .pdf-inner.template-weekly table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pdf-inner.template-yearly th,
+        .pdf-inner.template-monthly th,
+        .pdf-inner.template-weekly th {
+            background: #f0f4ff;
+            padding: 5px;
+        }
+
+        .pdf-inner.template-yearly td,
+        .pdf-inner.template-monthly td,
+        .pdf-inner.template-weekly td {
+            padding: 5px;
+            border: 1px solid #dce7f0;
             text-align: center;
         }
 
@@ -1037,6 +1077,8 @@
             © 2026 <a href="#">Taha All in One</a> |
             <a href="https://t.me/superTsybot" target="_blank">@superTsybot</a> |
             <span style="font-size:11px;">v3.0 المُخصص</span>
+            <br>
+            <span style="font-size:11px; color: var(--gold-dark);">صمم بواسطة Tahatechpro2026</span>
         </div>
     </div>
 
@@ -1116,6 +1158,7 @@
             let isConverting = false;
             let selectedSymbol = '❦';
             let savedPresets = [];
+            let _templateType = 'default';
 
             // ============ تحميل الإعدادات المحفوظة ============
             try {
@@ -1166,7 +1209,6 @@
                 panelContent.classList.toggle('show');
             });
 
-            // تحديث قيم الشرائط
             borderWidth.addEventListener('input', () => {
                 borderWidthValue.textContent = borderWidth.value + 'px';
             });
@@ -1183,24 +1225,20 @@
                 lineHeightValue.textContent = lineHeight.value;
             });
 
-            // اختيار الرمز
             symbolPicker.addEventListener('click', (e) => {
                 const btn = e.target.closest('.symbol-btn');
                 if (!btn) return;
-
                 document.querySelectorAll('.symbol-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 selectedSymbol = btn.dataset.symbol;
             });
 
-            // تحديد أول رمز كافتراضي
             const firstSymbol = symbolPicker.querySelector('.symbol-btn');
             if (firstSymbol) firstSymbol.classList.add('selected');
 
             // ============ جمع إعدادات التخصيص ============
             function getCustomizationSettings() {
                 const decoration = getSelectedDecoration();
-
                 return {
                     decoration,
                     fontSize: fontSizeSelect.value,
@@ -1227,54 +1265,73 @@
                 };
             }
 
-            // ============ تطبيق التخصيص على PDF ============
+            // ============ تطبيق التخصيص على PDF (مع دعم القوالب) ============
             function applyCustomizationToPDF() {
                 const settings = getCustomizationSettings();
                 const dec = settings.decoration;
+                const templateType = _templateType || 'default';
 
-                // إعادة تعيين
                 pdfInner.className = 'pdf-inner';
                 pdfInner.style.cssText = '';
                 headerDecor.innerHTML = '';
                 footerDecor.innerHTML = '';
                 watermarkLayer.innerHTML = '';
 
-                // تطبيق الأساسيات
                 pdfInner.style.fontSize = settings.fontSize + 'px';
                 pdfInner.style.fontFamily = settings.fontFamily;
                 pdfInner.style.lineHeight = settings.lineHeight;
                 pdfInner.style.color = settings.textColor;
 
+                // دعم القوالب
+                if (templateType !== 'default' && templateType !== 'none') {
+                    pdfInner.classList.add(`template-${templateType}`);
+                    switch (templateType) {
+                        case 'yearly':
+                            pdfInner.style.fontSize = '12px';
+                            pdfInner.style.direction = 'rtl';
+                            pdfInner.style.padding = '15px';
+                            break;
+                        case 'monthly':
+                            pdfInner.style.fontSize = '13px';
+                            pdfInner.style.direction = 'rtl';
+                            pdfInner.style.padding = '20px';
+                            break;
+                        case 'weekly':
+                            pdfInner.style.fontSize = '11px';
+                            pdfInner.style.direction = 'rtl';
+                            pdfInner.style.padding = '15px';
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
                 if (dec === 'custom' || (dec === 'none' && settings.borderWidth > 0)) {
-                    // نمط مخصص بالكامل
                     pdfInner.style.border = `${settings.borderWidth}px ${settings.borderStyle} ${settings.borderColor}`;
                     pdfInner.style.borderRadius = settings.borderRadius + 'px';
                     pdfInner.style.background = settings.bgColor;
                     pdfInner.style.padding = '35px';
 
-                    // ترويسة
                     if (settings.customHeader) {
                         headerDecor.innerHTML = `
-                        <div style="text-align:center; margin-bottom:25px; color:${settings.headerColor};">
-                            <div style="font-size:28px; margin-bottom:10px;">${settings.symbol} ${settings.symbol} ${settings.symbol}</div>
-                            <div style="font-size:20px; font-weight:bold;">${settings.customHeader}</div>
-                            <div style="height:2px; background:linear-gradient(90deg,transparent,${settings.headerColor},transparent); margin:12px 0;"></div>
-                        </div>`;
+                            <div style="text-align:center; margin-bottom:25px; color:${settings.headerColor};">
+                                <div style="font-size:28px; margin-bottom:10px;">${settings.symbol} ${settings.symbol} ${settings.symbol}</div>
+                                <div style="font-size:20px; font-weight:bold;">${settings.customHeader}</div>
+                                <div style="height:2px; background:linear-gradient(90deg,transparent,${settings.headerColor},transparent); margin:12px 0;"></div>
+                            </div>`;
                     } else {
                         headerDecor.innerHTML = `
-                        <div style="text-align:center; margin-bottom:20px; color:${settings.headerColor};">
-                            <div style="font-size:28px;">${settings.symbol} ${settings.symbol} ${settings.symbol}</div>
-                        </div>`;
+                            <div style="text-align:center; margin-bottom:20px; color:${settings.headerColor};">
+                                <div style="font-size:28px;">${settings.symbol} ${settings.symbol} ${settings.symbol}</div>
+                            </div>`;
                     }
 
-                    // تذييل
                     footerDecor.innerHTML = `
-                    <div style="border-top:2px solid ${settings.borderColor}; padding-top:15px; margin-top:30px; text-align:center; font-size:12px; color:${settings.headerColor};">
-                        ${settings.symbol} ${settings.customFooter || 'Taha All in One'} ${settings.symbol}
-                    </div>`;
+                        <div style="border-top:2px solid ${settings.borderColor}; padding-top:15px; margin-top:30px; text-align:center; font-size:12px; color:${settings.headerColor};">
+                            ${settings.symbol} ${settings.customFooter || 'Taha All in One'} ${settings.symbol}
+                        </div>`;
 
                 } else {
-                    // استخدام الأنماط الجاهزة
                     switch (dec) {
                         case 'islamic':
                             pdfInner.style.border = '12px solid #c9a96e';
@@ -1282,25 +1339,27 @@
                             pdfInner.style.fontFamily = "'Traditional Arabic', 'Amiri', serif";
                             pdfInner.style.color = '#4a3728';
                             pdfInner.style.padding = '40px 30px';
-                            pdfInner.style.boxShadow =
-                                'inset 0 0 0 4px #d4b896, inset 0 0 0 8px #fdf8f0, inset 0 0 0 10px #c9a96e';
-                            headerDecor.innerHTML =
-                                `<div style="text-align:center;margin-bottom:25px;font-size:36px;color:#c9a96e;">﷽</div>
-                            <div style="height:3px;background:linear-gradient(90deg,transparent,#c9a96e,#d4b896,#c9a96e,transparent);margin:15px 0;"></div>`;
-                            footerDecor.innerHTML =
-                                `<div style="text-align:center;border-top:2px solid #d4b896;padding-top:15px;margin-top:30px;font-size:12px;color:#8b7355;">❦ Taha All in One ❦</div>`;
+                            pdfInner.style.boxShadow = 'inset 0 0 0 4px #d4b896, inset 0 0 0 8px #fdf8f0, inset 0 0 0 10px #c9a96e';
+                            headerDecor.innerHTML = `
+                                <div style="text-align:center;margin-bottom:25px;font-size:36px;color:#c9a96e;">﷽</div>
+                                <div style="height:3px;background:linear-gradient(90deg,transparent,#c9a96e,#d4b896,#c9a96e,transparent);margin:15px 0;"></div>`;
+                            footerDecor.innerHTML = `
+                                <div style="text-align:center;border-top:2px solid #d4b896;padding-top:15px;margin-top:30px;font-size:12px;color:#8b7355;">❦ Taha All in One ❦</div>`;
                             break;
 
                         case 'modern':
                             pdfInner.style.borderRight = '12px solid #2a5298';
                             pdfInner.style.background = 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)';
                             pdfInner.style.padding = '30px 35px';
-                            headerDecor.innerHTML =
-                                `<div style="margin-bottom:30px;"><div style="width:60px;height:5px;background:#2a5298;border-radius:3px;margin-bottom:15px;"></div>
-                            <div style="font-size:11px;color:#6f8eae;letter-spacing:3px;">TAHA ALL IN ONE</div></div>`;
-                            footerDecor.innerHTML =
-                                `<div style="border-top:1px solid #e0e7f0;padding-top:15px;margin-top:30px;font-size:11px;color:#6f8eae;display:flex;justify-content:space-between;">
-                            <span>Taha All in One</span><span>tahaalrkmany-tech.github.io</span></div>`;
+                            headerDecor.innerHTML = `
+                                <div style="margin-bottom:30px;">
+                                    <div style="width:60px;height:5px;background:#2a5298;border-radius:3px;margin-bottom:15px;"></div>
+                                    <div style="font-size:11px;color:#6f8eae;letter-spacing:3px;">TAHA ALL IN ONE</div>
+                                </div>`;
+                            footerDecor.innerHTML = `
+                                <div style="border-top:1px solid #e0e7f0;padding-top:15px;margin-top:30px;font-size:11px;color:#6f8eae;display:flex;justify-content:space-between;">
+                                    <span>Taha All in One</span><span>tahaalrkmany-tech.github.io</span>
+                                </div>`;
                             break;
 
                         case 'classic':
@@ -1309,70 +1368,126 @@
                             pdfInner.style.fontFamily = "'Georgia', 'Times New Roman', serif";
                             pdfInner.style.color = '#3e2723';
                             pdfInner.style.padding = '45px 40px';
-                            pdfInner.style.boxShadow =
-                                '0 0 0 3px #fdfbf7, 0 0 0 6px #8b7355, 0 0 0 9px #fdfbf7, 0 0 0 12px #d4c5a9';
-                            headerDecor.innerHTML =
-                                `<div style="text-align:center;margin-bottom:35px;">
-                            <div style="display:inline-block;border-top:2px solid #8b7355;border-bottom:2px solid #8b7355;padding:8px 30px;">
-                            <span style="font-size:28px;color:#8b7355;letter-spacing:12px;">✦ ✦ ✦</span></div></div>`;
-                            footerDecor.innerHTML =
-                                `<div style="text-align:center;border-top:2px double #d4c5a9;padding-top:15px;margin-top:35px;font-size:11px;color:#8b7355;font-style:italic;">— Taha All in One —</div>`;
+                            pdfInner.style.boxShadow = '0 0 0 3px #fdfbf7, 0 0 0 6px #8b7355, 0 0 0 9px #fdfbf7, 0 0 0 12px #d4c5a9';
+                            headerDecor.innerHTML = `
+                                <div style="text-align:center;margin-bottom:35px;">
+                                    <div style="display:inline-block;border-top:2px solid #8b7355;border-bottom:2px solid #8b7355;padding:8px 30px;">
+                                        <span style="font-size:28px;color:#8b7355;letter-spacing:12px;">✦ ✦ ✦</span>
+                                    </div>
+                                </div>`;
+                            footerDecor.innerHTML = `
+                                <div style="text-align:center;border-top:2px double #d4c5a9;padding-top:15px;margin-top:35px;font-size:11px;color:#8b7355;font-style:italic;">— Taha All in One —</div>`;
                             break;
 
                         case 'floral':
                             pdfInner.style.border = '15px solid #e8f5e9';
                             pdfInner.style.background = '#f8fdf5';
                             pdfInner.style.padding = '35px';
-                            headerDecor.innerHTML =
-                                `<div style="text-align:center;margin-bottom:25px;font-size:30px;color:#4caf50;letter-spacing:10px;">❁ ✿ ❁</div>
-                            <div style="height:2px;background:linear-gradient(90deg,transparent,#a5d6a7,#4caf50,#a5d6a7,transparent);margin:10px 0;"></div>`;
-                            footerDecor.innerHTML =
-                                `<div style="text-align:center;border-top:2px dotted #c8e6c9;padding-top:15px;margin-top:30px;font-size:11px;color:#66bb6a;">🌿 Taha All in One 🌿</div>`;
+                            headerDecor.innerHTML = `
+                                <div style="text-align:center;margin-bottom:25px;font-size:30px;color:#4caf50;letter-spacing:10px;">❁ ✿ ❁</div>
+                                <div style="height:2px;background:linear-gradient(90deg,transparent,#a5d6a7,#4caf50,#a5d6a7,transparent);margin:10px 0;"></div>`;
+                            footerDecor.innerHTML = `
+                                <div style="text-align:center;border-top:2px dotted #c8e6c9;padding-top:15px;margin-top:30px;font-size:11px;color:#66bb6a;">🌿 Taha All in One 🌿</div>`;
                             break;
 
                         default:
                             pdfInner.style.padding = '20px';
                             pdfInner.style.background = 'white';
-                            footerDecor.innerHTML =
-                                `<div style="border-top:1px solid #dce7f0;padding-top:10px;margin-top:20px;font-size:12px;color:#6f8eae;text-align:center;">
-                            تم التحويل باستخدام Taha All in One</div>`;
+                            footerDecor.innerHTML = `
+                                <div style="border-top:1px solid #dce7f0;padding-top:10px;margin-top:20px;font-size:12px;color:#6f8eae;text-align:center;">
+                                    تم التحويل باستخدام Taha All in One
+                                </div>`;
                     }
                 }
 
-                // علامة مائية
                 if (settings.watermarkText && settings.watermarkOpacity > 0) {
                     watermarkLayer.innerHTML = `
-                    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);
-                        font-size:100px;color:rgba(0,0,0,${settings.watermarkOpacity/100});pointer-events:none;
-                        white-space:nowrap;font-weight:bold;letter-spacing:10px;z-index:0;">
-                        ${settings.watermarkText}
-                    </div>`;
+                        <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);
+                            font-size:100px;color:rgba(0,0,0,${settings.watermarkOpacity/100});pointer-events:none;
+                            white-space:nowrap;font-weight:bold;letter-spacing:10px;z-index:0;">
+                            ${settings.watermarkText}
+                        </div>`;
                 }
             }
 
-            // ============ عملية التحويل ============
-            async function handleConversion() {
-                if (isConverting) return;
+            // ============ دالة التحويل الداخلية (تستخدم من API ومن الواجهة) ============
+            async function handleConversion(htmlContent = null, options = {}) {
+                if (isConverting && !options._internal) return;
 
-                const text = textInput.value.trim();
+                // إذا تم إرسال محتوى HTML من API
+                if (htmlContent) {
+                    pdfTextContent.innerHTML = htmlContent;
+                }
+
+                // تطبيق الخيارات إذا وجدت
+                if (options.bgColor) document.getElementById('bgColor').value = options.bgColor;
+                if (options.textColor) document.getElementById('textColor').value = options.textColor;
+                if (options.borderColor) document.getElementById('borderColor').value = options.borderColor;
+                if (options.headerColor) document.getElementById('headerColor').value = options.headerColor;
+                if (options.borderWidth) document.getElementById('borderWidth').value = options.borderWidth;
+                if (options.borderStyle) document.getElementById('borderStyle').value = options.borderStyle;
+                if (options.borderRadius) document.getElementById('borderRadius').value = options.borderRadius;
+                if (options.customHeader) document.getElementById('customHeader').value = options.customHeader;
+                if (options.customFooter) document.getElementById('customFooter').value = options.customFooter;
+                if (options.watermarkText) document.getElementById('watermarkText').value = options.watermarkText;
+                if (options.watermarkOpacity) document.getElementById('watermarkOpacity').value = options.watermarkOpacity;
+                if (options.lineHeight) document.getElementById('lineHeight').value = options.lineHeight;
+                if (options.marginTop) document.getElementById('marginTop').value = options.marginTop;
+                if (options.marginRight) document.getElementById('marginRight').value = options.marginRight;
+                if (options.marginBottom) document.getElementById('marginBottom').value = options.marginBottom;
+                if (options.marginLeft) document.getElementById('marginLeft').value = options.marginLeft;
+                if (options.pageSize) document.getElementById('pageSize').value = options.pageSize;
+                if (options.orientation) document.getElementById('orientation').value = options.orientation;
+                if (options.symbol) {
+                    document.querySelectorAll('.symbol-btn').forEach(b => b.classList.remove('selected'));
+                    const symbolBtn = document.querySelector(`.symbol-btn[data-symbol="${options.symbol}"]`);
+                    if (symbolBtn) symbolBtn.classList.add('selected');
+                    selectedSymbol = options.symbol;
+                }
+                if (options.template) {
+                    _templateType = options.template;
+                }
+                if (options.fontSize) document.getElementById('fontSizeSelect').value = options.fontSize;
+                if (options.fontFamily) document.getElementById('fontFamilySelect').value = options.fontFamily;
+
+                // تحديث القيم
+                document.getElementById('borderWidthValue').textContent = document.getElementById('borderWidth').value + 'px';
+                document.getElementById('borderRadiusValue').textContent = document.getElementById('borderRadius').value + 'px';
+                document.getElementById('watermarkOpacityValue').textContent = document.getElementById('watermarkOpacity')
+                    .value + '%';
+                document.getElementById('lineHeightValue').textContent = document.getElementById('lineHeight').value;
+
+                // تعيين الزخرفة إلى مخصص إذا تم إرسال خيارات
+                if (Object.keys(options).length > 0 && !options._internal) {
+                    document.getElementById('decCustom').checked = true;
+                }
+
+                // التحقق من وجود نص
+                const text = pdfTextContent.innerHTML.trim() || textInput.value.trim();
                 if (!text) {
-                    showError('⚠️ الرجاء إدخال النص المراد تحويله.');
-                    textInput.focus();
+                    if (!options._internal) {
+                        showError('⚠️ الرجاء إدخال النص المراد تحويله.');
+                        textInput.focus();
+                    }
                     return;
                 }
 
+                // إذا كان النص في textInput ولم يكن في pdfTextContent
+                if (!pdfTextContent.innerHTML.trim() && textInput.value.trim()) {
+                    pdfTextContent.innerHTML = textInput.value.replace(/\n/g, '<br>');
+                }
+
                 isConverting = true;
-                convertBtn.disabled = true;
-                convertBtn.querySelector('.btn-text').textContent = '⏳ جاري التحويل...';
-                progressContainer.style.display = 'block';
-                resultArea.style.display = 'none';
-                errorMsg.style.display = 'none';
+                if (!options._internal) {
+                    convertBtn.disabled = true;
+                    convertBtn.querySelector('.btn-text').textContent = '⏳ جاري التحويل...';
+                    progressContainer.style.display = 'block';
+                    resultArea.style.display = 'none';
+                    errorMsg.style.display = 'none';
+                }
 
                 updateProgress(10, 'جاري تجهيز النص...');
                 await sleep(80);
-
-                const formattedText = text.replace(/\n/g, '<br>');
-                pdfTextContent.innerHTML = formattedText;
 
                 updateProgress(30, 'جاري تطبيق التخصيص...');
                 await sleep(80);
@@ -1425,25 +1540,34 @@
                     updateProgress(100, '✅ اكتمل!');
                     await sleep(300);
 
-                    progressContainer.style.display = 'none';
-                    resultArea.style.display = 'block';
-                    resultArea.style.animation = 'none';
-                    resultArea.offsetHeight;
-                    resultArea.style.animation = 'fadeInUp 0.4s ease';
-                    resultArea.classList.add('pulse');
-                    setTimeout(() => resultArea.classList.remove('pulse'), 1500);
+                    if (!options._internal) {
+                        progressContainer.style.display = 'none';
+                        resultArea.style.display = 'block';
+                        resultArea.style.animation = 'none';
+                        resultArea.offsetHeight;
+                        resultArea.style.animation = 'fadeInUp 0.4s ease';
+                        resultArea.classList.add('pulse');
+                        setTimeout(() => resultArea.classList.remove('pulse'), 1500);
+                        showToast('✅ تم إنشاء PDF بتخصيصك!');
+                        saveToLocalStorage(text);
+                    }
 
-                    showToast('✅ تم إنشاء PDF بتخصيصك!');
-                    saveToLocalStorage(text);
+                    // إرجاع الـ Blob للاستخدام في API
+                    return blob;
 
                 } catch (err) {
-                    showError('❌ حدث خطأ: ' + err.message);
-                    console.error('PDF Error:', err);
-                    progressContainer.style.display = 'none';
+                    if (!options._internal) {
+                        showError('❌ حدث خطأ: ' + err.message);
+                        console.error('PDF Error:', err);
+                        progressContainer.style.display = 'none';
+                    }
+                    throw err;
                 } finally {
                     isConverting = false;
-                    convertBtn.disabled = false;
-                    convertBtn.querySelector('.btn-text').textContent = '⚡ تحويل إلى PDF';
+                    if (!options._internal) {
+                        convertBtn.disabled = false;
+                        convertBtn.querySelector('.btn-text').textContent = '⚡ تحويل إلى PDF';
+                    }
                 }
             }
 
@@ -1731,11 +1855,144 @@
             });
 
             // ============ مستمعي الأحداث ============
-            convertBtn.addEventListener('click', handleConversion);
+            convertBtn.addEventListener('click', () => handleConversion());
             downloadBtn.addEventListener('click', downloadPDF);
             printBtn.addEventListener('click', printPDF);
             newConvertBtn.addEventListener('click', resetForNew);
             textInput.addEventListener('input', updatePreview);
+
+            // ================================================================
+            // ============ واجهة التكامل مع التطبيقات الخارجية ============
+            // ================================================================
+            window.TahaPDFTool = {
+                // الدالة الرئيسية للتحويل - تستقبل HTML وخيارات، تعيد Promise مع Blob
+                convert: function(htmlContent, options = {}) {
+                    return new Promise((resolve, reject) => {
+                        try {
+                            // تخزين نوع القالب إذا ورد
+                            if (options.template) {
+                                _templateType = options.template;
+                            }
+
+                            // استدعاء دالة التحويل مع تمرير المعاملات
+                            handleConversion(htmlContent, { ...options, _internal: true })
+                                .then(blob => {
+                                    resolve(blob);
+                                })
+                                .catch(err => {
+                                    reject(err);
+                                });
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                },
+
+                // تطبيق التخصيص فقط بدون تحويل
+                applyCustomization: function(options = {}) {
+                    try {
+                        if (options.bgColor) document.getElementById('bgColor').value = options.bgColor;
+                        if (options.textColor) document.getElementById('textColor').value = options.textColor;
+                        if (options.borderColor) document.getElementById('borderColor').value = options.borderColor;
+                        if (options.headerColor) document.getElementById('headerColor').value = options.headerColor;
+                        if (options.borderWidth) document.getElementById('borderWidth').value = options.borderWidth;
+                        if (options.borderStyle) document.getElementById('borderStyle').value = options.borderStyle;
+                        if (options.borderRadius) document.getElementById('borderRadius').value = options.borderRadius;
+                        if (options.customHeader) document.getElementById('customHeader').value = options.customHeader;
+                        if (options.customFooter) document.getElementById('customFooter').value = options.customFooter;
+                        if (options.watermarkText) document.getElementById('watermarkText').value = options.watermarkText;
+                        if (options.watermarkOpacity) document.getElementById('watermarkOpacity').value = options
+                        .watermarkOpacity;
+                        if (options.lineHeight) document.getElementById('lineHeight').value = options.lineHeight;
+                        if (options.marginTop) document.getElementById('marginTop').value = options.marginTop;
+                        if (options.marginRight) document.getElementById('marginRight').value = options.marginRight;
+                        if (options.marginBottom) document.getElementById('marginBottom').value = options.marginBottom;
+                        if (options.marginLeft) document.getElementById('marginLeft').value = options.marginLeft;
+                        if (options.pageSize) document.getElementById('pageSize').value = options.pageSize;
+                        if (options.orientation) document.getElementById('orientation').value = options.orientation;
+                        if (options.symbol) {
+                            document.querySelectorAll('.symbol-btn').forEach(b => b.classList.remove('selected'));
+                            const symbolBtn = document.querySelector(`.symbol-btn[data-symbol="${options.symbol}"]`);
+                            if (symbolBtn) symbolBtn.classList.add('selected');
+                            selectedSymbol = options.symbol;
+                        }
+                        if (options.template) {
+                            _templateType = options.template;
+                        }
+                        if (options.fontSize) document.getElementById('fontSizeSelect').value = options.fontSize;
+                        if (options.fontFamily) document.getElementById('fontFamilySelect').value = options.fontFamily;
+
+                        document.getElementById('borderWidthValue').textContent = document.getElementById('borderWidth')
+                            .value + 'px';
+                        document.getElementById('borderRadiusValue').textContent = document.getElementById('borderRadius')
+                            .value + 'px';
+                        document.getElementById('watermarkOpacityValue').textContent = document.getElementById(
+                            'watermarkOpacity').value + '%';
+                        document.getElementById('lineHeightValue').textContent = document.getElementById('lineHeight')
+                            .value;
+
+                        if (Object.keys(options).length > 0) {
+                            document.getElementById('decCustom').checked = true;
+                        }
+
+                        applyCustomizationToPDF();
+                        return true;
+                    } catch (error) {
+                        console.error('خطأ في تطبيق التخصيص:', error);
+                        return false;
+                    }
+                },
+
+                // جلب الإعدادات الحالية
+                getSettings: function() {
+                    return getCustomizationSettings();
+                },
+
+                // إعادة ضبط الإعدادات
+                resetSettings: function() {
+                    try {
+                        document.getElementById('resetCustomBtn').click();
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                },
+
+                // تحميل إعداد مسبق
+                loadPreset: function(presetName) {
+                    try {
+                        const presets = JSON.parse(localStorage.getItem('taha_pdf_presets') || '[]');
+                        const preset = presets.find(p => p.presetName === presetName);
+                        if (preset) {
+                            loadPreset(preset);
+                            return true;
+                        }
+                        return false;
+                    } catch (error) {
+                        return false;
+                    }
+                },
+
+                // حفظ الإعداد الحالي
+                savePreset: function(presetName) {
+                    try {
+                        const settings = getCustomizationSettings();
+                        settings.presetName = presetName || 'إعداد ' + (Date.now());
+                        settings.savedAt = new Date().toISOString();
+                        const presets = JSON.parse(localStorage.getItem('taha_pdf_presets') || '[]');
+                        presets.push(settings);
+                        localStorage.setItem('taha_pdf_presets', JSON.stringify(presets));
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                }
+            };
+
+            // دالة مساعدة للتحويل المباشر
+            window.convertHTMLToPDF = function(htmlContent, options = {}) {
+                return window.TahaPDFTool.convert(htmlContent, options);
+            };
 
             // ============ تحميل الصفحة ============
             window.addEventListener('load', function() {
@@ -1754,6 +2011,8 @@
             console.log('🎨 يمكنك تخصيص: الألوان | الإطارات | الرموز | العلامة المائية | الخطوط | الهوامش');
             console.log('💾 يمكنك حفظ وتحميل الإعدادات المسبقة');
             console.log('⌨️ Ctrl+Enter للتحويل | Ctrl+S للتحميل');
+            console.log('📡 واجهة API: window.TahaPDFTool.convert(html, options)');
+            console.log('📡 دالة مساعدة: window.convertHTMLToPDF(html, options)');
         })();
     </script>
 
