@@ -4,19 +4,27 @@
   "description": "ألعاب وأدوات تقنية مجانية",
   "start_url": "/taha-all-in-one/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0d1b2a",
   "theme_color": "#ffd700",
-  "orientation": "portrait",
-  "id": "tahatech-app",
-  "scope": "/taha-all-in-one/",
-  "lang": "ar",
-  "dir": "rtl",
-  "categories": ["games", "utilities"],
   "icons": [
     {
       "src": "icon-512.png",
-      "sizes": "512x512",
+      "sizes": "1080x1080",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1080x1920",
       "type": "image/png"
     }
-  ]
+  ],
+  "categories": ["games", "utilities"],
+  "lang": "ar",
+  "dir": "rtl",
+  "id": "tahatech-app",
+  "scope": "/taha-all-in-one/"
 }
